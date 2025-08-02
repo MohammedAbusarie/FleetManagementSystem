@@ -1,0 +1,8 @@
+Django==5.2.7
+psycopg2-binary==2.9.10
+python-dotenv==1.0.1
+django-crispy-forms==2.3
+crispy-bootstrap5==2025.6
+Pillow==11.0.0
+Faker==24.0.0
+
