@@ -1,0 +1,369 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load inventory_extras %}
+
+{% block title %}تفاصيل السيارة - {{ car.fleet_no }}{% endblock %}
+
+{% block content %}
+<style>
+    .detail-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .detail-card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 15px 20px;
+        border-radius: 8px 8px 0 0;
+        font-weight: bold;
+        color: #495057;
+    }
+    
+    .detail-card-body {
+        padding: 20px;
+    }
+    
+    .detail-row {
+        display: flex;
+        margin-bottom: 15px;
+        align-items: flex-start;
+    }
+    
+    .detail-label {
+        font-weight: bold;
+        color: #495057;
+        min-width: 200px;
+        flex-shrink: 0;
+    }
+    
+    .detail-value {
+        color: #6c757d;
+        flex-grow: 1;
+    }
+    
+    .car-image-container {
+        text-align: center;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .car-image {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .status-badge {
+        font-size: 0.9em;
+        padding: 6px 12px;
+    }
+    
+    .maintenance-table {
+        margin-top: 15px;
+    }
+    
+    .regions-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .region-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85em;
+    }
+    
+    .back-button {
+        margin-bottom: 20px;
+    }
+    
+    .action-buttons {
+        margin-top: 20px;
+        text-align: center;
+    }
+    
+    .action-buttons .btn {
+        margin: 0 5px;
+    }
+    
+    @media (max-width: 768px) {
+        .detail-row {
+            flex-direction: column;
+            margin-bottom: 10px;
+        }
+        
+        .detail-label {
+            min-width: auto;
+            margin-bottom: 5px;
+        }
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Back Button -->
+    <div class="back-button">
+        <a href="{% url 'car_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-right"></i> العودة إلى قائمة السيارات
+        </a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-car-front"></i> تفاصيل السيارة - {{ car.fleet_no }}</h1>
+        <div class="action-buttons">
+            <a href="{% url 'car_update' car.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> تعديل
+            </a>
+            <a href="{% url 'car_delete' car.pk %}" class="btn btn-danger">
+                <i class="bi bi-trash"></i> حذف
+            </a>
+        </div>
+    </div>
+
+    <!-- Car Image Section -->
+    {% if car.car_image %}
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <i class="bi bi-image"></i> صورة السيارة
+        </div>
+        <div class="detail-card-body">
+            <div class="car-image-container">
+                <img src="{{ car.car_image|secure_media_url }}" alt="{{ car.fleet_no }}" class="car-image">
+                <div class="mt-3">
+                    <a href="{{ car.car_image|secure_media_url }}" download="{{ car.fleet_no }}_image.jpg" class="btn btn-info">
+                        <i class="bi bi-download"></i> تحميل الصورة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Basic Information -->
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <i class="bi bi-info-circle"></i> المعلومات الأساسية
+        </div>
+        <div class="detail-card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="detail-row">
+                        <div class="detail-label">رقم الأسطول:</div>
+                        <div class="detail-value">{{ car.fleet_no }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">رقم اللوحة (الإنجليزية):</div>
+                        <div class="detail-value">{{ car.plate_no_en }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">رقم اللوحة (العربية):</div>
+                        <div class="detail-value">{{ car.plate_no_ar }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">الإدارة:</div>
+                        <div class="detail-value">{{ car.administrative_unit.name|default:"-" }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">رمز القسم:</div>
+                        <div class="detail-value">{{ car.department_code.name }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">اسم السائق:</div>
+                        <div class="detail-value">{{ car.driver_name.name|default:"-" }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-row">
+                        <div class="detail-label">فئة السيارة:</div>
+                        <div class="detail-value">{{ car.car_class.name }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">الشركة المصنعة:</div>
+                        <div class="detail-value">{{ car.manufacturer.name }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">الموديل:</div>
+                        <div class="detail-value">{{ car.model.name }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">نوع الملكية:</div>
+                        <div class="detail-value">{{ car.get_ownership_type_display }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">الحالة:</div>
+                        <div class="detail-value">
+                            {% if car.status == 'operational' %}
+                                <span class="badge bg-success status-badge">عاملة</span>
+                            {% elif car.status == 'new' %}
+                                <span class="badge bg-info status-badge">جديدة</span>
+                            {% elif car.status == 'defective' %}
+                                <span class="badge bg-danger status-badge">معطلة</span>
+                            {% else %}
+                                <span class="badge bg-warning status-badge">تحت الصيانة</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location and Assignment Information -->
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <i class="bi bi-geo-alt"></i> معلومات الموقع والتخصيص
+        </div>
+        <div class="detail-card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="detail-row">
+                        <div class="detail-label">الموقع الوظيفي:</div>
+                        <div class="detail-value">{{ car.functional_location.name }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">الغرفة:</div>
+                        <div class="detail-value">{{ car.room.name|default:"-" }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">وصف الموقع:</div>
+                        <div class="detail-value">{{ car.location_description }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-row">
+                        <div class="detail-label">مستلم الإشعار:</div>
+                        <div class="detail-value">{{ car.notification_recipient.name|default:"-" }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">نوع العقد:</div>
+                        <div class="detail-value">{{ car.contract_type.name|default:"-" }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">النشاط:</div>
+                        <div class="detail-value">{{ car.activity.name|default:"-" }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">تفاصيل العنوان 1:</div>
+                        <div class="detail-value">{{ car.address_details_1|default:"-" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- License and Inspection Information -->
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <i class="bi bi-calendar-check"></i> معلومات الرخصة والفحص
+        </div>
+        <div class="detail-card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="detail-row">
+                        <div class="detail-label">تاريخ بداية رخصة السيارة:</div>
+                        <div class="detail-value">{{ car.car_license_start_date|date:"Y-m-d"|default:"-" }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">تاريخ انتهاء رخصة السيارة:</div>
+                        <div class="detail-value">{{ car.car_license_end_date|date:"Y-m-d"|default:"-" }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-row">
+                        <div class="detail-label">تاريخ بداية الفحص السنوي:</div>
+                        <div class="detail-value">{{ car.annual_inspection_start_date|date:"Y-m-d"|default:"-" }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">تاريخ انتهاء الفحص السنوي:</div>
+                        <div class="detail-value">{{ car.annual_inspection_end_date|date:"Y-m-d"|default:"-" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visited Regions -->
+    {% if car.visited_regions.exists %}
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <i class="bi bi-map"></i> المناطق المزارة
+        </div>
+        <div class="detail-card-body">
+            <div class="regions-list">
+                {% for region in car.visited_regions.all %}
+                    <span class="region-badge">{{ region.name }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Maintenance Records -->
+    {% if maintenance_records %}
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <i class="bi bi-tools"></i> سجلات الصيانة
+        </div>
+        <div class="detail-card-body">
+            <div class="table-responsive">
+                <table class="table table-hover maintenance-table">
+                    <thead>
+                        <tr>
+                            <th>تاريخ الصيانة</th>
+                            <th>تاريخ الإصلاح</th>
+                            <th>التكلفة</th>
+                            <th>الوصف</th>
+                            <th>تاريخ الإنشاء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for maintenance in maintenance_records %}
+                        <tr>
+                            <td>{{ maintenance.maintenance_date|date:"Y-m-d"|default:"-" }}</td>
+                            <td>{{ maintenance.restoration_date|date:"Y-m-d"|default:"-" }}</td>
+                            <td>{{ maintenance.cost|default:"-" }}</td>
+                            <td>{{ maintenance.description|default:"-" }}</td>
+                            <td>{{ maintenance.created_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- System Information -->
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <i class="bi bi-gear"></i> معلومات النظام
+        </div>
+        <div class="detail-card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="detail-row">
+                        <div class="detail-label">تاريخ الإنشاء:</div>
+                        <div class="detail-value">{{ car.created_at|date:"Y-m-d H:i" }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-row">
+                        <div class="detail-label">تاريخ آخر تحديث:</div>
+                        <div class="detail-value">{{ car.updated_at|date:"Y-m-d H:i" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

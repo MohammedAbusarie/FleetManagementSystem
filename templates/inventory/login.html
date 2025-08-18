@@ -1,0 +1,28 @@
+{% extends 'base_login.html' %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}تسجيل الدخول - نظام إدارة الأسطول{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-lg">
+            <div class="card-header text-center">
+                <h3><i class="bi bi-truck"></i> نظام إدارة الأسطول</h3>
+            </div>
+            <div class="card-body p-4">
+                <h5 class="text-center mb-4">تسجيل الدخول</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-primary w-100 mt-3">
+                        <i class="bi bi-box-arrow-in-right"></i> تسجيل الدخول
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

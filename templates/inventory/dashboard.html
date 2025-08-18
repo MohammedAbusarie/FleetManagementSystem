@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}لوحة القيادة - نظام إدارة الأسطول{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4"><i class="bi bi-speedometer2"></i> لوحة القيادة</h1>
+    
+    <!-- Expiry Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-center">
+                <div class="col-auto">
+                    <label class="form-label">نوع العرض:</label>
+                </div>
+                <div class="col-auto">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="expiry_status" id="about_to_expire" value="about_to_expire" 
+                               {% if expiry_status == 'about_to_expire' or not expiry_status %}checked{% endif %} onchange="this.form.submit()">
+                        <label class="form-check-label" for="about_to_expire">
+                            على وشك الانتهاء
+                        </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="expiry_status" id="expired" value="expired" 
+                               {% if expiry_status == 'expired' %}checked{% endif %} onchange="this.form.submit()">
+                        <label class="form-check-label" for="expired">
+                            منتهية الصلاحية
+                        </label>
+                    </div>
+                </div>
+                {% if expiry_status == 'about_to_expire' or not expiry_status %}
+                <div class="col-auto">
+                    <label for="expiry_days" class="form-label">خلال:</label>
+                </div>
+                <div class="col-auto">
+                    <select name="expiry_days" id="expiry_days" class="form-select" onchange="this.form.submit()">
+                        <option value="7" {% if expiry_days == 7 %}selected{% endif %}>7 أيام</option>
+                        <option value="15" {% if expiry_days == 15 %}selected{% endif %}>15 أيام</option>
+                        <option value="30" {% if expiry_days == 30 %}selected{% endif %}>30 أيام</option>
+                        <option value="60" {% if expiry_days == 60 %}selected{% endif %}>60 أيام</option>
+                        <option value="90" {% if expiry_days == 90 %}selected{% endif %}>90 أيام</option>
+                    </select>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+    
+    <!-- Cars Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0"><i class="bi bi-car-front"></i> 
+                {% if expiry_status == 'expired' %}
+                    السيارات ذات الفحوصات المنتهية الصلاحية
+                {% else %}
+                    السيارات ذات الفحوصات الوشيكة
+                {% endif %}
+            </h4>
+        </div>
+        <div class="card-body">
+            {% if cars_expiring %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>رقم الأسطول</th>
+                                <th>رقم اللوحة (الإنجليزية)</th>
+                                <th>الشركة المصنعة</th>
+                                <th>الموديل</th>
+                                <th>تاريخ انتهاء الفحص</th>
+                                <th>تاريخ انتهاء الرخصة</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for car in cars_expiring %}
+                            <tr>
+                                <td>{{ car.fleet_no }}</td>
+                                <td>{{ car.plate_no_en }}</td>
+                                <td>{{ car.manufacturer.name }}</td>
+                                <td>{{ car.model.name }}</td>
+                                <td>
+                                    {% if car.annual_inspection_end_date %}
+                                        {{ car.annual_inspection_end_date }}
+                                    {% else %}
+                                        <span class="badge bg-warning">لم يتم التعيين</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if car.car_license_end_date %}
+                                        {{ car.car_license_end_date }}
+                                    {% else %}
+                                        <span class="badge bg-warning">لم يتم التعيين</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if car.annual_inspection_end_date and car.car_license_end_date %}
+                                        {% if car.annual_inspection_end_date < today or car.car_license_end_date < today %}
+                                            <span class="badge bg-danger">منتهية الصلاحية</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">تنتهي صلاحيتها قريباً</span>
+                                        {% endif %}
+                                    {% elif car.annual_inspection_end_date %}
+                                        {% if car.annual_inspection_end_date < today %}
+                                            <span class="badge bg-danger">منتهية الصلاحية</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">تنتهي صلاحيتها قريباً</span>
+                                        {% endif %}
+                                    {% elif car.car_license_end_date %}
+                                        {% if car.car_license_end_date < today %}
+                                            <span class="badge bg-danger">منتهية الصلاحية</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">تنتهي صلاحيتها قريباً</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-secondary">غير معروف</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">
+                    {% if expiry_status == 'expired' %}
+                        لا توجد سيارات ذات فحوصات منتهية الصلاحية.
+                    {% else %}
+                        لا توجد سيارات ذات فحوصات وشيكة.
+                    {% endif %}
+                </p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Equipment Section -->
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0"><i class="bi bi-tools"></i> 
+                {% if expiry_status == 'expired' %}
+                    المعدات ذات الفحوصات المنتهية الصلاحية
+                {% else %}
+                    المعدات ذات الفحوصات الوشيكة
+                {% endif %}
+            </h4>
+        </div>
+        <div class="card-body">
+            {% if equipment_expiring %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>رقم الباب</th>
+                                <th>رقم اللوحة</th>
+                                <th>الشركة المصنعة</th>
+                                <th>الموديل</th>
+                                <th>تاريخ انتهاء الفحص</th>
+                                <th>تاريخ انتهاء الرخصة</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for equipment in equipment_expiring %}
+                            <tr>
+                                <td>{{ equipment.door_no }}</td>
+                                <td>{{ equipment.plate_no }}</td>
+                                <td>{{ equipment.manufacturer.name }}</td>
+                                <td>{{ equipment.model.name }}</td>
+                                <td>
+                                    {% if equipment.annual_inspection_end_date %}
+                                        {{ equipment.annual_inspection_end_date }}
+                                    {% else %}
+                                        <span class="badge bg-warning">لم يتم التعيين</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if equipment.equipment_license_end_date %}
+                                        {{ equipment.equipment_license_end_date }}
+                                    {% else %}
+                                        <span class="badge bg-warning">لم يتم التعيين</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if equipment.annual_inspection_end_date and equipment.equipment_license_end_date %}
+                                        {% if equipment.annual_inspection_end_date < today or equipment.equipment_license_end_date < today %}
+                                            <span class="badge bg-danger">منتهية الصلاحية</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">تنتهي صلاحيتها قريباً</span>
+                                        {% endif %}
+                                    {% elif equipment.annual_inspection_end_date %}
+                                        {% if equipment.annual_inspection_end_date < today %}
+                                            <span class="badge bg-danger">منتهية الصلاحية</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">تنتهي صلاحيتها قريباً</span>
+                                        {% endif %}
+                                    {% elif equipment.equipment_license_end_date %}
+                                        {% if equipment.equipment_license_end_date < today %}
+                                            <span class="badge bg-danger">منتهية الصلاحية</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">تنتهي صلاحيتها قريباً</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-secondary">غير معروف</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">
+                    {% if expiry_status == 'expired' %}
+                        لا توجد معدات ذات فحوصات منتهية الصلاحية.
+                    {% else %}
+                        لا توجد معدات ذات فحوصات وشيكة.
+                    {% endif %}
+                </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

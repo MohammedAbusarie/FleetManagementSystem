@@ -1,0 +1,99 @@
+{% extends "inventory/errors/base_error.html" %}
+
+{% block title %}غير مصرح - نظام إدارة الأسطول{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-ban me-2"></i>
+                        403 - غير مصرح بالوصول
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- User-friendly message -->
+                    <div class="alert alert-danger" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-lock me-2"></i>
+                            ما حدث؟
+                        </h5>
+                        <p class="mb-0">ليس لديك صلاحية للوصول إلى هذه الصفحة أو إجراء هذه العملية.</p>
+                    </div>
+
+                    <!-- Action suggestions -->
+                    <div class="alert alert-info" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            ما يمكنك فعله؟
+                        </h5>
+                        <ul class="mb-0">
+                            <li>تأكد من تسجيل الدخول بحساب صحيح</li>
+                            <li>تحقق من صلاحياتك مع مدير النظام</li>
+                            <li>ارجع إلى <a href="{% url 'dashboard' %}" class="alert-link">الصفحة الرئيسية</a></li>
+                            <li>إذا كنت تعتقد أن هذا خطأ، اتصل بالدعم الفني</li>
+                        </ul>
+                    </div>
+
+                    <!-- Login suggestion if not authenticated -->
+                    {% if not user.is_authenticated %}
+                    <div class="alert alert-warning" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            تسجيل الدخول
+                        </h5>
+                        <p class="mb-0">يبدو أنك غير مسجل دخول. <a href="{% url 'login' %}" class="alert-link">اضغط هنا لتسجيل الدخول</a></p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Technical details (for developers and debugging) -->
+                    {% if technical_details and user.is_staff %}
+                    <div class="mt-4">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#technicalDetails" aria-expanded="false" aria-controls="technicalDetails">
+                            <i class="fas fa-code me-2"></i>
+                            تفاصيل تقنية (للمطورين)
+                        </button>
+                        
+                        <div class="collapse mt-3" id="technicalDetails">
+                            <div class="card card-body bg-light">
+                                <h6>معلومات الطلب:</h6>
+                                <ul class="mb-3">
+                                    <li><strong>المسار:</strong> {{ request_path }}</li>
+                                    <li><strong>الطريقة:</strong> {{ request_method }}</li>
+                                    <li><strong>المستخدم:</strong> {{ user.username|default:"غير مسجل دخول" }}</li>
+                                    <li><strong>مجموعات المستخدم:</strong> {{ user.groups.all|join:", "|default:"لا توجد مجموعات" }}</li>
+                                </ul>
+                                
+                                <h6>تفاصيل الخطأ:</h6>
+                                <pre class="bg-dark text-light p-3 rounded"><code>{{ technical_details }}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Navigation buttons -->
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary me-2">
+                            <i class="fas fa-home me-2"></i>
+                            الصفحة الرئيسية
+                        </a>
+                        {% if user.is_authenticated %}
+                        <button onclick="history.back()" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            العودة للصفحة السابقة
+                        </button>
+                        {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-success">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            تسجيل الدخول
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

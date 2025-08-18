@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% if object %}تعديل{% else %}إضافة{% endif %} {{ model_name_arabic|lower }} - نظام إدارة الأسطول{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-plus-circle"></i> {% if object %}تعديل {{ model_name_arabic|lower }}{% else %}إضافة {{ model_name_arabic|lower }}{% endif %}</h1>
+        <a href="{% url 'generic_table_detail' model_name %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> العودة إلى {{ model_name_arabic|lower }}
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {% if form %}
+                    {{ form.as_p }}
+                {% else %}
+                    <div class="form-group mb-3">
+                        <label for="name" class="form-label">الاسم</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{% if object %}{{ object.name }}{% endif %}" required>
+                    </div>
+                {% endif %}
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> {% if object %}تحديث {{ model_name_arabic|lower }}{% else %}إضافة {{ model_name_arabic|lower }}{% endif %}
+                    </button>
+                    <a href="{% url 'generic_table_detail' model_name %}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> إلغاء
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

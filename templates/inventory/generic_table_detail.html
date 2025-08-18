@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ arabic_name }} - نظام إدارة الأسطول{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-list-ul"></i> {{ arabic_name }}</h1>
+        <div>
+            <a href="{% url 'generic_table_create' model_name %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> إضافة {{ arabic_name|lower }} جديد
+            </a>
+            <a href="{% url 'generic_tables' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> رجوع
+            </a>
+        </div>
+    </div>
+    
+    <!-- Search Bar -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" 
+                       class="form-control" 
+                       id="search-input-{{ model_name }}" 
+                       placeholder="البحث في {{ arabic_name }}..."
+                       data-model="{{ model_name }}">
+                <button class="btn btn-outline-secondary" type="button" onclick="clearSearch('{{ model_name }}')">
+                    <i class="bi bi-x-circle"></i> مسح
+                </button>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex align-items-center">
+                <span class="text-muted me-2">عدد النتائج:</span>
+                <span class="badge bg-primary" id="results-count-{{ model_name }}">{{ objects|length }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if objects %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="generic-table-{{ model_name }}">
+                        <thead>
+                            <tr>
+                                <th>الرقم التعريفي</th>
+                                <th>الاسم</th>
+                                <th>تاريخ الإنشاء</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body-{{ model_name }}">
+                            {% for obj in objects %}
+                            <tr class="table-row" data-name="{{ obj.name|lower }}">
+                                <td>{{ obj.id }}</td>
+                                <td class="searchable-text">{{ obj.name }}</td>
+                                <td>{{ obj.created_at|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'generic_table_update' model_name obj.pk %}" class="btn btn-sm btn-warning" title="تعديل">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'generic_table_delete' model_name obj.pk %}" class="btn btn-sm btn-danger" title="حذف">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center">لم يتم العثور على سجلات.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize search functionality
+    initializeSearch('{{ model_name }}');
+});
+
+// Function to search within a table
+function searchTable(modelName, searchTerm) {
+    const searchInput = document.getElementById(`search-input-${modelName}`);
+    const tableBody = document.getElementById(`table-body-${modelName}`);
+    const resultsCount = document.getElementById(`results-count-${modelName}`);
+    
+    if (!tableBody || !resultsCount) {
+        console.error('Table elements not found for search');
+        return;
+    }
+    
+    const rows = tableBody.querySelectorAll('.table-row');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const nameCell = row.querySelector('.searchable-text');
+        const rowName = nameCell ? nameCell.textContent.toLowerCase() : '';
+        
+        if (rowName.includes(searchTerm.toLowerCase())) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update results count
+    resultsCount.textContent = visibleCount;
+    
+    // Show/hide "no results" message
+    const noResultsMsg = tableBody.querySelector('.no-results-msg');
+    if (visibleCount === 0 && searchTerm.length > 0) {
+        if (!noResultsMsg) {
+            const msg = document.createElement('tr');
+            msg.className = 'no-results-msg';
+            msg.innerHTML = '<td colspan="4" class="text-center text-muted py-4">لم يتم العثور على نتائج</td>';
+            tableBody.appendChild(msg);
+        }
+    } else if (noResultsMsg) {
+        noResultsMsg.remove();
+    }
+}
+
+// Function to clear search
+function clearSearch(modelName) {
+    const searchInput = document.getElementById(`search-input-${modelName}`);
+    if (searchInput) {
+        searchInput.value = '';
+        searchTable(modelName, '');
+    }
+}
+
+// Initialize search functionality for a specific table
+function initializeSearch(modelName) {
+    const searchInput = document.getElementById(`search-input-${modelName}`);
+    
+    if (searchInput) {
+        // Remove existing event listeners
+        searchInput.removeEventListener('input', searchInput._searchHandler);
+        
+        // Add new event listener
+        searchInput._searchHandler = function(e) {
+            searchTable(modelName, e.target.value);
+        };
+        
+        searchInput.addEventListener('input', searchInput._searchHandler);
+        console.log(`Search initialized for ${modelName}`);
+    }
+}
+
+// Make functions globally available
+window.clearSearch = clearSearch;
+</script>
+{% endblock %}
+

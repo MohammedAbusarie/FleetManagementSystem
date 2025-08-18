@@ -1,0 +1,177 @@
+{% extends "inventory/errors/base_error.html" %}
+{% load inventory_extras %}
+
+{% block title %}خطأ في قاعدة البيانات - نظام إدارة الأسطول{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-database me-2"></i>
+                        خطأ في قاعدة البيانات
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- User-friendly message -->
+                    <div class="alert alert-danger" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>
+                            ما حدث؟
+                        </h5>
+                        <p class="mb-0">{{ error_message }}</p>
+                        
+                        {% if technical_details.error_type == 'ProtectedError' %}
+                        <div class="mt-3">
+                            <h6>العناصر المرتبطة:</h6>
+                            <p class="mb-2">{{ technical_details.detailed_message|linebreaksbr }}</p>
+                            
+                            {% if technical_details.related_objects %}
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-2"></i>ملخص العناصر المرتبطة:</h6>
+                                <ul class="mb-0">
+                                    {% for model_name, count in technical_details.model_counts.items %}
+                                    <li><strong>{{ model_name|arabic_model_name }}:</strong> {{ count }} عنصر</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            
+                            <h6>تفاصيل العناصر:</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>النوع</th>
+                                            <th>الرقم</th>
+                                            <th>الوصف</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for obj in technical_details.related_objects %}
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-secondary">{{ obj.arabic_model }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">#{{ obj.pk }}</span>
+                                            </td>
+                                            <td>
+                                                <small>{{ obj.str }}</small>
+                                            </td>
+                                            <td>
+                                                {% if obj.admin_url and user.is_staff %}
+                                                <a href="{{ obj.admin_url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                    <i class="fas fa-external-link-alt"></i>
+                                                </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Action suggestions -->
+                    <div class="alert alert-info" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            ما يمكنك فعله؟
+                        </h5>
+                        {% if technical_details.error_type == 'ProtectedError' %}
+                        <ul class="mb-0">
+                            <li><strong>لا يمكن حذف هذا العنصر</strong> لأنه مرتبط بعناصر أخرى</li>
+                            <li>قم بحذف العناصر المرتبطة أولاً إذا كان ذلك ممكناً</li>
+                            <li>أو قم بتغيير المراجع في العناصر المرتبطة</li>
+                            <li>إذا كنت تريد حذف جميع العناصر المرتبطة، اتصل بالدعم الفني</li>
+                        </ul>
+                        {% else %}
+                        <ul class="mb-0">
+                            <li>تأكد من صحة البيانات المدخلة</li>
+                            <li>تحقق من عدم وجود تكرار في البيانات</li>
+                            <li>جرب مرة أخرى</li>
+                            <li>إذا استمر الخطأ، اتصل بالدعم الفني</li>
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <!-- Specific guidance for ProtectedError -->
+                    {% if technical_details.error_type == 'ProtectedError' %}
+                    <div class="alert alert-warning" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            حماية البيانات
+                        </h5>
+                        <p class="mb-0">
+                            هذا الخطأ يحدث لحماية البيانات من الحذف العرضي. 
+                            النظام يمنع حذف العناصر التي لها علاقات مع عناصر أخرى لضمان سلامة البيانات.
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Technical details (for developers and debugging) -->
+                    {% if technical_details and user.is_staff %}
+                    <div class="mt-4">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#technicalDetails" aria-expanded="false" aria-controls="technicalDetails">
+                            <i class="fas fa-code me-2"></i>
+                            تفاصيل تقنية (للمطورين)
+                        </button>
+                        
+                        <div class="collapse mt-3" id="technicalDetails">
+                            <div class="card card-body bg-light">
+                                <h6>معلومات الطلب:</h6>
+                                <ul class="mb-3">
+                                    <li><strong>المسار:</strong> {{ request_path }}</li>
+                                    <li><strong>الطريقة:</strong> {{ request_method }}</li>
+                                    <li><strong>المستخدم:</strong> {{ user.username|default:"غير مسجل دخول" }}</li>
+                                </ul>
+                                
+                                <h6>تفاصيل الخطأ:</h6>
+                                <div class="mb-3">
+                                    <strong>نوع الخطأ:</strong> {{ technical_details.error_type }}<br>
+                                    <strong>الرسالة:</strong> {{ technical_details.message }}
+                                </div>
+                                
+                                {% if technical_details.related_objects %}
+                                <h6>العناصر المرتبطة (JSON):</h6>
+                                <pre class="bg-dark text-light p-3 rounded"><code>{{ technical_details.related_objects|pprint }}</code></pre>
+                                {% endif %}
+                                
+                                {% if technical_details.errors %}
+                                <h6>أخطاء التحقق:</h6>
+                                <pre class="bg-dark text-light p-3 rounded"><code>{{ technical_details.errors|pprint }}</code></pre>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Navigation buttons -->
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary me-2">
+                            <i class="fas fa-home me-2"></i>
+                            الصفحة الرئيسية
+                        </a>
+                        <button onclick="history.back()" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            العودة للصفحة السابقة
+                        </button>
+                        {% if technical_details.error_type == 'ProtectedError' %}
+                        <a href="{% url 'generic_tables' %}" class="btn btn-info">
+                            <i class="fas fa-table me-2"></i>
+                            عرض الجداول المرجعية
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

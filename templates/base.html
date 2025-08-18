@@ -1,0 +1,493 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}نظام إدارة الأسطول{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+        }
+        
+        .sidebar {
+            position: fixed;
+            right: -250px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            top: 0;
+            bottom: 0;
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding-top: 20px;
+            z-index: 1000;
+            transition: right 0.3s ease-in-out;
+        }
+        
+        .sidebar.collapsed {
+            right: -250px;
+        }
+        
+        .sidebar.expanded {
+            right: 0;
+        }
+        
+        .sidebar-toggle {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1002;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            border: 2px solid rgba(255, 255, 255, 0.9) !important;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            visibility: visible !important;
+            opacity: 1 !important;
+            backdrop-filter: blur(10px);
+        }
+        
+        .sidebar-toggle:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
+        }
+        
+        .sidebar-toggle:active {
+            transform: translateY(0) scale(0.98);
+        }
+        
+        .sidebar-toggle.sidebar-open {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%) !important;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .sidebar-toggle.sidebar-open:hover {
+            background: linear-gradient(135deg, #ee5a52 0%, #ff6b6b 100%) !important;
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+        
+        /* Move toggle button when sidebar is expanded on desktop */
+        @media (min-width: 769px) {
+            .sidebar-toggle.sidebar-open {
+                right: 265px;
+                transform: translateY(-2px);
+            }
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 15px 20px;
+            margin: 5px 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .sidebar .nav-link i {
+            margin-left: 10px;
+        }
+        
+        .sidebar-time {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            font-weight: 500;
+            direction: ltr;
+            text-align: center;
+            padding: 15px 20px;
+            margin: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            padding: 15px 20px;
+            margin: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-user-avatar {
+            width: 35px;
+            height: 35px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar-user-name {
+            font-weight: 500;
+            font-size: 0.95rem;
+            flex: 1;
+        }
+
+        .main-content {
+            margin-right: 0;
+            padding: 30px;
+            min-height: 100vh;
+            background: #f8f9fa;
+            transition: margin-right 0.3s ease-in-out;
+        }
+        
+        .main-content.sidebar-expanded {
+            margin-right: 250px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 15px 20px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+        
+        .sidebar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 0 20px 20px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+        }
+        
+        .alert {
+            border-radius: 10px;
+        }
+        
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 280px;
+                position: fixed;
+                height: 100vh;
+            }
+            
+            .sidebar.collapsed {
+                right: -280px;
+            }
+            
+            .sidebar.expanded {
+                right: 0;
+            }
+            
+            .sidebar-time,
+            .sidebar-user {
+                margin: 5px 10px;
+                padding: 10px 15px;
+            }
+            
+            .sidebar-user-name {
+                font-size: 0.9rem;
+            }
+            
+            .main-content {
+                margin-right: 0;
+            }
+            
+            .sidebar-toggle {
+                top: 12px;
+                right: 12px;
+                width: 42px;
+                height: 42px;
+                font-size: 1.1rem;
+                border-radius: 10px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Sidebar Toggle Button -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="تبديل الشريط الجانبي">
+        <i class="bi bi-list" id="toggleIcon"></i>
+    </button>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <i class="bi bi-truck"></i> إدارة الأسطول
+        </div>
+        
+        <!-- Time Display -->
+        <div class="sidebar-time" id="currentTime">
+            <i class="bi bi-clock"></i><br>
+            <span id="timeDisplay"></span>
+        </div>
+        
+        <!-- User Info -->
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar">
+                <i class="bi bi-person-circle"></i>
+            </div>
+            <div class="sidebar-user-name">{{ user.get_full_name|default:user.username }}</div>
+        </div>
+        
+        <nav class="nav flex-column">
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+                <i class="bi bi-speedometer2"></i> لوحة القيادة
+            </a>
+            <a class="nav-link {% if 'car' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'car_list' %}">
+                <i class="bi bi-car-front"></i> السيارات
+            </a>
+            <a class="nav-link {% if 'equipment' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'equipment_list' %}">
+                <i class="bi bi-tools"></i> المعدات
+            </a>
+            <a class="nav-link {% if 'generic' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'generic_tables' %}">
+                <i class="bi bi-table"></i> الجداول العامة
+            </a>
+            <hr style="border-color: rgba(255, 255, 255, 0.2); margin: 20px 15px;">
+            <a class="nav-link" href="{% url 'logout' %}">
+                <i class="bi bi-box-arrow-right"></i> تسجيل الخروج
+            </a>
+        </nav>
+    </div>
+    {% endif %}
+    
+    <!-- Main Content -->
+    <div class="{% if user.is_authenticated %}main-content{% else %}container mt-5{% endif %}">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Real-time clock with timezone for sidebar
+        function updateTime() {
+            const now = new Date();
+            
+            // Format time in Arabic numerals but with Arabic labels
+            const timeOptions = {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: 'Africa/Cairo'  // Fixed Cairo timezone
+            };
+            
+            const timeString = now.toLocaleTimeString('ar-SA', timeOptions);
+            
+            // Fixed timezone name for Cairo
+            const cityName = 'القاهرة';
+            
+            // Format date in Arabic - shorter format for sidebar
+            const dateOptions = {
+                month: 'short',
+                day: 'numeric'
+            };
+            const dateString = now.toLocaleDateString('ar-SA', dateOptions);
+            
+            // Display the time and date in sidebar
+            const timeDisplay = document.getElementById('timeDisplay');
+            if (timeDisplay) {
+                timeDisplay.innerHTML = `
+                    ${timeString}<br>
+                    <small style="font-size: 0.75em; opacity: 0.8;">
+                        ${dateString} - ${cityName}
+                    </small>
+                `;
+            }
+        }
+        
+        // Update time immediately and then every second
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        // Update time when page becomes visible (in case tab was inactive)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                updateTime();
+            }
+        });
+        
+        // Sidebar toggle functionality with enhanced UX
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const mainContent = document.querySelector('.main-content');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            // Initialize sidebar state - start collapsed by default
+            sidebar.classList.add('collapsed');
+            sidebar.classList.remove('expanded');
+            if (mainContent) {
+                mainContent.classList.remove('sidebar-expanded');
+            }
+            sidebarOverlay.classList.remove('active');
+            toggleIcon.className = 'bi bi-list';
+            
+            // Function to expand sidebar with smooth animation
+            function expandSidebar() {
+                sidebar.classList.remove('collapsed');
+                sidebar.classList.add('expanded');
+                if (mainContent) {
+                    mainContent.classList.add('sidebar-expanded');
+                }
+                sidebarOverlay.classList.add('active');
+                sidebarToggle.classList.add('sidebar-open');
+                toggleIcon.className = 'bi bi-x-lg';
+                
+                // Add subtle animation to toggle button
+                sidebarToggle.style.transform = 'translateY(-2px) scale(1.05)';
+                setTimeout(() => {
+                    sidebarToggle.style.transform = '';
+                }, 200);
+            }
+            
+            // Function to collapse sidebar with smooth animation
+            function collapseSidebar() {
+                sidebar.classList.add('collapsed');
+                sidebar.classList.remove('expanded');
+                if (mainContent) {
+                    mainContent.classList.remove('sidebar-expanded');
+                }
+                sidebarOverlay.classList.remove('active');
+                sidebarToggle.classList.remove('sidebar-open');
+                toggleIcon.className = 'bi bi-list';
+                
+                // Add subtle animation to toggle button
+                sidebarToggle.style.transform = 'translateY(0) scale(0.98)';
+                setTimeout(() => {
+                    sidebarToggle.style.transform = '';
+                }, 200);
+            }
+            
+            // Toggle sidebar when button is clicked
+            sidebarToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isCurrentlyCollapsed = sidebar.classList.contains('collapsed');
+                
+                if (isCurrentlyCollapsed) {
+                    expandSidebar();
+                } else {
+                    collapseSidebar();
+                }
+            });
+            
+            // Close sidebar when clicking on overlay
+            sidebarOverlay.addEventListener('click', function() {
+                collapseSidebar();
+            });
+            
+            // Close sidebar when pressing Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('expanded')) {
+                    collapseSidebar();
+                }
+            });
+            
+            // Add touch support for mobile
+            let touchStartX = 0;
+            let touchStartY = 0;
+            
+            document.addEventListener('touchstart', function(e) {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            });
+            
+            document.addEventListener('touchend', function(e) {
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+                const deltaX = touchEndX - touchStartX;
+                const deltaY = touchEndY - touchStartY;
+                
+                // Swipe from right edge to open sidebar
+                if (touchStartX > window.innerWidth - 50 && deltaX < -50 && Math.abs(deltaY) < 100) {
+                    if (sidebar.classList.contains('collapsed')) {
+                        expandSidebar();
+                    }
+                }
+                
+                // Swipe left to close sidebar
+                if (sidebar.classList.contains('expanded') && deltaX < -50 && Math.abs(deltaY) < 100) {
+                    collapseSidebar();
+                }
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

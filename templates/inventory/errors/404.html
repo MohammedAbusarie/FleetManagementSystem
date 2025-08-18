@@ -1,0 +1,103 @@
+{% extends "inventory/errors/base_error.html" %}
+
+{% block title %}الصفحة غير موجودة - نظام إدارة الأسطول{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-search me-2"></i>
+                        404 - الصفحة غير موجودة
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- User-friendly message -->
+                    <div class="alert alert-warning" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>
+                            ما حدث؟
+                        </h5>
+                        <p class="mb-0">الصفحة التي تبحث عنها غير موجودة أو تم نقلها إلى مكان آخر.</p>
+                    </div>
+
+                    <!-- Action suggestions -->
+                    <div class="alert alert-info" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            ما يمكنك فعله؟
+                        </h5>
+                        <ul class="mb-0">
+                            <li>تأكد من صحة الرابط</li>
+                            <li>استخدم القائمة الرئيسية للانتقال</li>
+                            <li>ارجع إلى <a href="{% url 'dashboard' %}" class="alert-link">الصفحة الرئيسية</a></li>
+                            <li>استخدم البحث للعثور على ما تبحث عنه</li>
+                        </ul>
+                    </div>
+
+                    <!-- Quick navigation -->
+                    <div class="alert alert-secondary" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-compass me-2"></i>
+                            التنقل السريع
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><a href="{% url 'dashboard' %}" class="text-decoration-none">🏠 لوحة التحكم</a></li>
+                                    <li><a href="{% url 'car_list' %}" class="text-decoration-none">🚗 قائمة السيارات</a></li>
+                                    <li><a href="{% url 'equipment_list' %}" class="text-decoration-none">⚙️ قائمة المعدات</a></li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><a href="{% url 'generic_tables' %}" class="text-decoration-none">📋 الجداول المرجعية</a></li>
+                                    <li><a href="{% url 'login' %}" class="text-decoration-none">🔐 تسجيل الدخول</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Technical details (for developers and debugging) -->
+                    {% if technical_details and user.is_staff %}
+                    <div class="mt-4">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#technicalDetails" aria-expanded="false" aria-controls="technicalDetails">
+                            <i class="fas fa-code me-2"></i>
+                            تفاصيل تقنية (للمطورين)
+                        </button>
+                        
+                        <div class="collapse mt-3" id="technicalDetails">
+                            <div class="card card-body bg-light">
+                                <h6>معلومات الطلب:</h6>
+                                <ul class="mb-3">
+                                    <li><strong>المسار:</strong> {{ request_path }}</li>
+                                    <li><strong>الطريقة:</strong> {{ request_method }}</li>
+                                    <li><strong>المستخدم:</strong> {{ user.username|default:"غير مسجل دخول" }}</li>
+                                </ul>
+                                
+                                <h6>تفاصيل الخطأ:</h6>
+                                <pre class="bg-dark text-light p-3 rounded"><code>{{ technical_details }}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Navigation buttons -->
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary me-2">
+                            <i class="fas fa-home me-2"></i>
+                            الصفحة الرئيسية
+                        </a>
+                        <button onclick="history.back()" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            العودة للصفحة السابقة
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

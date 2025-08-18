@@ -1,0 +1,73 @@
+<!-- Table Content for AJAX loading -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-list-ul"></i> {{ arabic_name }}</h2>
+    <div>
+        <a href="{% url 'generic_table_create' model_name %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> إضافة {{ arabic_name|lower }}
+        </a>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="input-group">
+            <span class="input-group-text">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" 
+                   class="form-control" 
+                   id="search-input-{{ model_name }}" 
+                   placeholder="البحث في {{ arabic_name }}..."
+                   data-model="{{ model_name }}">
+            <button class="btn btn-outline-secondary" type="button" onclick="clearSearch('{{ model_name }}')">
+                <i class="bi bi-x-circle"></i> مسح
+            </button>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="d-flex align-items-center">
+            <span class="text-muted me-2">عدد النتائج:</span>
+            <span class="badge bg-primary" id="results-count-{{ model_name }}">{{ objects|length }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if objects %}
+            <div class="table-responsive">
+                <table class="table table-hover" id="generic-table-{{ model_name }}">
+                    <thead>
+                        <tr>
+                            <th>الرقم التعريفي</th>
+                            <th>الاسم</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body-{{ model_name }}">
+                        {% for obj in objects %}
+                        <tr class="table-row" data-name="{{ obj.name|lower }}">
+                            <td>{{ obj.id }}</td>
+                            <td class="searchable-text">{{ obj.name }}</td>
+                            <td>{{ obj.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <a href="{% url 'generic_table_update' model_name obj.pk %}" class="btn btn-sm btn-warning" title="تعديل">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'generic_table_delete' model_name obj.pk %}" class="btn btn-sm btn-danger" title="حذف">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted text-center">لم يتم العثور على سجلات.</p>
+        {% endif %}
+    </div>
+</div>
+

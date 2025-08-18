@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}خطأ - نظام إدارة الأسطول{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {{ error_type }} - {{ error_message }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- User-friendly message -->
+                    <div class="alert alert-warning" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>
+                            ما حدث؟
+                        </h5>
+                        <p class="mb-0">{{ error_message }}</p>
+                    </div>
+
+                    <!-- Action suggestions -->
+                    <div class="alert alert-info" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            ما يمكنك فعله؟
+                        </h5>
+                        <ul class="mb-0">
+                            <li>تأكد من صحة الرابط</li>
+                            <li>ارجع إلى <a href="{% url 'dashboard' %}" class="alert-link">الصفحة الرئيسية</a></li>
+                            <li>جرب مرة أخرى بعد قليل</li>
+                            <li>إذا استمر الخطأ، اتصل بالدعم الفني</li>
+                        </ul>
+                    </div>
+
+                    <!-- Technical details (for developers and debugging) -->
+                    {% if technical_details and user.is_staff %}
+                    <div class="mt-4">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#technicalDetails" aria-expanded="false" aria-controls="technicalDetails">
+                            <i class="fas fa-code me-2"></i>
+                            تفاصيل تقنية (للمطورين)
+                        </button>
+                        
+                        <div class="collapse mt-3" id="technicalDetails">
+                            <div class="card card-body bg-light">
+                                <h6>معلومات الطلب:</h6>
+                                <ul class="mb-3">
+                                    <li><strong>المسار:</strong> {{ request_path }}</li>
+                                    <li><strong>الطريقة:</strong> {{ request_method }}</li>
+                                    <li><strong>المستخدم:</strong> {{ user.username|default:"غير مسجل دخول" }}</li>
+                                </ul>
+                                
+                                <h6>تفاصيل الخطأ:</h6>
+                                <pre class="bg-dark text-light p-3 rounded"><code>{{ technical_details|default:"لا توجد تفاصيل متاحة" }}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Navigation buttons -->
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary me-2">
+                            <i class="fas fa-home me-2"></i>
+                            الصفحة الرئيسية
+                        </a>
+                        <button onclick="history.back()" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            العودة للصفحة السابقة
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
