@@ -1,0 +1,245 @@
+from django import forms
+from django.utils.translation import gettext_lazy as _
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Submit, Row, Column, Field
+from django.forms import inlineformset_factory
+from .models import (
+    Car, Equipment, Maintenance, CalibrationCertificateImage,
+    AdministrativeUnit, Department, Driver, CarClass, Manufacturer, CarModel, EquipmentModel,
+    FunctionalLocation, Room, Location, Sector, NotificationRecipient,
+    ContractType, Activity, Region
+)
+
+
+class Select2Widget(forms.Select):
+    """Custom Select2 widget for searchable dropdowns"""
+    class Media:
+        css = {
+            'all': ('admin/css/vendor/select2/select2.min.css',)
+        }
+        js = (
+            'admin/js/vendor/jquery/jquery.min.js',
+            'admin/js/vendor/select2/select2.full.min.js',
+            'admin/js/vendor/select2/i18n/ar.js',
+        )
+    
+    def __init__(self, attrs=None, choices=(), **kwargs):
+        super().__init__(attrs, choices, **kwargs)
+        if attrs is None:
+            attrs = {}
+        attrs.update({
+            'class': 'form-control select2-search',
+            'data-language': 'ar',
+            'data-placeholder': 'اختر...',
+            'data-allow-clear': 'true',
+            'data-width': '100%',
+            'data-dir': 'rtl'
+        })
+        self.attrs = attrs
+    
+    def render(self, name, value, attrs=None, renderer=None):
+        """Override render to ensure proper attributes"""
+        if attrs is None:
+            attrs = {}
+        
+        # Ensure the select2-search class is always present
+        if 'class' in attrs:
+            if 'select2-search' not in attrs['class']:
+                attrs['class'] += ' select2-search'
+        else:
+            attrs['class'] = 'form-control select2-search'
+        
+        # Add data attributes for Select2
+        attrs.update({
+            'data-language': 'ar',
+            'data-placeholder': 'اختر...',
+            'data-allow-clear': 'true',
+            'data-width': '100%',
+            'data-dir': 'rtl'
+        })
+        
+        return super().render(name, value, attrs, renderer)
+
+
+class CarForm(forms.ModelForm):
+    """Form for Car model"""
+    
+    class Meta:
+        model = Car
+        fields = [
+            'fleet_no', 'plate_no_en', 'plate_no_ar', 'administrative_unit', 'department_code', 'driver_name',
+            'car_class', 'manufacturer', 'model', 'functional_location', 'ownership_type',
+            'room', 'location_description', 'address_details_1', 'notification_recipient',
+            'contract_type', 'activity', 'car_license_start_date', 'car_license_end_date',
+            'annual_inspection_start_date', 'annual_inspection_end_date', 'car_image', 'status'
+        ]
+        widgets = {
+            # Foreign key fields with search functionality
+            'administrative_unit': Select2Widget(attrs={'data-placeholder': 'اختر الإدارة...'}),
+            'department_code': Select2Widget(attrs={'data-placeholder': 'اختر رمز القسم...'}),
+            'driver_name': Select2Widget(attrs={'data-placeholder': 'اختر اسم السائق...'}),
+            'car_class': Select2Widget(attrs={'data-placeholder': 'اختر فئة السيارة...'}),
+            'manufacturer': Select2Widget(attrs={'data-placeholder': 'اختر الشركة المصنعة...'}),
+            'model': Select2Widget(attrs={'data-placeholder': 'اختر الموديل...'}),
+            'functional_location': Select2Widget(attrs={'data-placeholder': 'اختر الموقع الوظيفي...'}),
+            'room': Select2Widget(attrs={'data-placeholder': 'اختر الغرفة...'}),
+            'notification_recipient': Select2Widget(attrs={'data-placeholder': 'اختر مستلم الإشعار...'}),
+            'contract_type': Select2Widget(attrs={'data-placeholder': 'اختر نوع العقد...'}),
+            'activity': Select2Widget(attrs={'data-placeholder': 'اختر النشاط...'}),
+            # Other fields
+            'location_description': forms.Textarea(attrs={'rows': 3}),
+            'address_details_1': forms.Textarea(attrs={'rows': 3}),
+            'car_license_start_date': forms.DateInput(attrs={'type': 'date'}),
+            'car_license_end_date': forms.DateInput(attrs={'type': 'date'}),
+            'annual_inspection_start_date': forms.DateInput(attrs={'type': 'date'}),
+            'annual_inspection_end_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_enctype = 'multipart/form-data'
+
+        # Handle image update logic
+        if self.instance and self.instance.car_image:
+            self.fields['car_image'].required = False
+
+
+class EquipmentForm(forms.ModelForm):
+    """Form for Equipment model"""
+    
+    class Meta:
+        model = Equipment
+        fields = [
+            'door_no', 'plate_no', 'manufacture_year', 'manufacturer', 'model',
+            'location', 'sector', 'status', 'equipment_license_start_date',
+            'equipment_license_end_date', 'annual_inspection_start_date',
+            'annual_inspection_end_date', 'equipment_image'
+        ]
+        widgets = {
+            # Foreign key fields with search functionality
+            'manufacturer': Select2Widget(attrs={'data-placeholder': 'اختر الشركة المصنعة...'}),
+            'model': Select2Widget(attrs={'data-placeholder': 'اختر الموديل...'}),
+            'location': Select2Widget(attrs={'data-placeholder': 'اختر الموقع...'}),
+            'sector': Select2Widget(attrs={'data-placeholder': 'اختر القطاع...'}),
+            # Other fields
+            'equipment_license_start_date': forms.DateInput(attrs={'type': 'date'}),
+            'equipment_license_end_date': forms.DateInput(attrs={'type': 'date'}),
+            'annual_inspection_start_date': forms.DateInput(attrs={'type': 'date'}),
+            'annual_inspection_end_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_enctype = 'multipart/form-data'
+
+        # Handle image update logic
+        if self.instance and self.instance.equipment_image:
+            self.fields['equipment_image'].required = False
+
+
+class CalibrationCertificateImageForm(forms.ModelForm):
+    """Form for Calibration Certificate Images"""
+    
+    class Meta:
+        model = CalibrationCertificateImage
+        fields = ['image']
+
+
+class MaintenanceForm(forms.ModelForm):
+    """Form for Maintenance model"""
+    
+    class Meta:
+        model = Maintenance
+        fields = ['maintenance_date', 'restoration_date', 'cost', 'description']
+        widgets = {
+            'maintenance_date': forms.DateInput(attrs={'type': 'date'}),
+            'restoration_date': forms.DateInput(attrs={'type': 'date'}),
+            'description': forms.Textarea(attrs={'rows': 3}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+
+
+# Formsets for Maintenance
+from django.contrib.contenttypes.forms import BaseGenericInlineFormSet, generic_inlineformset_factory
+from django.contrib.contenttypes.models import ContentType
+
+# Equipment Maintenance Formset
+EquipmentMaintenanceFormSet = generic_inlineformset_factory(
+    Maintenance,
+    form=MaintenanceForm,
+    extra=1,
+    can_delete=True,
+    ct_field="content_type",
+    fk_field="object_id"
+)
+
+# Car Maintenance Formset
+CarMaintenanceFormSet = generic_inlineformset_factory(
+    Maintenance,
+    form=MaintenanceForm,
+    extra=1,
+    can_delete=True,
+    ct_field="content_type",
+    fk_field="object_id"
+)
+
+
+# Generic DDL Form
+class GenericDDLForm(forms.ModelForm):
+    """Generic form for DDL tables"""
+    
+    class Meta:
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+
+
+class EquipmentModelForm(forms.ModelForm):
+    """Form for EquipmentModel"""
+    
+    class Meta:
+        model = EquipmentModel
+        fields = ['name', 'manufacturer']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'manufacturer': forms.Select(attrs={'class': 'form-control'})
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+
+
+# Search Form
+class SearchForm(forms.Form):
+    """Generic search form"""
+    search_query = forms.CharField(
+        max_length=255,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('Search...')})
+    )
+    search_field = forms.ChoiceField(
+        required=False,
+        widget=forms.RadioSelect()
+    )
+    
+    def __init__(self, *args, **kwargs):
+        search_fields = kwargs.pop('search_fields', [])
+        super().__init__(*args, **kwargs)
+        self.fields['search_field'].choices = search_fields
+
