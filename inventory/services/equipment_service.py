@@ -14,7 +14,7 @@ class EquipmentService(BaseService):
         """Get equipment with all related objects prefetched"""
         return self.model.objects.select_related(
             'manufacturer', 'model', 'location', 'sector'
-        ).prefetch_related('calibration_certificates')
+        ).prefetch_related('calibration_certificates', 'fire_extinguisher_images')
     
     def get_equipment_with_maintenance(self):
         """Get equipment annotated with latest maintenance info"""
@@ -55,27 +55,31 @@ class EquipmentService(BaseService):
         
         # Get equipment with their current inspection and license records
         equipment_with_records = self.get_equipment_with_related().prefetch_related(
-            'inspection_records', 'license_records'
+            'inspection_records', 'license_records', 'fire_extinguisher_records'
         )
         
         expiring_equipment = []
         for equipment in equipment_with_records:
             current_inspection = equipment.current_inspection_record
             current_license = equipment.current_license_record
+            current_fire_extinguisher = equipment.current_fire_extinguisher_record
             
             if expiry_status == 'expired':
-                # Check if inspection or license is expired
+                # Check if inspection, license, or fire extinguisher is expired
                 inspection_expired = (not current_inspection or 
                                    not current_inspection.end_date or 
                                    current_inspection.end_date < today)
                 license_expired = (not current_license or 
                                  not current_license.end_date or 
                                  current_license.end_date < today)
+                fire_extinguisher_expired = (not current_fire_extinguisher or 
+                                           not current_fire_extinguisher.expiry_date or 
+                                           current_fire_extinguisher.expiry_date < today)
                 
-                if inspection_expired or license_expired:
+                if inspection_expired or license_expired or fire_extinguisher_expired:
                     expiring_equipment.append(equipment)
             else:
-                # Check if inspection or license is about to expire
+                # Check if inspection, license, or fire extinguisher is about to expire
                 inspection_expiring = (current_inspection and 
                                      current_inspection.end_date and
                                      current_inspection.end_date >= today and 
@@ -84,8 +88,12 @@ class EquipmentService(BaseService):
                                   current_license.end_date and
                                   current_license.end_date >= today and 
                                   current_license.end_date <= expiry_date)
+                fire_extinguisher_expiring = (current_fire_extinguisher and 
+                                            current_fire_extinguisher.expiry_date and
+                                            current_fire_extinguisher.expiry_date >= today and 
+                                            current_fire_extinguisher.expiry_date <= expiry_date)
                 
-                if inspection_expiring or license_expiring:
+                if inspection_expiring or license_expiring or fire_extinguisher_expiring:
                     expiring_equipment.append(equipment)
         
         return expiring_equipment

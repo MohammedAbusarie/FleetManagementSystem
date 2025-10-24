@@ -137,6 +137,64 @@
                     </div>
                 </div>
 
+                <!-- Fire Extinguisher Records Formset -->
+                <div class="mb-4">
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="mb-0"><i class="bi bi-fire text-danger"></i> سجلات فحص طفاية الحريق</h5>
+                        <button type="button" class="btn btn-success btn-sm" onclick="addFireExtinguisherForm()">
+                            <i class="bi bi-plus-circle"></i> إضافة سجل طفاية حريق
+                        </button>
+                    </div>
+                    {{ fire_extinguisher_formset.management_form }}
+                    <div id="fire-extinguisher-forms-container">
+                        {% for form in fire_extinguisher_formset %}
+                            <div class="fire-extinguisher-form card mb-3" data-form-index="{{ forloop.counter0 }}">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0"><i class="bi bi-fire"></i> سجل طفاية حريق {{ forloop.counter }}</h6>
+                                    {% if form.instance.pk %}
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeFireExtinguisherForm(this)">
+                                            <i class="bi bi-trash"></i> حذف السجل
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeFireExtinguisherForm(this)">
+                                            <i class="bi bi-x-circle"></i> إزالة
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label class="form-label fw-bold">تاريخ الفحص الدوري لطفاية الحريق *</label>
+                                                {{ form.inspection_date }}
+                                                {% if form.inspection_date.errors %}
+                                                    <div class="text-danger small">{{ form.inspection_date.errors.0 }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label class="form-label fw-bold">تاريخ انتهاء طفاية الحريق *</label>
+                                                {{ form.expiry_date }}
+                                                {% if form.expiry_date.errors %}
+                                                    <div class="text-danger small">{{ form.expiry_date.errors.0 }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if form.instance.pk %}
+                                        {{ form.DELETE }}
+                                    {% endif %}
+                                    {% for hidden_field in form.hidden_fields %}
+                                        {{ hidden_field }}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
                 <!-- Maintenance Formset -->
                 <div id="maintenance-records" style="display: none;">
                     <hr>
@@ -261,6 +319,38 @@
                     </div>
                 </div>
                 
+                <!-- Empty fire extinguisher form template for dynamic form addition -->
+                <div id="empty-fire-extinguisher-form" style="display: none;">
+                    <div class="fire-extinguisher-form card mb-3" data-form-index="__prefix__">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bi bi-fire"></i> سجل طفاية حريق جديد</h6>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeFireExtinguisherForm(this)">
+                                <i class="bi bi-x-circle"></i> إزالة
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label fw-bold">تاريخ الفحص الدوري لطفاية الحريق *</label>
+                                        {{ fire_extinguisher_formset.empty_form.inspection_date }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label fw-bold">تاريخ انتهاء طفاية الحريق *</label>
+                                        {{ fire_extinguisher_formset.empty_form.expiry_date }}
+                                    </div>
+                                </div>
+                            </div>
+                            {{ fire_extinguisher_formset.empty_form.DELETE }}
+                            {% for hidden_field in fire_extinguisher_formset.empty_form.hidden_fields %}
+                                {{ hidden_field }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Equipment Images -->
                 <div class="mb-3">
                     <label class="form-label">صور المعدة</label>
@@ -331,6 +421,36 @@
                 
                 <!-- Hidden input to track certificates to delete -->
                 <input type="hidden" name="certificates_to_delete" id="certificates-to-delete" value="">
+                
+                <!-- Fire Extinguisher Images -->
+                <div class="mb-3">
+                    <label for="fire_extinguisher_images" class="form-label">صور طفاية الحريق</label>
+                    <input type="file" class="form-control" id="fire_extinguisher_images" name="fire_extinguisher_images" multiple accept="image/*">
+                    <div class="form-text">يمكنك اختيار صور متعددة لطفاية الحريق.</div>
+                </div>
+                
+                {% if equipment.fire_extinguisher_images.all %}
+                <div class="mb-3">
+                    <label class="form-label">صور طفاية الحريق الموجودة</label>
+                    <div class="row">
+                        {% for img in equipment.fire_extinguisher_images.all %}
+                        <div class="col-md-3 mb-2">
+                            <div class="image-container position-relative">
+                                <img src="{{ img.image|secure_media_url }}" class="img-thumbnail" alt="Fire Extinguisher Image" id="fire-img-{{ img.id }}">
+                                <div class="mt-2 text-center">
+                                    <button type="button" class="btn btn-sm btn-danger delete-fire-extinguisher-image" data-img-id="{{ img.id }}" data-img-name="{{ img.image.name|basename }}">
+                                        <i class="bi bi-trash"></i> حذف الصورة
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Hidden input to track fire extinguisher images to delete -->
+                <input type="hidden" name="fire_extinguisher_images_to_delete" id="fire-extinguisher-images-to-delete" value="">
                 
                 <div class="mt-4">
                     <button type="submit" class="btn btn-primary">
@@ -706,6 +826,26 @@
             totalForms.value = formNum + 1;
         };
         
+        // Add a new fire extinguisher form
+        window.addFireExtinguisherForm = function() {
+            const totalForms = document.getElementById('id_fire_extinguisher_records-TOTAL_FORMS');
+            const formNum = parseInt(totalForms.value);
+            const formRegex = RegExp(`fire_extinguisher_records-(\\d+)-`,'g');
+            
+            let emptyForm = document.getElementById('empty-fire-extinguisher-form');
+            if (!emptyForm) return;
+            
+            let newForm = emptyForm.innerHTML.replace(formRegex, `fire_extinguisher_records-${formNum}-`);
+            const formContainer = document.createElement('div');
+            formContainer.className = 'fire-extinguisher-form card mb-3';
+            formContainer.setAttribute('data-form-index', formNum);
+            formContainer.innerHTML = newForm;
+            
+            const container = document.getElementById('fire-extinguisher-forms-container');
+            container.appendChild(formContainer);
+            totalForms.value = formNum + 1;
+        };
+        
         // Add a new inspection form
         window.addInspectionForm = function() {
             const totalForms = document.getElementById('id_inspection_records-TOTAL_FORMS');
@@ -792,6 +932,28 @@
             }
         };
         
+        // Remove a fire extinguisher form
+        window.removeFireExtinguisherForm = function(button) {
+            const formContainer = button.closest('.fire-extinguisher-form');
+            const deleteCheckbox = formContainer.querySelector('input[name$="-DELETE"]');
+            
+            if (deleteCheckbox) {
+                // This is an existing record, mark it for deletion
+                deleteCheckbox.checked = true;
+                formContainer.style.opacity = '0.5';
+                formContainer.style.backgroundColor = '#f8d7da';
+                button.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> إلغاء الحذف';
+                button.classList.remove('btn-outline-danger');
+                button.classList.add('btn-warning');
+                button.onclick = function() { undoRemoveFireExtinguisherForm(this); };
+            } else {
+                // This is a new form, remove it completely
+                formContainer.remove();
+                updateFireExtinguisherFormNumbers();
+                updateFireExtinguisherTotalForms();
+            }
+        };
+        
         // Remove a maintenance form
         window.removeMaintenanceForm = function(button) {
             const formContainer = button.closest('.maintenance-form');
@@ -840,6 +1002,20 @@
             button.classList.remove('btn-warning');
             button.classList.add('btn-danger');
             button.onclick = function() { removeInspectionForm(this); };
+        };
+        
+        // Undo removal of a fire extinguisher form
+        window.undoRemoveFireExtinguisherForm = function(button) {
+            const formContainer = button.closest('.fire-extinguisher-form');
+            const deleteCheckbox = formContainer.querySelector('input[name$="-DELETE"]');
+            
+            deleteCheckbox.checked = false;
+            formContainer.style.opacity = '';
+            formContainer.style.backgroundColor = '';
+            button.innerHTML = '<i class="bi bi-trash"></i> حذف السجل';
+            button.classList.remove('btn-warning');
+            button.classList.add('btn-danger');
+            button.onclick = function() { removeFireExtinguisherForm(this); };
         };
         
         // Undo removal of a maintenance form
@@ -894,6 +1070,27 @@
             const totalForms = document.getElementById('id_inspection_records-TOTAL_FORMS');
             if (totalForms) {
                 const visibleForms = document.querySelectorAll('#inspection-forms-container .inspection-form');
+                totalForms.value = visibleForms.length;
+            }
+        }
+        
+        // Update fire extinguisher form numbers in labels
+        function updateFireExtinguisherFormNumbers() {
+            const forms = document.querySelectorAll('#fire-extinguisher-forms-container .fire-extinguisher-form');
+            forms.forEach((form, index) => {
+                const label = form.querySelector('h6');
+                if (label) {
+                    label.innerHTML = `<i class="bi bi-fire"></i> سجل طفاية حريق ${index + 1}`;
+                }
+                form.setAttribute('data-form-index', index);
+            });
+        }
+        
+        // Update fire extinguisher total forms count
+        function updateFireExtinguisherTotalForms() {
+            const totalForms = document.getElementById('id_fire_extinguisher_records-TOTAL_FORMS');
+            if (totalForms) {
+                const visibleForms = document.querySelectorAll('#fire-extinguisher-forms-container .fire-extinguisher-form');
                 totalForms.value = visibleForms.length;
             }
         }
@@ -1010,6 +1207,41 @@
             }
         });
         
+        // Fire extinguisher image deletion functionality
+        const fireExtinguisherImagesToDelete = new Set();
+        const fireExtinguisherImagesToDeleteInput = document.getElementById('fire-extinguisher-images-to-delete');
+        
+        // Handle fire extinguisher image deletion
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('delete-fire-extinguisher-image') || e.target.closest('.delete-fire-extinguisher-image')) {
+                e.preventDefault();
+                
+                const button = e.target.classList.contains('delete-fire-extinguisher-image') ? e.target : e.target.closest('.delete-fire-extinguisher-image');
+                const imgId = button.getAttribute('data-img-id');
+                const imgName = button.getAttribute('data-img-name');
+                const container = button.closest('.image-container');
+                
+                if (fireExtinguisherImagesToDelete.has(imgId)) {
+                    // Remove from deletion list
+                    fireExtinguisherImagesToDelete.delete(imgId);
+                    container.classList.remove('marked-for-deletion');
+                    button.innerHTML = '<i class="bi bi-trash"></i> حذف الصورة';
+                    button.classList.remove('btn-secondary');
+                    button.classList.add('btn-danger');
+                } else {
+                    // Add to deletion list
+                    fireExtinguisherImagesToDelete.add(imgId);
+                    container.classList.add('marked-for-deletion');
+                    button.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> إلغاء الحذف';
+                    button.classList.remove('btn-danger');
+                    button.classList.add('btn-secondary');
+                }
+                
+                // Update hidden input
+                fireExtinguisherImagesToDeleteInput.value = Array.from(fireExtinguisherImagesToDelete).join(',');
+            }
+        });
+        
         // Form submission confirmation
         document.getElementById('equipmentForm').addEventListener('submit', function(e) {
             if (certificatesToDelete.size > 0) {
@@ -1023,6 +1255,14 @@
             if (imagesToDelete.size > 0) {
                 const imgCount = imagesToDelete.size;
                 if (!confirm(`هل أنت متأكد من حذف ${imgCount} صورة؟`)) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            
+            if (fireExtinguisherImagesToDelete.size > 0) {
+                const imgCount = fireExtinguisherImagesToDelete.size;
+                if (!confirm(`هل أنت متأكد من حذف ${imgCount} صورة طفاية حريق؟`)) {
                     e.preventDefault();
                     return false;
                 }

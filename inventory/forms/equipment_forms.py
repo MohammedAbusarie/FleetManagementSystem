@@ -2,7 +2,7 @@
 from django import forms
 from crispy_forms.helper import FormHelper
 from django.contrib.contenttypes.forms import generic_inlineformset_factory
-from ..models import Equipment, CalibrationCertificateImage, Maintenance, EquipmentImage, EquipmentLicenseRecord, EquipmentInspectionRecord
+from ..models import Equipment, CalibrationCertificateImage, Maintenance, EquipmentImage, EquipmentLicenseRecord, EquipmentInspectionRecord, FireExtinguisherInspectionRecord, FireExtinguisherImage
 from .base import Select2Widget
 from .generic_forms import MaintenanceForm
 
@@ -71,6 +71,26 @@ class EquipmentInspectionRecordForm(forms.ModelForm):
         }
 
 
+class FireExtinguisherInspectionRecordForm(forms.ModelForm):
+    """Form for Fire Extinguisher Inspection Records"""
+    
+    class Meta:
+        model = FireExtinguisherInspectionRecord
+        fields = ['inspection_date', 'expiry_date']
+        widgets = {
+            'inspection_date': forms.DateInput(attrs={'type': 'date'}),
+            'expiry_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+
+class FireExtinguisherImageForm(forms.ModelForm):
+    """Form for Fire Extinguisher Images"""
+    
+    class Meta:
+        model = FireExtinguisherImage
+        fields = ['image']
+
+
 # Equipment Maintenance Formset
 EquipmentMaintenanceFormSet = generic_inlineformset_factory(
     Maintenance,
@@ -100,5 +120,16 @@ EquipmentInspectionRecordFormSet = forms.inlineformset_factory(
     extra=1,
     can_delete=True,
     min_num=1,  # At least one inspection record is required
+    validate_min=True
+)
+
+# Fire Extinguisher Inspection Records Formset
+FireExtinguisherInspectionRecordFormSet = forms.inlineformset_factory(
+    Equipment,
+    FireExtinguisherInspectionRecord,
+    form=FireExtinguisherInspectionRecordForm,
+    extra=1,
+    can_delete=True,
+    min_num=1,  # At least one fire extinguisher record is required
     validate_min=True
 )

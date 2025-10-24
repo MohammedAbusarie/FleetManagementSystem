@@ -4,7 +4,8 @@ from .models import (
     FunctionalLocation, Room, Location, Sector, NotificationRecipient,
     ContractType, Activity, Region, Car, Equipment, CalibrationCertificateImage,
     Maintenance, CarImage, EquipmentImage, CarLicenseRecord, CarInspectionRecord,
-    EquipmentLicenseRecord, EquipmentInspectionRecord
+    EquipmentLicenseRecord, EquipmentInspectionRecord, FireExtinguisherInspectionRecord,
+    FireExtinguisherImage
 )
 
 
@@ -229,3 +230,24 @@ class EquipmentInspectionRecordAdmin(admin.ModelAdmin):
             'fields': ('start_date', 'end_date')
         }),
     )
+
+
+@admin.register(FireExtinguisherInspectionRecord)
+class FireExtinguisherInspectionRecordAdmin(admin.ModelAdmin):
+    list_display = ['equipment', 'inspection_date', 'expiry_date', 'created_at']
+    list_filter = ['inspection_date', 'expiry_date', 'created_at']
+    search_fields = ['equipment__door_no', 'equipment__plate_no']
+    fieldsets = (
+        ('Equipment Information', {
+            'fields': ('equipment',)
+        }),
+        ('Fire Extinguisher Details', {
+            'fields': ('inspection_date', 'expiry_date')
+        }),
+    )
+
+
+@admin.register(FireExtinguisherImage)
+class FireExtinguisherImageAdmin(admin.ModelAdmin):
+    list_display = ['equipment', 'uploaded_at']
+    list_filter = ['equipment', 'uploaded_at']

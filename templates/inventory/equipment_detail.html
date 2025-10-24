@@ -312,6 +312,64 @@
     </div>
     {% endif %}
 
+    <!-- Fire Extinguisher Records -->
+    {% if fire_extinguisher_records %}
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <i class="bi bi-fire text-danger"></i> سجلات فحص طفاية الحريق
+        </div>
+        <div class="detail-card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>تاريخ الفحص الدوري</th>
+                            <th>تاريخ انتهاء طفاية الحريق</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>تاريخ آخر تحديث</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fire_extinguisher in fire_extinguisher_records %}
+                        <tr>
+                            <td>{{ fire_extinguisher.inspection_date|date:"Y-m-d" }}</td>
+                            <td>{{ fire_extinguisher.expiry_date|date:"Y-m-d" }}</td>
+                            <td>{{ fire_extinguisher.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ fire_extinguisher.updated_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Fire Extinguisher Images -->
+    {% if equipment.fire_extinguisher_images.all %}
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <i class="bi bi-fire text-danger"></i> صور طفاية الحريق
+        </div>
+        <div class="detail-card-body">
+            <div class="row">
+                {% for img in equipment.fire_extinguisher_images.all %}
+                <div class="col-md-4 mb-3">
+                    <div class="equipment-image-container">
+                        <img src="{{ img.image|secure_media_url }}" alt="طفاية حريق {{ equipment.door_no }}" class="equipment-image">
+                        <div class="mt-2">
+                            <a href="{{ img.image|secure_media_url }}" download="{{ equipment.door_no }}_fire_extinguisher_{{ forloop.counter }}.jpg" class="btn btn-sm btn-info">
+                                <i class="bi bi-download"></i> تحميل الصورة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Calibration Certificates -->
     {% if calibration_certificates %}
     <div class="detail-card">

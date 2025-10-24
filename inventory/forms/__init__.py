@@ -7,6 +7,7 @@ from .equipment_forms import (
     EquipmentMaintenanceFormSet,
     EquipmentLicenseRecordFormSet,
     EquipmentInspectionRecordFormSet,
+    FireExtinguisherInspectionRecordFormSet,
 )
 from .generic_forms import GenericDDLForm, EquipmentModelForm, SearchForm, MaintenanceForm
 
@@ -21,6 +22,7 @@ __all__ = [
     'EquipmentMaintenanceFormSet',
     'EquipmentLicenseRecordFormSet',
     'EquipmentInspectionRecordFormSet',
+    'FireExtinguisherInspectionRecordFormSet',
     'GenericDDLForm',
     'EquipmentModelForm',
     'SearchForm',

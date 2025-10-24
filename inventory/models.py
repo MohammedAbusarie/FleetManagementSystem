@@ -298,10 +298,31 @@ class Equipment(models.Model):
             return None
         delta = current_record.end_date - date.today()
         return delta.days
+    
+    @property
+    def current_fire_extinguisher_record(self):
+        """Get the current fire extinguisher record"""
+        return self.fire_extinguisher_records.first()
+    
+    @property
+    def is_fire_extinguisher_expired(self):
+        """Check if fire extinguisher is expired"""
+        current_record = self.current_fire_extinguisher_record
+        if not current_record or not current_record.expiry_date:
+            return True
+        return current_record.expiry_date < date.today()
+    
+    @property
+    def days_until_fire_extinguisher_expiry(self):
+        """Days until fire extinguisher expires"""
+        current_record = self.current_fire_extinguisher_record
+        if not current_record or not current_record.expiry_date:
+            return None
+        delta = current_record.expiry_date - date.today()
+        return delta.days
 
 
 class CalibrationCertificateImage(models.Model):
-    """Model to store multiple calibration certificate files (images and PDFs) for equipment"""
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='calibration_certificates', verbose_name="المعدة")
     image = models.FileField(upload_to='calibration_certificates/', verbose_name="شهادة المعايرة")
     uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الرفع")
@@ -446,6 +467,40 @@ class EquipmentInspectionRecord(models.Model):
     
     def __str__(self):
         return f"Inspection for {self.equipment.door_no} ({self.start_date} - {self.end_date})"
+
+
+class FireExtinguisherInspectionRecord(models.Model):
+    """Fire Extinguisher Inspection Record model - سجل فحص طفاية الحريق"""
+    
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='fire_extinguisher_records', verbose_name="المعدة")
+    inspection_date = models.DateField(verbose_name="تاريخ الفحص الدوري لطفاية الحريق")
+    expiry_date = models.DateField(verbose_name="تاريخ انتهاء طفاية الحريق")
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الإنشاء")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاريخ التحديث")
+    
+    class Meta:
+        verbose_name = "سجل فحص طفاية حريق"
+        verbose_name_plural = "سجلات فحص طفايات الحريق"
+        ordering = ['-inspection_date']
+    
+    def __str__(self):
+        return f"Fire Extinguisher Inspection for {self.equipment.door_no} ({self.inspection_date} - {self.expiry_date})"
+
+
+class FireExtinguisherImage(models.Model):
+    """Model to store multiple fire extinguisher images"""
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='fire_extinguisher_images', verbose_name="المعدة")
+    image = models.ImageField(upload_to='fire_extinguishers/', verbose_name="صورة طفاية الحريق")
+    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الرفع")
+    
+    class Meta:
+        verbose_name = "صورة طفاية حريق"
+        verbose_name_plural = "صور طفايات الحريق"
+    
+    def __str__(self):
+        return f"Fire Extinguisher Image for {self.equipment.door_no}"
 
 
 class Maintenance(models.Model):
