@@ -38,7 +38,7 @@ def setup_rbac_system(apps, schema_editor):
     
     for user in all_users:
         # Check if user already has a profile
-        if not UserProfile.objects.filter(user=user).exists():
+        if not UserProfile.objects.filter(user_id=user.id).exists():
             # Determine user type based on existing system
             if user.is_superuser:
                 user_type = 'super_admin'
@@ -52,7 +52,7 @@ def setup_rbac_system(apps, schema_editor):
             
             # Create user profile
             UserProfile.objects.create(
-                user=user,
+                user_id=user.id,
                 user_type=user_type,
                 is_active=user.is_active,
                 created_at=user.date_joined

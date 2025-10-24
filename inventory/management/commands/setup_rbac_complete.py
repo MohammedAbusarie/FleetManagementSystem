@@ -67,7 +67,7 @@ class Command(BaseCommand):
                 self.stdout.write('Step 1: Running database migration...')
                 call_command('migrate', 'inventory', verbosity=1)
                 self.stdout.write(
-                    self.style.SUCCESS('✓ Database migration completed')
+                    self.style.SUCCESS('Database migration completed')
                 )
             else:
                 self.stdout.write('Step 1: Skipping database migration')
@@ -77,7 +77,7 @@ class Command(BaseCommand):
                 self.stdout.write('Step 2: Setting up default permissions...')
                 call_command('setup_rbac_permissions', verbosity=1)
                 self.stdout.write(
-                    self.style.SUCCESS('✓ Default permissions setup completed')
+                    self.style.SUCCESS('Default permissions setup completed')
                 )
             else:
                 self.stdout.write('Step 2: Skipping permission setup')
@@ -87,7 +87,7 @@ class Command(BaseCommand):
                 self.stdout.write('Step 3: Migrating existing users...')
                 call_command('migrate_users_to_rbac', verbosity=1)
                 self.stdout.write(
-                    self.style.SUCCESS('✓ User migration completed')
+                    self.style.SUCCESS('User migration completed')
                 )
             else:
                 self.stdout.write('Step 3: Skipping user migration')
@@ -103,7 +103,7 @@ class Command(BaseCommand):
                     verbosity=1
                 )
                 self.stdout.write(
-                    self.style.SUCCESS('✓ Super admin user created')
+                    self.style.SUCCESS('Super admin user created')
                 )
             else:
                 self.stdout.write('Step 4: Skipping super admin creation')

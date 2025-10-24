@@ -26,7 +26,7 @@ from inventory.error_handlers import (
 )
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('django-admin/', admin.site.urls),
     path('', include('inventory.urls')),
 ]
 
