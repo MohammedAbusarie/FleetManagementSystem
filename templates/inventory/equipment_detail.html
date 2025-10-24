@@ -90,6 +90,27 @@
         margin-bottom: 10px;
     }
     
+    .pdf-preview, .file-preview {
+        text-align: center;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .pdf-filename, .file-filename {
+        font-size: 0.8em;
+        color: #6c757d;
+        margin-top: 10px;
+        word-break: break-all;
+        max-width: 100%;
+    }
+    
     .back-button {
         margin-bottom: 20px;
     }
@@ -301,11 +322,28 @@
             <div class="certificate-gallery">
                 {% for certificate in calibration_certificates %}
                 <div class="certificate-item">
-                    <img src="{{ certificate.image|secure_media_url }}" alt="شهادة معايرة {{ forloop.counter }}" class="certificate-image">
+                    {% if certificate.is_image %}
+                        <img src="{{ certificate.image|secure_media_url }}" alt="شهادة معايرة {{ forloop.counter }}" class="certificate-image">
+                    {% elif certificate.is_pdf %}
+                        <div class="pdf-preview">
+                            <i class="bi bi-file-pdf" style="font-size: 4rem; color: #dc3545;"></i>
+                            <div class="pdf-filename">{{ certificate.image.name|basename }}</div>
+                        </div>
+                    {% else %}
+                        <div class="file-preview">
+                            <i class="bi bi-file-earmark" style="font-size: 4rem; color: #6c757d;"></i>
+                            <div class="file-filename">{{ certificate.image.name|basename }}</div>
+                        </div>
+                    {% endif %}
                     <div>
-                        <a href="{{ certificate.image|secure_media_url }}" download="{{ equipment.door_no }}_certificate_{{ forloop.counter }}.jpg" class="btn btn-sm btn-secondary">
+                        <a href="{{ certificate.image|secure_media_url }}" download="{{ equipment.door_no }}_certificate_{{ forloop.counter }}{% if certificate.is_pdf %}.pdf{% else %}.jpg{% endif %}" class="btn btn-sm btn-secondary">
                             <i class="bi bi-download"></i> تحميل الشهادة
                         </a>
+                        {% if certificate.is_pdf %}
+                            <a href="{{ certificate.image|secure_media_url }}" target="_blank" class="btn btn-sm btn-primary">
+                                <i class="bi bi-eye"></i> عرض PDF
+                            </a>
+                        {% endif %}
                     </div>
                     <small class="text-muted">{{ certificate.uploaded_at|date:"Y-m-d H:i" }}</small>
                 </div>

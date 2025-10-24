@@ -301,9 +301,9 @@ class Equipment(models.Model):
 
 
 class CalibrationCertificateImage(models.Model):
-    """Model to store multiple calibration certificate images for equipment"""
+    """Model to store multiple calibration certificate files (images and PDFs) for equipment"""
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='calibration_certificates', verbose_name="المعدة")
-    image = models.ImageField(upload_to='calibration_certificates/', verbose_name="شهادة المعايرة")
+    image = models.FileField(upload_to='calibration_certificates/', verbose_name="شهادة المعايرة")
     uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الرفع")
     
     class Meta:
@@ -312,6 +312,32 @@ class CalibrationCertificateImage(models.Model):
     
     def __str__(self):
         return f"Certificate for {self.equipment.door_no}"
+    
+    @property
+    def is_image(self):
+        """Check if the uploaded file is an image"""
+        if not self.image:
+            return False
+        file_extension = self.image.name.lower().split('.')[-1] if '.' in self.image.name else ''
+        return file_extension in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+    
+    @property
+    def is_pdf(self):
+        """Check if the uploaded file is a PDF"""
+        if not self.image:
+            return False
+        file_extension = self.image.name.lower().split('.')[-1] if '.' in self.image.name else ''
+        return file_extension == 'pdf'
+    
+    @property
+    def file_type(self):
+        """Return the file type for display purposes"""
+        if self.is_image:
+            return 'image'
+        elif self.is_pdf:
+            return 'pdf'
+        else:
+            return 'unknown'
 
 
 class CarImage(models.Model):

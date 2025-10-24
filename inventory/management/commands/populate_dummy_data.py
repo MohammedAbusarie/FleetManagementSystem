@@ -368,7 +368,7 @@ class Command(BaseCommand):
                 # Add calibration certificates
                 certificates_dir = 'dummy_media/certificates'
                 if os.path.exists(certificates_dir):
-                    cert_files = [f for f in os.listdir(certificates_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+                    cert_files = [f for f in os.listdir(certificates_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.pdf'))]
                     # Add 1-3 random certificates
                     num_certs = random.randint(1, 3)
                     selected_certs = random.sample(cert_files, min(num_certs, len(cert_files)))

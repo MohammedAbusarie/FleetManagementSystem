@@ -292,9 +292,9 @@
                 <input type="hidden" name="images_to_delete" id="images-to-delete" value="">
                 
                 <div class="mb-3">
-                    <label for="calibration_certificates" class="form-label">شهادات المعايرة (صور متعددة)</label>
-                    <input type="file" class="form-control" id="calibration_certificates" name="calibration_certificates" multiple accept="image/*">
-                    <div class="form-text">يمكنك اختيار صور متعددة لشهادات المعايرة.</div>
+                    <label for="calibration_certificates" class="form-label">شهادات المعايرة (صور وملفات PDF)</label>
+                    <input type="file" class="form-control" id="calibration_certificates" name="calibration_certificates" multiple accept="image/*,.pdf">
+                    <div class="form-text">يمكنك اختيار صور أو ملفات PDF متعددة لشهادات المعايرة.</div>
                 </div>
                 
                 {% if equipment.calibration_certificates.all %}
@@ -304,7 +304,19 @@
                         {% for cert in equipment.calibration_certificates.all %}
                         <div class="col-md-3 mb-2">
                             <div class="certificate-container position-relative">
-                                <img src="{{ cert.image|secure_media_url }}" class="img-thumbnail" alt="Certificate" id="cert-{{ cert.id }}">
+                                {% if cert.is_image %}
+                                    <img src="{{ cert.image|secure_media_url }}" class="img-thumbnail" alt="Certificate" id="cert-{{ cert.id }}">
+                                {% elif cert.is_pdf %}
+                                    <div class="pdf-thumbnail">
+                                        <i class="bi bi-file-pdf" style="font-size: 3rem; color: #dc3545;"></i>
+                                        <div class="pdf-filename-small">{{ cert.image.name|basename }}</div>
+                                    </div>
+                                {% else %}
+                                    <div class="file-thumbnail">
+                                        <i class="bi bi-file-earmark" style="font-size: 3rem; color: #6c757d;"></i>
+                                        <div class="file-filename-small">{{ cert.image.name|basename }}</div>
+                                    </div>
+                                {% endif %}
                                 <div class="mt-2 text-center">
                                     <button type="button" class="btn btn-sm btn-danger delete-certificate" data-cert-id="{{ cert.id }}" data-cert-name="{{ cert.image.name|basename }}">
                                         <i class="bi bi-trash"></i> حذف الشهادة
@@ -439,6 +451,35 @@
     .image-container.marked-for-deletion img {
         border-color: #dc3545;
         filter: grayscale(100%);
+    }
+    
+    .image-container img {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+    
+    .pdf-thumbnail, .file-thumbnail {
+        width: 100%;
+        height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        text-align: center;
+    }
+    
+    .pdf-filename-small, .file-filename-small {
+        font-size: 0.7em;
+        color: #6c757d;
+        margin-top: 5px;
+        word-break: break-all;
+        max-width: 100%;
+        padding: 0 5px;
     }
     
     .delete-image {
