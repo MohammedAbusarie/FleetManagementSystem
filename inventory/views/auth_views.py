@@ -29,18 +29,35 @@ def login_view(request):
             ip_address = get_client_ip(request)
             user_agent = get_user_agent(request)
             
-            # Check user permissions using helper function (backward compatible)
-            if is_admin_user(user):
-                login(request, user)
-                
-                # Log successful login
-                log_user_login(user, ip_address, user_agent, success=True)
-                
-                return redirect('dashboard')
-            else:
-                # Log failed login attempt
-                log_user_login(user, ip_address, user_agent, success=False)
-                messages.error(request, 'ليس لديك صلاحية للدخول إلى هذا النظام.')
+            # Check if user is active and has proper permissions
+            # All users with profiles should be able to login to main system
+            # Admin panel access is controlled separately
+            try:
+                profile = user.profile
+                if profile.is_active:
+                    login(request, user)
+                    
+                    # Log successful login
+                    log_user_login(user, ip_address, user_agent, success=True)
+                    
+                    return redirect('dashboard')
+                else:
+                    # User profile is inactive
+                    log_user_login(user, ip_address, user_agent, success=False)
+                    messages.error(request, 'حسابك غير نشط. يرجى التواصل مع المدير.')
+            except Exception:
+                # Fallback: check if user is in Admin group (backward compatibility)
+                if user.groups.filter(name='Admin').exists() or user.is_superuser:
+                    login(request, user)
+                    
+                    # Log successful login
+                    log_user_login(user, ip_address, user_agent, success=True)
+                    
+                    return redirect('dashboard')
+                else:
+                    # Log failed login attempt
+                    log_user_login(user, ip_address, user_agent, success=False)
+                    messages.error(request, 'ليس لديك صلاحية للدخول إلى هذا النظام.')
         else:
             # Log failed login attempt (invalid credentials)
             if form.errors:

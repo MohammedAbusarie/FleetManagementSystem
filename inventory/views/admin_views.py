@@ -17,7 +17,7 @@ from ..forms.rbac_forms import UserCreateForm, UserUpdateForm, PermissionAssignm
 from ..models import UserProfile
 
 
-@super_admin_required
+@admin_required
 def admin_panel_view(request):
     """Main admin panel dashboard"""
     try:
