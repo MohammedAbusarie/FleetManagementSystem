@@ -155,6 +155,75 @@ class PermissionService(BaseService):
         ).select_related('module_permission')
 
 
+class AuthenticationService(BaseService):
+    """Service for authentication operations"""
+    
+    def authenticate_user(self, username, password):
+        """Authenticate user with enhanced logging"""
+        from django.contrib.auth import authenticate
+        
+        user = authenticate(username=username, password=password)
+        return user
+    
+    def login_user(self, request, user):
+        """Login user with logging"""
+        from django.contrib.auth import login
+        
+        login(request, user)
+        
+        # Log successful login
+        ip_address = self._get_client_ip(request)
+        user_agent = self._get_user_agent(request)
+        
+        return LoginLog.objects.create(
+            user=user,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            success=True
+        )
+    
+    def logout_user(self, request):
+        """Logout user with logging"""
+        from django.contrib.auth import logout
+        
+        user = request.user
+        ip_address = self._get_client_ip(request)
+        
+        # Log logout
+        self._log_logout(user, ip_address)
+        
+        logout(request)
+    
+    def _get_client_ip(self, request):
+        """Get client IP address from request"""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+    
+    def _get_user_agent(self, request):
+        """Get user agent from request"""
+        return request.META.get('HTTP_USER_AGENT', '')
+    
+    def _log_logout(self, user, ip_address):
+        """Log user logout"""
+        try:
+            login_log = LoginLog.objects.filter(
+                user=user,
+                logout_time__isnull=True
+            ).order_by('-login_time').first()
+
+            if login_log:
+                login_log.logout_time = timezone.now()
+                login_log.save()
+                return login_log
+        except Exception:
+            pass
+        return None
+
+
 class LoggingService(BaseService):
     """Service for logging operations"""
     model = ActionLog
