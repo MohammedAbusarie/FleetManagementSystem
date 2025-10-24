@@ -5,6 +5,7 @@ A comprehensive fleet and equipment management system built with Django, featuri
 ## 📚 Documentation
 
 - **[PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md)** - Complete architectural reference for developers and AI agents
+- **[ADMIN_PANEL_USER_GUIDE.md](ADMIN_PANEL_USER_GUIDE.md)** - User guide for the admin panel (Arabic)
 - **[AI_AGENT_RULES.md](AI_AGENT_RULES.md)** - Guidelines for AI agents working on this project
 - **[QUICKSTART.md](QUICKSTART.md)** - Quick setup guide
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - Production deployment instructions
@@ -20,6 +21,23 @@ A comprehensive fleet and equipment management system built with Django, featuri
 - **Image Upload**: Support for vehicle images, equipment images, and multiple calibration certificates
 - **Search & Filter**: Advanced search functionality across all entities
 - **Bilingual Support**: Full Arabic and English language support
+
+### Role-Based Access Control (RBAC)
+- **Super Admin**: Full system access, can manage all users and permissions
+- **Admin**: Can access admin panel, manage normal users, view system logs
+- **Normal User**: Limited access based on assigned permissions
+- **Legacy Support**: Existing Admin group users continue to work unchanged
+- **Permission System**: Granular permissions for each module (Create, Read, Update, Delete)
+- **User Management**: Create, update, and manage user accounts and permissions
+
+### Admin Panel
+- **User Management**: Complete user lifecycle management with Arabic interface
+- **Permission Assignment**: Grant/revoke module-specific permissions to users
+- **System Monitoring**: Track login/logout activities and system operations
+- **Database Storage Monitor**: Real-time database usage monitoring with visual gauge
+- **Audit Trail**: Complete history of system changes and user activities
+- **System Logs**: Comprehensive logging of all system activities
+- **User Statistics**: Detailed statistics on user activity and system usage
 
 ### Database Schema
 

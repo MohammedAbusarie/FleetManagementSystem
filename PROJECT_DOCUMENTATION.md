@@ -36,6 +36,13 @@ Car                    # Fleet vehicles with Arabic/English plates
 Equipment             # Equipment with calibration certificates
 Maintenance           # Generic maintenance records (polymorphic)
 
+# RBAC Models
+UserProfile           # Extended user information with user types
+ModulePermission      # Available permissions for each module
+UserPermission        # User-specific permission assignments
+LoginLog             # User login/logout tracking
+ActionLog            # System action logging
+
 # DDL Tables (BaseDDLModel inheritance)
 AdministrativeUnit    # الإدارة
 Department           # الأقسام
@@ -60,6 +67,10 @@ CalibrationCertificateImage # شهادات المعايرة
 - **Equipment** → ForeignKeys to Manufacturer, Model, Location, Sector
 - **Maintenance** → GenericForeignKey to Car OR Equipment
 - **CalibrationCertificateImage** → ForeignKey to Equipment
+- **UserProfile** → OneToOne to User (optional, with fallback)
+- **UserPermission** → ForeignKey to User + ModulePermission
+- **LoginLog** → ForeignKey to User
+- **ActionLog** → ForeignKey to User
 
 ## 🔧 Business Logic Patterns
 
@@ -85,6 +96,34 @@ get_expiring_equipment(status, days) # Filter by inspection expiry
 # MaintenanceService (Maintenance Operations)
 get_maintenance_for_object(obj)   # Get all maintenance for any object
 create_maintenance(obj, **kwargs) # Create maintenance record
+
+# RBAC Services
+UserProfileService:
+get_user_profile(user)            # Get or create user profile
+get_user_type(user)              # Get user type with fallback
+is_super_admin(user)             # Check super admin status
+is_admin_user(user)              # Check admin status
+
+PermissionService:
+get_module_permissions(module)    # Get permissions for module
+get_user_permissions(user)       # Get user's permissions
+has_permission(user, module, action) # Check specific permission
+grant_permission(user, module, action) # Grant permission
+revoke_permission(user, module, action) # Revoke permission
+
+LoggingService:
+log_login(user, request, success) # Log login attempt
+log_logout(user, request)         # Log logout
+log_action(user, action, module, obj_id, desc) # Log system action
+get_user_login_history(user)     # Get login history
+get_user_action_history(user)    # Get action history
+
+AdminService:
+create_user(username, email, user_type) # Create new user
+update_user(user, **kwargs)      # Update user and profile
+soft_delete_user(user)          # Soft delete user
+assign_permissions(user, permissions) # Assign permissions
+get_user_statistics()           # Get user statistics
 ```
 
 ### Custom Model Managers
@@ -98,6 +137,33 @@ expiring_inspections(days) # Get expiring inspections
 with_related()           # Prefetch all related objects
 by_status(status)       # Filter by status
 expiring_inspections(days) # Get expiring inspections
+
+# RBAC Managers
+UserProfileManager:
+active_users()          # Get active users only
+by_user_type(type)     # Filter by user type
+with_permissions()     # Prefetch user permissions
+
+ModulePermissionManager:
+by_module(module)       # Get permissions for specific module
+by_permission_type(type) # Get permissions by type
+
+UserPermissionManager:
+granted_permissions()   # Get only granted permissions
+revoked_permissions()   # Get only revoked permissions
+by_user(user)          # Get permissions for specific user
+
+LoginLogManager:
+successful_logins()     # Get successful login attempts
+failed_logins()        # Get failed login attempts
+by_user(user)          # Get login history for user
+recent_logins(days)    # Get recent login attempts
+
+ActionLogManager:
+by_user(user)          # Get action history for user
+by_module(module)      # Get actions for specific module
+by_action_type(type)   # Get actions by type
+recent_actions(days)   # Get recent actions
 ```
 
 ## 🎨 UI & Translation System
@@ -118,22 +184,68 @@ templates/
     ├── car_*.html             # Vehicle management
     ├── equipment_*.html       # Equipment management
     ├── generic_*.html          # DDL table management
+    ├── admin/                 # Admin panel templates
+    │   ├── admin_panel.html   # Main admin dashboard
+    │   ├── user_management.html # User management interface
+    │   ├── system_logs.html   # System logs display
+    │   ├── permission_management.html # Permission assignment
+    │   └── database_storage.html # Database storage monitor
     └── errors/                # Error pages
 ```
 
 ## 🔐 Security & Authentication
 
+### Role-Based Access Control (RBAC)
+- **Super Admin**: Full system access, can manage all users and permissions
+- **Admin**: Can access admin panel, manage normal users, view system logs
+- **Normal User**: Limited access based on assigned permissions
+- **Legacy Support**: Existing Admin group users continue to work unchanged
+
+### User Types & Permissions
+```python
+# User Types Hierarchy
+Super Admin (is_superuser=True)
+├── Can create, disable, and delete both Admins and Normal Users
+├── Can assign or edit CRUD permissions for each user
+├── Fully controls which user can Create/Read/Update/Delete any module
+└── Access to all admin panel features
+
+Admin User (user_type='admin')
+├── Can access the admin panel
+├── Can view system logs and database gauge
+├── Can create and manage only Normal Users
+├── Cannot create or manage Admins
+└── Operates only within permissions granted by Super Admin
+
+Normal User (user_type='normal')
+├── Cannot access admin panel
+└── Operates only within assigned permissions
+```
+
+### Permission System
+```python
+# Module Permissions Structure
+MODULE_PERMISSIONS = {
+    'cars': ['create', 'read', 'update', 'delete'],
+    'equipment': ['create', 'read', 'update', 'delete'],
+    'generic_tables': ['create', 'read', 'update', 'delete']
+}
+```
+
 ### Access Control
-- **Admin Required**: All views require admin group membership
+- **Admin Panel**: Only Super Admin and Admin users can access
+- **User Management**: Super Admin can manage all users, Admin can manage Normal Users only
+- **Permission Assignment**: Super Admin and Admin can assign permissions
+- **System Logs**: Super Admin and Admin can view system activity
 - **Secure Media**: Files served through authentication check
 - **CSRF Protection**: Enabled on all forms
 - **SQL Injection**: Protected by Django ORM
 
 ### Authentication Flow
-1. **Login**: Arabic form with admin group check
-2. **Session**: HTTP-only cookies
-3. **Authorization**: `@user_passes_test(is_admin)` decorator
-4. **Logout**: Redirect to login page
+1. **Login**: Arabic form with user type and permission check
+2. **Session**: HTTP-only cookies with user profile
+3. **Authorization**: `@super_admin_required` or `@permission_required` decorators
+4. **Logout**: Redirect to login page with activity logging
 
 ## 📁 File Organization Patterns
 
@@ -147,19 +259,25 @@ inventory/
 │   ├── base.py           # Base service class
 │   ├── car_service.py    # Vehicle operations
 │   ├── equipment_service.py # Equipment operations
-│   └── maintenance_service.py # Maintenance operations
+│   ├── maintenance_service.py # Maintenance operations
+│   ├── rbac_service.py   # RBAC operations
+│   ├── admin_service.py  # Admin panel operations
+│   ├── logging_service.py # System logging operations
+│   └── permission_service.py # Permission management operations
 ├── views/                 # Modular view structure
 │   ├── auth_views.py     # Authentication
 │   ├── dashboard_views.py # Dashboard
 │   ├── car_views.py      # Vehicle CRUD
 │   ├── equipment_views.py # Equipment CRUD
 │   ├── generic_table_views.py # DDL management
+│   ├── admin_views.py    # Admin panel views
 │   └── media_views.py    # File serving
 ├── forms/                 # Form organization
 │   ├── base.py           # Base widgets
 │   ├── car_forms.py      # Vehicle forms
 │   ├── equipment_forms.py # Equipment forms
-│   └── generic_forms.py  # DDL forms
+│   ├── generic_forms.py  # DDL forms
+│   └── rbac_forms.py     # RBAC forms
 ├── utils/                 # Utility functions
 │   ├── translations.py   # Arabic translations
 │   ├── decorators.py     # Custom decorators
@@ -168,8 +286,41 @@ inventory/
 └── tests/                # Test coverage
     ├── test_models.py    # Model tests
     ├── test_services.py  # Service tests
-    └── test_views.py     # View tests
+    ├── test_views.py     # View tests
+    ├── test_admin_views.py # Admin panel tests
+    ├── test_permissions.py # Permission system tests
+    └── test_rbac_services.py # RBAC service tests
 ```
+
+## 🎛️ Admin Panel Features
+
+### User Management
+- **User Creation**: Create new users with specific user types
+- **User Updates**: Modify user information and permissions
+- **User Deactivation**: Soft delete users while preserving audit trail
+- **Permission Assignment**: Grant/revoke module-specific permissions
+- **User Search**: Search users by username, email, or user type
+- **User Statistics**: View user counts by type and activity
+
+### System Monitoring
+- **Login Logs**: Track user login/logout activities
+- **Action Logs**: Monitor system operations and changes
+- **Database Storage**: Monitor database size and usage
+- **Performance Metrics**: Track system performance indicators
+- **Audit Trail**: Complete history of system changes
+
+### Permission Management
+- **Module Permissions**: Define available permissions for each module
+- **User Permissions**: Assign specific permissions to users
+- **Permission Inheritance**: Super Admin and Admin inherit all permissions
+- **Permission Validation**: Ensure proper permission assignment
+- **Permission Statistics**: View permission distribution and usage
+
+### Admin Panel Access Control
+- **Super Admin**: Full access to all admin panel features
+- **Admin**: Limited access to user management and system logs
+- **Normal User**: No access to admin panel
+- **Legacy Support**: Existing Admin group users maintain access
 
 ## 🚀 Development Patterns
 
@@ -294,10 +445,11 @@ TIME_ZONE=Asia/Riyadh
 
 ### Common Imports
 ```python
-from inventory.services import CarService, EquipmentService
-from inventory.models import Car, Equipment, Maintenance
+from inventory.services import CarService, EquipmentService, AdminService, PermissionService, LoggingService
+from inventory.models import Car, Equipment, Maintenance, UserProfile, ModulePermission, UserPermission
 from inventory.utils.translations import get_model_arabic_name
-from inventory.utils.decorators import admin_required
+from inventory.utils.decorators import admin_required, super_admin_required, permission_required
+from inventory.utils.helpers import is_super_admin, is_admin_user, has_permission
 ```
 
 ### Common Patterns
@@ -305,11 +457,27 @@ from inventory.utils.decorators import admin_required
 # Service initialization
 car_service = CarService()
 equipment_service = EquipmentService()
+admin_service = AdminService()
+permission_service = PermissionService()
+logging_service = LoggingService()
 
 # View decorators
 @login_required
 @user_passes_test(is_admin)
 def my_view(request):
+    pass
+
+@super_admin_required
+def admin_only_view(request):
+    pass
+
+@permission_required('cars', 'create')
+def create_car_view(request):
+    pass
+
+# Permission checking
+if has_permission(request.user, 'cars', 'create'):
+    # User can create cars
     pass
 
 # Arabic translations
