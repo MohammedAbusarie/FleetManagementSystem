@@ -10,7 +10,6 @@ equipment_service = EquipmentService()
 
 
 @login_required
-@user_passes_test(is_admin)
 def dashboard_view(request):
     """Dashboard view with expiry filtering"""
     expiry_status = request.GET.get('expiry_status', 'about_to_expire')

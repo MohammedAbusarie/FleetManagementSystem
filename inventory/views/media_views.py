@@ -9,13 +9,12 @@ from .auth_views import is_admin
 
 
 @login_required
-@user_passes_test(is_admin)
 @never_cache
 @require_http_methods(["GET"])
 def secure_media_view(request, path):
     """
     Secure media file serving view that requires authentication.
-    Only authenticated admin users can access uploaded images.
+    All authenticated users can access uploaded images.
     """
     # Construct the full file path
     file_path = os.path.join(settings.MEDIA_ROOT, path)
