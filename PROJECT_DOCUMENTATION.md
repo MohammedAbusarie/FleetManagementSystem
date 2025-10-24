@@ -43,6 +43,21 @@ UserPermission        # User-specific permission assignments
 LoginLog             # User login/logout tracking
 ActionLog            # System action logging
 
+# Historical Records System
+CarLicenseRecord      # سجلات رخص السيارات
+CarInspectionRecord   # سجلات فحص السيارات السنوي
+EquipmentLicenseRecord # سجلات رخص المعدات
+EquipmentInspectionRecord # سجلات فحص المعدات السنوي
+FireExtinguisherInspectionRecord # سجلات فحص طفايات الحريق
+
+# Multi-Image System
+CarImage              # صور السيارات المتعددة
+EquipmentImage        # صور المعدات المتعددة
+FireExtinguisherImage # صور طفايات الحريق
+
+# Certificate Management
+CalibrationCertificateImage # شهادات المعايرة للمعدات
+
 # DDL Tables (BaseDDLModel inheritance)
 AdministrativeUnit    # الإدارة
 Department           # الأقسام
@@ -59,18 +74,148 @@ NotificationRecipient # مستلمي الإشعارات
 ContractType         # أنواع العقود
 Activity             # الأنشطة
 Region               # المناطق
-CalibrationCertificateImage # شهادات المعايرة
 ```
 
 ### Key Relationships
 - **Car** → Many ForeignKeys to DDL tables + ManyToMany to Regions
 - **Equipment** → ForeignKeys to Manufacturer, Model, Location, Sector
 - **Maintenance** → GenericForeignKey to Car OR Equipment
-- **CalibrationCertificateImage** → ForeignKey to Equipment
+- **Historical Records** → ForeignKey to Car OR Equipment (one-to-many)
+- **Multi-Image Models** → ForeignKey to Car OR Equipment (one-to-many)
+- **CalibrationCertificateImage** → ForeignKey to Equipment (one-to-many)
 - **UserProfile** → OneToOne to User (optional, with fallback)
 - **UserPermission** → ForeignKey to User + ModulePermission
 - **LoginLog** → ForeignKey to User
 - **ActionLog** → ForeignKey to User
+
+## 📋 Historical Records System
+
+### Overview
+The system maintains historical records for licenses and inspections, allowing tracking of expiration dates and generating alerts.
+
+### Car Historical Records
+```python
+# Car License Records
+CarLicenseRecord:
+- car: ForeignKey to Car
+- start_date: Date when license becomes valid
+- end_date: Date when license expires
+- created_at/updated_at: Timestamps
+
+# Car Inspection Records  
+CarInspectionRecord:
+- car: ForeignKey to Car
+- start_date: Date when inspection is valid
+- end_date: Date when inspection expires
+- created_at/updated_at: Timestamps
+```
+
+### Equipment Historical Records
+```python
+# Equipment License Records
+EquipmentLicenseRecord:
+- equipment: ForeignKey to Equipment
+- start_date: Date when license becomes valid
+- end_date: Date when license expires
+- created_at/updated_at: Timestamps
+
+# Equipment Inspection Records
+EquipmentInspectionRecord:
+- equipment: ForeignKey to Equipment
+- start_date: Date when inspection is valid
+- end_date: Date when inspection expires
+- created_at/updated_at: Timestamps
+
+# Fire Extinguisher Inspection Records
+FireExtinguisherInspectionRecord:
+- equipment: ForeignKey to Equipment
+- inspection_date: Date of fire extinguisher inspection
+- expiry_date: Date when fire extinguisher expires
+- created_at/updated_at: Timestamps
+```
+
+### Historical Record Properties
+```python
+# Car Properties
+car.current_license_record        # Get current license record
+car.current_inspection_record     # Get current inspection record
+car.is_inspection_expired         # Check if inspection is expired
+car.days_until_inspection_expiry  # Days until inspection expires
+
+# Equipment Properties
+equipment.current_license_record              # Get current license record
+equipment.current_inspection_record           # Get current inspection record
+equipment.current_fire_extinguisher_record     # Get current fire extinguisher record
+equipment.is_inspection_expired               # Check if inspection is expired
+equipment.is_fire_extinguisher_expired        # Check if fire extinguisher is expired
+equipment.days_until_inspection_expiry        # Days until inspection expires
+equipment.days_until_fire_extinguisher_expiry # Days until fire extinguisher expires
+```
+
+## 🖼️ Multi-Image System
+
+### Overview
+The system supports multiple images for cars and equipment, replacing single image fields with dedicated image models.
+
+### Image Models
+```python
+# Car Images
+CarImage:
+- car: ForeignKey to Car
+- image: ImageField (uploaded to 'cars/')
+- uploaded_at: Timestamp
+
+# Equipment Images
+EquipmentImage:
+- equipment: ForeignKey to Equipment
+- image: ImageField (uploaded to 'equipment/')
+- uploaded_at: Timestamp
+
+# Fire Extinguisher Images
+FireExtinguisherImage:
+- equipment: ForeignKey to Equipment
+- image: ImageField (uploaded to 'fire_extinguishers/')
+- uploaded_at: Timestamp
+```
+
+### Image Access Patterns
+```python
+# Access multiple images
+car.car_images.all()                    # Get all car images
+equipment.equipment_images.all()        # Get all equipment images
+equipment.fire_extinguisher_images.all() # Get all fire extinguisher images
+
+# Legacy single image (still available)
+car.car_image                          # Single car image (deprecated)
+equipment.equipment_image               # Single equipment image (deprecated)
+```
+
+## 📜 Certificate Management System
+
+### Overview
+Equipment can have multiple calibration certificates stored as files (images or PDFs).
+
+### Certificate Model
+```python
+CalibrationCertificateImage:
+- equipment: ForeignKey to Equipment
+- image: FileField (uploaded to 'calibration_certificates/')
+- uploaded_at: Timestamp
+```
+
+### Certificate Properties
+```python
+certificate.is_image    # Check if file is an image
+certificate.is_pdf      # Check if file is a PDF
+certificate.file_type   # Return 'image', 'pdf', or 'unknown'
+```
+
+### Certificate Access Patterns
+```python
+# Access certificates
+equipment.calibration_certificates.all()  # Get all certificates
+certificate.equipment.door_no             # Get equipment door number
+```
 
 ## 🔧 Business Logic Patterns
 
@@ -87,11 +232,16 @@ paginate(queryset, page, per_page)
 get_cars_with_related()           # Prefetch all FKs
 get_cars_with_maintenance()       # Annotate with latest maintenance
 get_expiring_cars(status, days)   # Filter by inspection expiry
+get_cars_with_images()            # Prefetch car images
+get_cars_with_historical_records() # Prefetch license/inspection records
 
 # EquipmentService (Equipment Operations)
 get_equipment_with_related()      # Prefetch all FKs
 get_equipment_with_maintenance() # Annotate with latest maintenance
 get_expiring_equipment(status, days) # Filter by inspection expiry
+get_equipment_with_images()       # Prefetch equipment images
+get_equipment_with_certificates() # Prefetch calibration certificates
+get_equipment_with_historical_records() # Prefetch all historical records
 
 # MaintenanceService (Maintenance Operations)
 get_maintenance_for_object(obj)   # Get all maintenance for any object
@@ -132,11 +282,16 @@ get_user_statistics()           # Get user statistics
 with_related()           # Prefetch all related objects
 by_status(status)       # Filter by status
 expiring_inspections(days) # Get expiring inspections
+with_images()           # Prefetch car images
+with_historical_records() # Prefetch license/inspection records
 
 # EquipmentManager
 with_related()           # Prefetch all related objects
 by_status(status)       # Filter by status
 expiring_inspections(days) # Get expiring inspections
+with_images()           # Prefetch equipment images
+with_certificates()      # Prefetch calibration certificates
+with_historical_records() # Prefetch all historical records
 
 # RBAC Managers
 UserProfileManager:
@@ -379,15 +534,21 @@ cars = Car.objects.filter(
 - **Fleet No**: Unique identifier
 - **Plates**: Both English and Arabic required
 - **Location**: Description required
-- **Inspections**: Track start/end dates
+- **Historical Records**: License and inspection records with start/end dates
+- **Images**: Multiple images supported via CarImage model
 - **Regions**: Many-to-many relationship
+- **Expiry Tracking**: Automatic calculation of days until inspection expiry
 
 ### Equipment Management
 - **Door No**: Unique identifier
 - **Plate No**: Required
 - **Manufacturing Year**: 2000-2030 range
 - **Status**: Operational/New/Defective
-- **Certificates**: Multiple calibration certificates
+- **Historical Records**: License, inspection, and fire extinguisher records
+- **Images**: Multiple images supported via EquipmentImage model
+- **Certificates**: Multiple calibration certificates via CalibrationCertificateImage
+- **Fire Extinguisher**: Separate tracking with inspection and expiry dates
+- **Expiry Tracking**: Automatic calculation for all expiry dates
 
 ### Maintenance Tracking
 - **Generic**: Works with both Cars and Equipment
@@ -446,7 +607,14 @@ TIME_ZONE=Asia/Riyadh
 ### Common Imports
 ```python
 from inventory.services import CarService, EquipmentService, AdminService, PermissionService, LoggingService
-from inventory.models import Car, Equipment, Maintenance, UserProfile, ModulePermission, UserPermission
+from inventory.models import (
+    Car, Equipment, Maintenance, 
+    CarImage, EquipmentImage, FireExtinguisherImage,
+    CarLicenseRecord, CarInspectionRecord, 
+    EquipmentLicenseRecord, EquipmentInspectionRecord, FireExtinguisherInspectionRecord,
+    CalibrationCertificateImage,
+    UserProfile, ModulePermission, UserPermission
+)
 from inventory.utils.translations import get_model_arabic_name
 from inventory.utils.decorators import admin_required, super_admin_required, permission_required
 from inventory.utils.helpers import is_super_admin, is_admin_user, has_permission
@@ -482,6 +650,23 @@ if has_permission(request.user, 'cars', 'create'):
 
 # Arabic translations
 model_name = get_model_arabic_name('Car')
+
+# Working with Historical Records
+car.current_license_record        # Get current license
+car.current_inspection_record     # Get current inspection
+car.is_inspection_expired         # Check expiry status
+car.days_until_inspection_expiry  # Days until expiry
+
+# Working with Multiple Images
+car.car_images.all()              # Get all car images
+equipment.equipment_images.all()   # Get all equipment images
+equipment.fire_extinguisher_images.all() # Get fire extinguisher images
+
+# Working with Certificates
+equipment.calibration_certificates.all() # Get all certificates
+certificate.is_image              # Check if certificate is image
+certificate.is_pdf                # Check if certificate is PDF
+certificate.file_type             # Get file type
 ```
 
 ---

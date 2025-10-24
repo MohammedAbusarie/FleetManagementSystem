@@ -17,8 +17,11 @@ A comprehensive fleet and equipment management system built with Django, featuri
 - **Equipment Management**: Track and manage equipment with calibration certificates
 - **Generic Tables (DDL)**: Manage all dropdown list data including departments, manufacturers, models, locations, etc.
 - **Maintenance Tracking**: Record and track maintenance activities for both vehicles and equipment
+- **Historical Records System**: Track license and inspection records with automatic expiry alerts
+- **Multi-Image System**: Support for multiple images per vehicle and equipment
+- **Certificate Management**: Store and manage multiple calibration certificates per equipment
+- **Fire Extinguisher Tracking**: Separate tracking for fire extinguisher inspections and expiry
 - **Inspection Alerts**: Dashboard alerts for upcoming/expired inspections
-- **Image Upload**: Support for vehicle images, equipment images, and multiple calibration certificates
 - **Search & Filter**: Advanced search functionality across all entities
 - **Bilingual Support**: Full Arabic and English language support
 
@@ -58,10 +61,11 @@ A comprehensive fleet and equipment management system built with Django, featuri
 - Notification Recipient
 - Contract Type (Agencies, Management Purchase)
 - Activity
-- Vehicle Registration Start/End Dates
-- Annual Inspection Start/End Dates
-- Vehicle Image
+- Vehicle Image (legacy single image)
+- Multiple Car Images (new multi-image system)
 - Visited Regions (multiple regions)
+- License Records (historical tracking)
+- Inspection Records (historical tracking)
 
 #### Equipment Table
 - Door Number (required)
@@ -72,16 +76,41 @@ A comprehensive fleet and equipment management system built with Django, featuri
 - Sector
 - Plate Number (required)
 - Equipment Status (Operational, New, Defective) - 3 status colors
-- Calibration Certificates (multiple images)
-- Equipment Image
-- Equipment Registration Start/End Dates
-- Annual Inspection Start/End Dates
+- Equipment Image (legacy single image)
+- Multiple Equipment Images (new multi-image system)
+- Multiple Calibration Certificates (images or PDFs)
+- Fire Extinguisher Images (multiple images)
+- License Records (historical tracking)
+- Inspection Records (historical tracking)
+- Fire Extinguisher Inspection Records (historical tracking)
 
 #### Maintenance Table
 - Linked to both Cars and Equipment
 - Maintenance Date (nullable)
 - Recovery Date (nullable)
 - Maintenance Cost (nullable)
+
+### New Features (Latest Updates)
+
+#### Historical Records System
+- **License Tracking**: Automatic tracking of vehicle and equipment license expiry dates
+- **Inspection Tracking**: Monitor annual inspection expiry dates
+- **Fire Extinguisher Tracking**: Separate tracking for fire extinguisher inspections
+- **Expiry Alerts**: Dashboard alerts for upcoming expirations
+- **Automatic Calculations**: System automatically calculates days until expiry
+
+#### Multi-Image System
+- **Multiple Car Images**: Upload multiple photos per vehicle
+- **Multiple Equipment Images**: Upload multiple photos per equipment
+- **Fire Extinguisher Images**: Dedicated images for fire extinguishers
+- **Legacy Support**: Original single image fields still available
+- **Organized Storage**: Images stored in organized directories
+
+#### Certificate Management
+- **Multiple Certificates**: Upload multiple calibration certificates per equipment
+- **File Type Support**: Supports both images (JPG, PNG) and PDF files
+- **File Type Detection**: Automatic detection of uploaded file types
+- **Secure Storage**: Certificates stored securely with authentication
 
 ## Technology Stack
 
@@ -222,9 +251,13 @@ The dashboard displays:
 
 ### Image Storage
 - Images are stored locally in the `media/` directory
-- Vehicle images: `media/cars/`
-- Equipment images: `media/equipment/`
+- Vehicle images: `media/cars/` (both single and multiple images)
+- Equipment images: `media/equipment/` (both single and multiple images)
 - Calibration certificates: `media/calibration_certificates/`
+- Fire extinguisher images: `media/fire_extinguishers/`
+- **Multi-Image Support**: Each car and equipment can have multiple images
+- **File Type Support**: Certificates support both images and PDF files
+- **Secure Access**: All media files served through authentication check
 
 **Note**: As per your requirements, S3 storage is NOT used. All images are stored locally on the server.
 
