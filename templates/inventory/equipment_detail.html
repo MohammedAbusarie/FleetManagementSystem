@@ -223,36 +223,7 @@
         </div>
     </div>
 
-    <!-- License and Inspection Information -->
-    <div class="detail-card">
-        <div class="detail-card-header">
-            <i class="bi bi-calendar-check"></i> معلومات الرخصة والفحص
-        </div>
-        <div class="detail-card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="detail-row">
-                        <div class="detail-label">تاريخ بداية رخصة المعدة:</div>
-                        <div class="detail-value">{% if equipment.current_license_record %}{{ equipment.current_license_record.start_date|date:"Y-m-d" }}{% else %}-{% endif %}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">تاريخ انتهاء رخصة المعدة:</div>
-                        <div class="detail-value">{% if equipment.current_license_record %}{{ equipment.current_license_record.end_date|date:"Y-m-d" }}{% else %}-{% endif %}</div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="detail-row">
-                        <div class="detail-label">تاريخ بداية الفحص السنوي:</div>
-                        <div class="detail-value">{% if equipment.current_inspection_record %}{{ equipment.current_inspection_record.start_date|date:"Y-m-d" }}{% else %}-{% endif %}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">تاريخ انتهاء الفحص السنوي:</div>
-                        <div class="detail-value">{% if equipment.current_inspection_record %}{{ equipment.current_inspection_record.end_date|date:"Y-m-d" }}{% else %}-{% endif %}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    
 
     <!-- License Records -->
     {% if license_records %}
