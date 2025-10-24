@@ -21,12 +21,12 @@ def secure_media_url(media_file):
     """Convert media file URL to secure URL that requires authentication"""
     if not media_file:
         return None
-    
+
     # Extract the relative path from the media file
     # media_file.url gives us something like '/media/cars/image.jpg'
     # We need to extract 'cars/image.jpg' part
     media_path = str(media_file)
-    
+
     # Generate secure URL
     return reverse('secure_media', kwargs={'path': media_path})
 
@@ -37,3 +37,10 @@ def basename(file_path):
     if not file_path:
         return ''
     return os.path.basename(str(file_path))
+
+
+@register.filter
+def is_admin_user(user):
+    """Check if user is admin (including super admin)"""
+    from ..utils.helpers import is_admin_user as check_admin_user
+    return check_admin_user(user)
