@@ -11,7 +11,7 @@ from ..forms import EquipmentForm, EquipmentMaintenanceFormSet, EquipmentLicense
 from ..services import EquipmentService
 from ..translation_utils import get_message_template
 from .auth_views import is_admin
-from ..utils.decorators import admin_or_permission_required
+from ..utils.decorators import admin_or_permission_required, admin_or_permission_required_with_message
 from ..utils.helpers import has_permission, log_user_action, get_client_ip
 from ..services.rbac_service import LoggingService
 
@@ -19,7 +19,7 @@ equipment_service = EquipmentService()
 
 
 @login_required
-@admin_or_permission_required('equipment', 'read')
+@admin_or_permission_required_with_message('equipment', 'read')
 def equipment_list_view(request):
     """Equipment list view with search, pagination, and sorting"""
     search_query = request.GET.get('search_query', '')
@@ -91,7 +91,7 @@ def equipment_detail_json(request, pk):
 
 
 @login_required
-@admin_or_permission_required('equipment', 'create')
+@admin_or_permission_required_with_message('equipment', 'create')
 def equipment_create_view(request):
     """Equipment create view"""
     if request.method == 'POST':
@@ -169,7 +169,7 @@ def equipment_create_view(request):
 
 
 @login_required
-@admin_or_permission_required('equipment', 'update')
+@admin_or_permission_required_with_message('equipment', 'update')
 def equipment_update_view(request, pk):
     """Equipment update view"""
     equipment = get_object_or_404(Equipment, pk=pk)
@@ -293,7 +293,7 @@ def equipment_update_view(request, pk):
 
 
 @login_required
-@admin_or_permission_required('equipment', 'read')
+@admin_or_permission_required_with_message('equipment', 'read')
 def equipment_detail_view(request, pk):
     """Equipment detail view - comprehensive page showing all equipment information"""
     equipment = get_object_or_404(Equipment, pk=pk)
@@ -326,7 +326,7 @@ def equipment_detail_view(request, pk):
 
 
 @login_required
-@admin_or_permission_required('equipment', 'delete')
+@admin_or_permission_required_with_message('equipment', 'delete')
 def equipment_delete_view(request, pk):
     """Equipment delete view"""
     equipment = get_object_or_404(Equipment, pk=pk)

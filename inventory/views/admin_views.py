@@ -8,7 +8,7 @@ from django.db import connection
 from django.conf import settings
 import os
 
-from ..utils.decorators import super_admin_required, admin_required
+from ..utils.decorators import super_admin_required, admin_required, super_admin_required_with_message, admin_required_with_message
 from ..utils.helpers import paginate_queryset, log_user_action
 from ..services.rbac_service import (
     UserProfileService, PermissionService, LoggingService
@@ -17,7 +17,7 @@ from ..forms.rbac_forms import UserCreateForm, UserUpdateForm, PermissionAssignm
 from ..models import UserProfile
 
 
-@admin_required
+@admin_required_with_message()
 def admin_panel_view(request):
     """Main admin panel dashboard"""
     try:
@@ -64,7 +64,7 @@ def admin_panel_view(request):
         return redirect('dashboard')
 
 
-@admin_required
+@admin_required_with_message()
 def user_management_view(request):
     """User management interface"""
     try:
@@ -112,7 +112,7 @@ def user_management_view(request):
         return redirect('admin_panel')
 
 
-@super_admin_required
+@super_admin_required_with_message()
 def user_create_view(request):
     """Create new user"""
     if request.method == 'POST':
@@ -143,7 +143,7 @@ def user_create_view(request):
     return render(request, 'inventory/admin/user_form.html', context)
 
 
-@super_admin_required
+@super_admin_required_with_message()
 def user_update_view(request, user_id):
     """Update user information"""
     user = get_object_or_404(User, id=user_id)
@@ -177,7 +177,7 @@ def user_update_view(request, user_id):
     return render(request, 'inventory/admin/user_form.html', context)
 
 
-@super_admin_required
+@super_admin_required_with_message()
 def user_delete_view(request, user_id):
     """Delete user (soft delete)"""
     user = get_object_or_404(User, id=user_id)
@@ -211,7 +211,7 @@ def user_delete_view(request, user_id):
     return render(request, 'inventory/admin/user_confirm_delete.html', context)
 
 
-@super_admin_required
+@super_admin_required_with_message()
 def permission_management_view(request):
     """Permission management interface"""
     try:
@@ -250,7 +250,7 @@ def permission_management_view(request):
         return redirect('admin_panel')
 
 
-@super_admin_required
+@super_admin_required_with_message()
 def user_permissions_view(request, user_id):
     """View and edit user permissions"""
     user = get_object_or_404(User, id=user_id)
@@ -284,7 +284,7 @@ def user_permissions_view(request, user_id):
     return render(request, 'inventory/admin/user_permissions.html', context)
 
 
-@admin_required
+@admin_required_with_message()
 def login_logs_view(request):
     """Display login history"""
     try:
@@ -331,7 +331,7 @@ def login_logs_view(request):
         return redirect('admin_panel')
 
 
-@admin_required
+@admin_required_with_message()
 def action_logs_view(request):
     """Display system action logs"""
     try:
@@ -391,7 +391,7 @@ def action_logs_view(request):
         return redirect('admin_panel')
 
 
-@admin_required
+@admin_required_with_message()
 def database_storage_view(request):
     """Database storage monitoring"""
     try:
@@ -469,7 +469,7 @@ def get_database_storage_info():
         }
 
 
-@admin_required
+@admin_required_with_message()
 def storage_data_api(request):
     """API endpoint for storage data"""
     try:

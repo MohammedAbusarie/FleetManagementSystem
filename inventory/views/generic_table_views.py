@@ -6,13 +6,13 @@ from django.apps import apps
 from ..translation_utils import get_verbose_model_translations, get_model_arabic_name, get_message_template
 from ..forms import EquipmentModelForm
 from .auth_views import is_admin
-from ..utils.decorators import admin_or_permission_required
+from ..utils.decorators import admin_or_permission_required, admin_or_permission_required_with_message
 from ..utils.helpers import has_permission, log_user_action, get_client_ip
 from ..services.rbac_service import LoggingService
 
 
 @login_required
-@admin_or_permission_required('generic_tables', 'read')
+@admin_or_permission_required_with_message('generic_tables', 'read')
 def generic_tables_view(request):
     """Generic tables management view"""
     # Use the translation utilities for model translations
@@ -33,7 +33,7 @@ def generic_tables_view(request):
 
 
 @login_required
-@admin_or_permission_required('generic_tables', 'read')
+@admin_or_permission_required_with_message('generic_tables', 'read')
 def generic_table_detail_view(request, model_name):
     """Generic table detail view for CRUD operations"""
     try:
@@ -61,7 +61,7 @@ def generic_table_detail_view(request, model_name):
 
 
 @login_required
-@admin_or_permission_required('generic_tables', 'create')
+@admin_or_permission_required_with_message('generic_tables', 'create')
 def generic_table_create_view(request, model_name):
     """Generic table create view"""
     try:
@@ -104,7 +104,7 @@ def generic_table_create_view(request, model_name):
 
 
 @login_required
-@admin_or_permission_required('generic_tables', 'update')
+@admin_or_permission_required_with_message('generic_tables', 'update')
 def generic_table_update_view(request, model_name, pk):
     """Generic table update view"""
     try:
@@ -152,7 +152,7 @@ def generic_table_update_view(request, model_name, pk):
 
 
 @login_required
-@admin_or_permission_required('generic_tables', 'delete')
+@admin_or_permission_required_with_message('generic_tables', 'delete')
 def generic_table_delete_view(request, model_name, pk):
     """Generic table delete view"""
     try:

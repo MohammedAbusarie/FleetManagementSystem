@@ -11,7 +11,7 @@ from ..forms import CarForm, CarMaintenanceFormSet, CarLicenseRecordFormSet, Car
 from ..services import CarService
 from ..translation_utils import get_message_template
 from .auth_views import is_admin
-from ..utils.decorators import admin_or_permission_required
+from ..utils.decorators import admin_or_permission_required, admin_or_permission_required_with_message
 from ..utils.helpers import has_permission, log_user_action, get_client_ip
 from ..services.rbac_service import LoggingService
 
@@ -19,7 +19,7 @@ car_service = CarService()
 
 
 @login_required
-@admin_or_permission_required('cars', 'read')
+@admin_or_permission_required_with_message('cars', 'read')
 def car_list_view(request):
     """Car list view with search, pagination, and sorting"""
     search_query = request.GET.get('search_query', '')
@@ -65,7 +65,7 @@ def car_list_view(request):
 
 
 @login_required
-@admin_or_permission_required('cars', 'create')
+@admin_or_permission_required_with_message('cars', 'create')
 def car_create_view(request):
     """Car create view"""
     if request.method == 'POST':
@@ -134,7 +134,7 @@ def car_create_view(request):
 
 
 @login_required
-@admin_or_permission_required('cars', 'update')
+@admin_or_permission_required_with_message('cars', 'update')
 def car_update_view(request, pk):
     """Car update view"""
     car = get_object_or_404(Car, pk=pk)
@@ -225,7 +225,7 @@ def car_update_view(request, pk):
 
 
 @login_required
-@admin_or_permission_required('cars', 'read')
+@admin_or_permission_required_with_message('cars', 'read')
 def car_detail_view(request, pk):
     """Car detail view - comprehensive page showing all car information"""
     car = get_object_or_404(Car, pk=pk)
@@ -252,7 +252,7 @@ def car_detail_view(request, pk):
 
 
 @login_required
-@admin_or_permission_required('cars', 'delete')
+@admin_or_permission_required_with_message('cars', 'delete')
 def car_delete_view(request, pk):
     """Car delete view"""
     car = get_object_or_404(Car, pk=pk)
