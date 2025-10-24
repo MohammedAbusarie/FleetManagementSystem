@@ -1,0 +1,384 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load inventory_extras %}
+
+{% block title %}إدارة المستخدمين - نظام إدارة الأسطول{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-card {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .user-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .user-avatar {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .user-type-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .user-type-super-admin {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .user-type-admin {
+        background-color: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .user-type-normal {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-active {
+        color: #28a745;
+    }
+    
+    .status-inactive {
+        color: #dc3545;
+    }
+    
+    .search-form {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .filter-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        margin: 2px;
+        display: inline-block;
+    }
+    
+    .filter-badge.active {
+        background-color: #667eea;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="bi bi-people-fill text-primary me-2"></i>
+                        إدارة المستخدمين
+                    </h1>
+                    <p class="text-muted mb-0">إدارة المستخدمين والصلاحيات</p>
+                </div>
+                <div>
+                    <a href="{% url 'user_create' %}" class="btn btn-primary">
+                        <i class="bi bi-person-plus me-2"></i>
+                        إضافة مستخدم جديد
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Form -->
+    <div class="search-form">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">البحث</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search_query }}" placeholder="اسم المستخدم، الاسم، أو البريد الإلكتروني">
+            </div>
+            <div class="col-md-3">
+                <label for="user_type" class="form-label">نوع المستخدم</label>
+                <select class="form-select" id="user_type" name="user_type">
+                    <option value="">جميع الأنواع</option>
+                    {% for value, label in user_type_choices %}
+                        <option value="{{ value }}" {% if user_type_filter == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search me-2"></i>
+                        بحث
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <a href="{% url 'user_management' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise me-2"></i>
+                        إعادة تعيين
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Active Filters -->
+    {% if search_query or user_type_filter %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex align-items-center">
+                <span class="me-2">الفلاتر النشطة:</span>
+                {% if search_query %}
+                    <span class="filter-badge active">
+                        البحث: "{{ search_query }}"
+                        <a href="?{% if user_type_filter %}user_type={{ user_type_filter }}{% endif %}" class="text-white ms-1">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    </span>
+                {% endif %}
+                {% if user_type_filter %}
+                    <span class="filter-badge active">
+                        النوع: {{ user_type_filter }}
+                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}" class="text-white ms-1">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Users List -->
+    <div class="row">
+        {% for user in users_page %}
+        <div class="col-lg-6 col-xl-4 mb-3">
+            <div class="user-card">
+                <div class="d-flex align-items-start">
+                    <div class="user-avatar me-3">
+                        {{ user.first_name|first|default:user.username|first|upper }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="mb-0">{{ user.get_full_name|default:user.username }}</h6>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'user_update' user.id %}">
+                                        <i class="bi bi-pencil me-2"></i>تعديل
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'user_permissions' user.id %}">
+                                        <i class="bi bi-shield-check me-2"></i>الصلاحيات
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="{% url 'user_delete' user.id %}">
+                                        <i class="bi bi-trash me-2"></i>حذف
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="bi bi-person me-1"></i>
+                                {{ user.username }}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="bi bi-envelope me-1"></i>
+                                {{ user.email|default:"غير محدد" }}
+                            </small>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                {% if user.profile %}
+                                    <span class="user-type-badge user-type-{{ user.profile.user_type }}">
+                                        {{ user.profile.get_user_type_display }}
+                                    </span>
+                                {% else %}
+                                    <span class="user-type-badge user-type-normal">عادي</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {% if user.profile and user.profile.is_active %}
+                                    <span class="status-active">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        نشط
+                                    </span>
+                                {% else %}
+                                    <span class="status-inactive">
+                                        <i class="bi bi-x-circle-fill"></i>
+                                        غير نشط
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="bi bi-calendar me-1"></i>
+                                انضم في {{ user.date_joined|date:"Y/m/d" }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-people fs-1 text-muted"></i>
+                <h5 class="text-muted mt-3">لا توجد مستخدمين</h5>
+                <p class="text-muted">لم يتم العثور على مستخدمين يطابقون معايير البحث.</p>
+                <a href="{% url 'user_create' %}" class="btn btn-primary">
+                    <i class="bi bi-person-plus me-2"></i>
+                    إضافة مستخدم جديد
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if users_page.has_other_pages %}
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="صفحات المستخدمين">
+                <ul class="pagination justify-content-center">
+                    {% if users_page.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if user_type_filter %}&user_type={{ user_type_filter }}{% endif %}">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ users_page.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if user_type_filter %}&user_type={{ user_type_filter }}{% endif %}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in users_page.paginator.page_range %}
+                        {% if users_page.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > users_page.number|add:'-3' and num < users_page.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if user_type_filter %}&user_type={{ user_type_filter }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if users_page.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ users_page.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if user_type_filter %}&user_type={{ user_type_filter }}{% endif %}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ users_page.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if user_type_filter %}&user_type={{ user_type_filter }}{% endif %}">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Statistics -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-bar-chart me-2"></i>
+                        إحصائيات المستخدمين
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h4 class="text-primary">{{ users_page.paginator.count }}</h4>
+                            <p class="text-muted mb-0">إجمالي المستخدمين</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-success">{{ users_page.paginator.count }}</h4>
+                            <p class="text-muted mb-0">المستخدمين النشطين</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-info">{{ users_page.paginator.count }}</h4>
+                            <p class="text-muted mb-0">المديرين</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-warning">{{ users_page.paginator.count }}</h4>
+                            <p class="text-muted mb-0">المستخدمين العاديين</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form on filter change
+    const userTypeSelect = document.getElementById('user_type');
+    if (userTypeSelect) {
+        userTypeSelect.addEventListener('change', function() {
+            this.form.submit();
+        });
+    }
+    
+    // Confirm delete action
+    const deleteLinks = document.querySelectorAll('a[href*="user_delete"]');
+    deleteLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

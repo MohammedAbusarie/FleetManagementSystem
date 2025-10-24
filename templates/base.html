@@ -298,6 +298,14 @@
             <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
                 <i class="bi bi-speedometer2"></i> لوحة القيادة
             </a>
+            {% if user.is_authenticated %}
+                {% load inventory_extras %}
+                {% if user|is_admin_user %}
+                    <a class="nav-link {% if 'admin' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'admin_panel' %}">
+                        <i class="bi bi-gear-fill"></i> لوحة الإدارة
+                    </a>
+                {% endif %}
+            {% endif %}
             <a class="nav-link {% if 'car' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'car_list' %}">
                 <i class="bi bi-car-front"></i> السيارات
             </a>

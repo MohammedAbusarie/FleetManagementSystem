@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - نظام إدارة الأسطول{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: none;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .delete-header {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .delete-body {
+        padding: 30px;
+    }
+    
+    .user-info {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .user-avatar {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0 auto 15px;
+    }
+    
+    .warning-box {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .warning-box h6 {
+        color: #856404;
+        margin-bottom: 10px;
+    }
+    
+    .warning-box ul {
+        color: #856404;
+        margin-bottom: 0;
+        padding-right: 20px;
+    }
+    
+    .btn-delete {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 30px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-delete:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    }
+    
+    .btn-cancel {
+        background: #6c757d;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 30px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-cancel:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card delete-card">
+                <div class="delete-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        تأكيد حذف المستخدم
+                    </h4>
+                    <p class="mb-0 mt-2 opacity-75">
+                        هل أنت متأكد من حذف هذا المستخدم؟
+                    </p>
+                </div>
+                
+                <div class="delete-body">
+                    <!-- User Information -->
+                    <div class="user-info text-center">
+                        <div class="user-avatar">
+                            {{ user.first_name|first|default:user.username|first|upper }}
+                        </div>
+                        <h5 class="mb-2">{{ user.get_full_name|default:user.username }}</h5>
+                        <p class="text-muted mb-1">
+                            <i class="bi bi-person me-1"></i>
+                            {{ user.username }}
+                        </p>
+                        <p class="text-muted mb-1">
+                            <i class="bi bi-envelope me-1"></i>
+                            {{ user.email|default:"غير محدد" }}
+                        </p>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-calendar me-1"></i>
+                            انضم في {{ user.date_joined|date:"Y/m/d" }}
+                        </p>
+                        {% if user.profile %}
+                            <div class="mt-2">
+                                <span class="badge bg-info">
+                                    {{ user.profile.get_user_type_display }}
+                                </span>
+                                {% if user.profile.is_active %}
+                                    <span class="badge bg-success">نشط</span>
+                                {% else %}
+                                    <span class="badge bg-danger">غير نشط</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Warning Box -->
+                    <div class="warning-box">
+                        <h6><i class="bi bi-exclamation-triangle me-2"></i>تحذير مهم</h6>
+                        <p class="mb-2">سيتم حذف المستخدم بالطريقة التالية:</p>
+                        <ul>
+                            <li>سيتم إلغاء تفعيل حساب المستخدم (حذف ناعم)</li>
+                            <li>لن يتمكن المستخدم من تسجيل الدخول إلى النظام</li>
+                            <li>ستبقى جميع البيانات والعمليات محفوظة للتدقيق</li>
+                            <li>يمكن إعادة تفعيل المستخدم لاحقاً إذا لزم الأمر</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Confirmation Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="text-center">
+                            <p class="text-muted mb-4">
+                                اكتب <strong>"تأكيد"</strong> في المربع أدناه لتأكيد الحذف
+                            </p>
+                            <div class="mb-4">
+                                <input type="text" class="form-control text-center" 
+                                       id="confirmation" name="confirmation" 
+                                       placeholder="تأكيد" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'user_management' %}" class="btn btn-cancel text-white">
+                                <i class="bi bi-arrow-right me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-delete text-white" id="deleteBtn" disabled>
+                                <i class="bi bi-trash me-2"></i>
+                                حذف المستخدم
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmationInput = document.getElementById('confirmation');
+    const deleteBtn = document.getElementById('deleteBtn');
+    
+    // Enable/disable delete button based on confirmation text
+    confirmationInput.addEventListener('input', function() {
+        if (this.value.trim() === 'تأكيد') {
+            deleteBtn.disabled = false;
+            deleteBtn.classList.remove('btn-secondary');
+            deleteBtn.classList.add('btn-delete');
+        } else {
+            deleteBtn.disabled = true;
+            deleteBtn.classList.remove('btn-delete');
+            deleteBtn.classList.add('btn-secondary');
+        }
+    });
+    
+    // Final confirmation before submit
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        if (confirmationInput.value.trim() !== 'تأكيد') {
+            e.preventDefault();
+            alert('يرجى كتابة "تأكيد" بشكل صحيح');
+            confirmationInput.focus();
+            return;
+        }
+        
+        if (!confirm('هل أنت متأكد تماماً من حذف هذا المستخدم؟\n\nهذا الإجراء لا يمكن التراجع عنه.')) {
+            e.preventDefault();
+        }
+    });
+    
+    // Focus on confirmation input
+    confirmationInput.focus();
+});
+</script>
+{% endblock %}

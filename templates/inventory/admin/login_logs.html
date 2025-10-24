@@ -1,0 +1,403 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - نظام إدارة الأسطول{% endblock %}
+
+{% block extra_css %}
+<style>
+    .logs-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: none;
+    }
+    
+    .logs-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 20px;
+    }
+    
+    .logs-body {
+        padding: 0;
+    }
+    
+    .log-item {
+        padding: 15px 20px;
+        border-bottom: 1px solid #f8f9fa;
+        transition: all 0.3s ease;
+    }
+    
+    .log-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .log-item:last-child {
+        border-bottom: none;
+    }
+    
+    .log-user {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 5px;
+    }
+    
+    .log-details {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    
+    .log-time {
+        font-size: 0.85rem;
+        color: #adb5bd;
+    }
+    
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .status-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .search-form {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .filter-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        margin: 2px;
+        display: inline-block;
+    }
+    
+    .filter-badge.active {
+        background-color: #667eea;
+        color: white;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .stats-number {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .stats-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="bi bi-box-arrow-in-right text-primary me-2"></i>
+                        سجل تسجيل الدخول
+                    </h1>
+                    <p class="text-muted mb-0">مراقبة محاولات تسجيل الدخول إلى النظام</p>
+                </div>
+                <div>
+                    <a href="{% url 'admin_panel' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-right me-2"></i>
+                        العودة للوحة الإدارة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-number">{{ logs_page.paginator.count }}</div>
+                <div class="stats-label">إجمالي المحاولات</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-number">{{ logs_page.paginator.count }}</div>
+                <div class="stats-label">المحاولات الناجحة</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-number">{{ logs_page.paginator.count }}</div>
+                <div class="stats-label">المحاولات الفاشلة</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-number">{{ logs_page.paginator.count }}</div>
+                <div class="stats-label">المستخدمين النشطين</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Form -->
+    <div class="search-form">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">البحث</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search_query }}" placeholder="اسم المستخدم أو عنوان IP">
+            </div>
+            <div class="col-md-3">
+                <label for="success" class="form-label">النتيجة</label>
+                <select class="form-select" id="success" name="success">
+                    <option value="">جميع النتائج</option>
+                    <option value="true" {% if success_filter == 'true' %}selected{% endif %}>نجح</option>
+                    <option value="false" {% if success_filter == 'false' %}selected{% endif %}>فشل</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search me-2"></i>
+                        بحث
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <a href="{% url 'login_logs' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise me-2"></i>
+                        إعادة تعيين
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Active Filters -->
+    {% if search_query or success_filter %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex align-items-center">
+                <span class="me-2">الفلاتر النشطة:</span>
+                {% if search_query %}
+                    <span class="filter-badge active">
+                        البحث: "{{ search_query }}"
+                        <a href="?{% if success_filter %}success={{ success_filter }}{% endif %}" class="text-white ms-1">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    </span>
+                {% endif %}
+                {% if success_filter %}
+                    <span class="filter-badge active">
+                        النتيجة: {% if success_filter == 'true' %}نجح{% else %}فشل{% endif %}
+                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}" class="text-white ms-1">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Logs List -->
+    <div class="card logs-card">
+        <div class="logs-header">
+            <h5 class="mb-0">
+                <i class="bi bi-list-ul me-2"></i>
+                سجل تسجيل الدخول
+            </h5>
+        </div>
+        <div class="logs-body">
+            {% for log in logs_page %}
+            <div class="log-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="log-user">
+                            <i class="bi bi-person me-2"></i>
+                            {{ log.user.get_full_name|default:log.user.username }}
+                        </div>
+                        <div class="log-details">
+                            <i class="bi bi-geo-alt me-2"></i>
+                            {{ log.ip_address }}
+                        </div>
+                        <div class="log-details">
+                            <i class="bi bi-globe me-2"></i>
+                            {{ log.user_agent|truncatechars:50 }}
+                        </div>
+                        <div class="log-time">
+                            <i class="bi bi-clock me-2"></i>
+                            {{ log.login_time|date:"Y/m/d H:i:s" }}
+                            {% if log.logout_time %}
+                                - {{ log.logout_time|date:"H:i:s" }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        {% if log.success %}
+                            <span class="status-badge status-success">
+                                <i class="bi bi-check-circle me-1"></i>
+                                نجح
+                            </span>
+                        {% else %}
+                            <span class="status-badge status-danger">
+                                <i class="bi bi-x-circle me-1"></i>
+                                فشل
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox fs-1 text-muted"></i>
+                <h5 class="text-muted mt-3">لا توجد سجلات</h5>
+                <p class="text-muted">لم يتم العثور على سجلات تسجيل دخول تطابق معايير البحث.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if logs_page.has_other_pages %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="صفحات السجلات">
+                <ul class="pagination justify-content-center">
+                    {% if logs_page.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ logs_page.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in logs_page.paginator.page_range %}
+                        {% if logs_page.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > logs_page.number|add:'-3' and num < logs_page.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if logs_page.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ logs_page.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ logs_page.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Export Options -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-download me-2"></i>
+                        تصدير البيانات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-success w-100" onclick="exportToCSV()">
+                                <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+                                تصدير إلى CSV
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-primary w-100" onclick="exportToPDF()">
+                                <i class="bi bi-file-earmark-pdf me-2"></i>
+                                تصدير إلى PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form on filter change
+    const successSelect = document.getElementById('success');
+    if (successSelect) {
+        successSelect.addEventListener('change', function() {
+            this.form.submit();
+        });
+    }
+    
+    // Auto-refresh every 30 seconds
+    setInterval(function() {
+        // Only refresh if no filters are applied
+        if (!document.getElementById('search').value && !document.getElementById('success').value) {
+            window.location.reload();
+        }
+    }, 30000);
+});
+
+function exportToCSV() {
+    // Implement CSV export functionality
+    alert('سيتم تنفيذ تصدير CSV قريباً');
+}
+
+function exportToPDF() {
+    // Implement PDF export functionality
+    alert('سيتم تنفيذ تصدير PDF قريباً');
+}
+</script>
+{% endblock %}

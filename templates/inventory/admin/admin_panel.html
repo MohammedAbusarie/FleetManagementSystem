@@ -1,0 +1,433 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load inventory_extras %}
+
+{% block title %}لوحة الإدارة - نظام إدارة الأسطول{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: transform 0.3s ease;
+    }
+    
+    .admin-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .admin-card .card-icon {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        opacity: 0.9;
+    }
+    
+    .admin-card .card-number {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .admin-card .card-label {
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+    
+    .storage-gauge {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        margin: 0 auto;
+    }
+    
+    .recent-activity {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .activity-item {
+        padding: 10px 15px;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.3s ease;
+    }
+    
+    .activity-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-time {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .activity-user {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .activity-description {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .status-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-warning {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="bi bi-gear-fill text-primary me-2"></i>
+                        لوحة الإدارة
+                    </h1>
+                    <p class="text-muted mb-0">مراقبة وإدارة النظام</p>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted">
+                        آخر تحديث: <span id="lastUpdate">{{ "الآن" }}</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="admin-card">
+                <div class="text-center">
+                    <i class="bi bi-people-fill card-icon"></i>
+                    <div class="card-number">{{ total_users }}</div>
+                    <div class="card-label">إجمالي المستخدمين</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="admin-card">
+                <div class="text-center">
+                    <i class="bi bi-person-check-fill card-icon"></i>
+                    <div class="card-number">{{ active_users }}</div>
+                    <div class="card-label">المستخدمين النشطين</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="admin-card">
+                <div class="text-center">
+                    <i class="bi bi-shield-check card-icon"></i>
+                    <div class="card-number">{{ admin_users }}</div>
+                    <div class="card-label">المديرين</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="admin-card">
+                <div class="text-center">
+                    <i class="bi bi-person card-icon"></i>
+                    <div class="card-number">{{ normal_users }}</div>
+                    <div class="card-label">المستخدمين العاديين</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
+        <!-- Database Storage Monitor -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-hdd-fill me-2"></i>
+                        مراقب قاعدة البيانات
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="storage-gauge">
+                        <canvas id="storageGauge" width="200" height="200"></canvas>
+                    </div>
+                    <div class="mt-3">
+                        <h6 class="mb-1">حجم قاعدة البيانات</h6>
+                        <p class="text-muted mb-0">{{ storage_info.database_size }}</p>
+                    </div>
+                    <div class="mt-2">
+                        <h6 class="mb-1">حجم الملفات</h6>
+                        <p class="text-muted mb-0">{{ storage_info.media_size }}</p>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{% url 'database_storage' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye me-1"></i>
+                            عرض التفاصيل
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Logins -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>
+                        آخر تسجيلات الدخول
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="recent-activity">
+                        {% for login in recent_logins %}
+                        <div class="activity-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="activity-user">
+                                        {{ login.user.get_full_name|default:login.user.username }}
+                                    </div>
+                                    <div class="activity-description">
+                                        {{ login.ip_address }}
+                                    </div>
+                                    <div class="activity-time">
+                                        {{ login.login_time|date:"Y/m/d H:i" }}
+                                    </div>
+                                </div>
+                                <div>
+                                    {% if login.success %}
+                                        <span class="status-badge status-success">نجح</span>
+                                    {% else %}
+                                        <span class="status-badge status-danger">فشل</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center p-4 text-muted">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p class="mt-2">لا توجد تسجيلات دخول حديثة</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="{% url 'login_logs' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye me-1"></i>
+                            عرض الكل
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Actions -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-activity me-2"></i>
+                        آخر العمليات
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="recent-activity">
+                        {% for action in recent_actions %}
+                        <div class="activity-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="activity-user">
+                                        {{ action.user.get_full_name|default:action.user.username }}
+                                    </div>
+                                    <div class="activity-description">
+                                        {{ action.description|default:action.action_type }}
+                                    </div>
+                                    <div class="activity-time">
+                                        {{ action.timestamp|date:"Y/m/d H:i" }}
+                                    </div>
+                                </div>
+                                <div>
+                                    {% if action.module_name %}
+                                        <span class="status-badge status-info">{{ action.module_name }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center p-4 text-muted">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p class="mt-2">لا توجد عمليات حديثة</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="{% url 'action_logs' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye me-1"></i>
+                            عرض الكل
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-lightning-fill me-2"></i>
+                        الإجراءات السريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'user_management' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-people me-2"></i>
+                                إدارة المستخدمين
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'permission_management' %}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-shield-check me-2"></i>
+                                إدارة الصلاحيات
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'login_logs' %}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>
+                                سجل تسجيل الدخول
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'action_logs' %}" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-activity me-2"></i>
+                                سجل العمليات
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update last update time
+    function updateLastUpdateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('ar-SA', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        document.getElementById('lastUpdate').textContent = timeString;
+    }
+    
+    updateLastUpdateTime();
+    setInterval(updateLastUpdateTime, 30000); // Update every 30 seconds
+    
+    // Create storage gauge chart
+    const ctx = document.getElementById('storageGauge').getContext('2d');
+    
+    // Calculate storage percentage (simplified calculation)
+    const storagePercentage = 45; // This would come from your storage calculation
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [storagePercentage, 100 - storagePercentage],
+                backgroundColor: [
+                    '#667eea',
+                    '#e9ecef'
+                ],
+                borderWidth: 0,
+                cutout: '70%'
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: false
+                }
+            },
+            animation: {
+                animateRotate: true,
+                duration: 2000
+            }
+        }
+    });
+    
+    // Add percentage text in the center
+    const canvas = document.getElementById('storageGauge');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    
+    ctx.font = 'bold 24px Arial';
+    ctx.fillStyle = '#667eea';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(storagePercentage + '%', centerX, centerY);
+    
+    // Auto-refresh storage data every 5 minutes
+    setInterval(function() {
+        fetch('{% url "storage_data_api" %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update storage display
+                    // You can update the chart here if needed
+                    console.log('Storage updated:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating storage data:', error);
+            });
+    }, 300000); // 5 minutes
+});
+</script>
+{% endblock %}

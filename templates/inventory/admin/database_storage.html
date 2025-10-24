@@ -1,0 +1,454 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - نظام إدارة الأسطول{% endblock %}
+
+{% block extra_css %}
+<style>
+    .storage-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: none;
+    }
+    
+    .storage-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 20px;
+    }
+    
+    .storage-body {
+        padding: 30px;
+    }
+    
+    .gauge-container {
+        position: relative;
+        width: 300px;
+        height: 300px;
+        margin: 0 auto;
+    }
+    
+    .gauge-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        z-index: 10;
+    }
+    
+    .gauge-percentage {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 5px;
+    }
+    
+    .gauge-label {
+        font-size: 1rem;
+        color: #6c757d;
+    }
+    
+    .storage-info {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .storage-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .storage-item:last-child {
+        border-bottom: none;
+    }
+    
+    .storage-label {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .storage-value {
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .table-storage {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .table-storage h6 {
+        color: #495057;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 10px;
+    }
+    
+    .table-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .table-row:last-child {
+        border-bottom: none;
+    }
+    
+    .table-name {
+        font-size: 0.9rem;
+        color: #495057;
+    }
+    
+    .table-size {
+        font-size: 0.9rem;
+        color: #667eea;
+        font-weight: 500;
+    }
+    
+    .refresh-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        color: white;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .refresh-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-left: 8px;
+    }
+    
+    .status-good {
+        background-color: #28a745;
+    }
+    
+    .status-warning {
+        background-color: #ffc107;
+    }
+    
+    .status-danger {
+        background-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card storage-card">
+                <div class="storage-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">
+                                <i class="bi bi-hdd-fill me-2"></i>
+                                مراقب قاعدة البيانات
+                            </h4>
+                            <p class="mb-0 mt-2 opacity-75">
+                                مراقبة استخدام التخزين في قاعدة البيانات والملفات
+                            </p>
+                        </div>
+                        <div>
+                            <button class="btn btn-light refresh-btn" onclick="refreshStorageData()">
+                                <i class="bi bi-arrow-clockwise me-2"></i>
+                                تحديث
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="storage-body">
+                    <!-- Storage Gauge -->
+                    <div class="gauge-container">
+                        <canvas id="storageGauge" width="300" height="300"></canvas>
+                        <div class="gauge-text">
+                            <div class="gauge-percentage" id="gaugePercentage">0%</div>
+                            <div class="gauge-label">استخدام التخزين</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Storage Information -->
+                    <div class="storage-info">
+                        <h6><i class="bi bi-info-circle me-2"></i>معلومات التخزين</h6>
+                        <div class="storage-item">
+                            <span class="storage-label">
+                                <i class="bi bi-database me-2"></i>
+                                حجم قاعدة البيانات
+                            </span>
+                            <span class="storage-value" id="databaseSize">
+                                {{ storage_info.database_size }}
+                            </span>
+                        </div>
+                        <div class="storage-item">
+                            <span class="storage-label">
+                                <i class="bi bi-folder me-2"></i>
+                                حجم الملفات
+                            </span>
+                            <span class="storage-value" id="mediaSize">
+                                {{ storage_info.media_size }}
+                            </span>
+                        </div>
+                        <div class="storage-item">
+                            <span class="storage-label">
+                                <i class="bi bi-graph-up me-2"></i>
+                                حالة التخزين
+                            </span>
+                            <span class="storage-value">
+                                <span class="status-indicator status-good" id="storageStatus"></span>
+                                جيد
+                            </span>
+                        </div>
+                        <div class="storage-item">
+                            <span class="storage-label">
+                                <i class="bi bi-clock me-2"></i>
+                                آخر تحديث
+                            </span>
+                            <span class="storage-value" id="lastUpdate">
+                                {{ "الآن" }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Table Sizes -->
+                    {% if storage_info.table_sizes %}
+                    <div class="table-storage">
+                        <h6><i class="bi bi-table me-2"></i>أحجام الجداول</h6>
+                        {% for table in storage_info.table_sizes %}
+                        <div class="table-row">
+                            <span class="table-name">{{ table.1 }}</span>
+                            <span class="table-size">{{ table.2 }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Storage Recommendations -->
+                    <div class="alert alert-info mt-4">
+                        <h6><i class="bi bi-lightbulb me-2"></i>توصيات التخزين</h6>
+                        <ul class="mb-0">
+                            <li>احتفظ بنسخ احتياطية منتظمة من قاعدة البيانات</li>
+                            <li>راقب نمو البيانات وتنظف السجلات القديمة عند الحاجة</li>
+                            <li>استخدم ضغط الملفات لتوفير مساحة التخزين</li>
+                            <li>فكر في أرشفة البيانات القديمة إذا تجاوزت المساحة المحددة</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize storage gauge
+    initializeStorageGauge();
+    
+    // Update last update time
+    updateLastUpdateTime();
+    setInterval(updateLastUpdateTime, 30000); // Update every 30 seconds
+    
+    // Auto-refresh storage data every 5 minutes
+    setInterval(refreshStorageData, 300000);
+});
+
+function initializeStorageGauge() {
+    const ctx = document.getElementById('storageGauge').getContext('2d');
+    
+    // Calculate storage percentage (simplified calculation)
+    const storagePercentage = 45; // This would come from your storage calculation
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [storagePercentage, 100 - storagePercentage],
+                backgroundColor: [
+                    '#667eea',
+                    '#e9ecef'
+                ],
+                borderWidth: 0,
+                cutout: '75%'
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: false
+                }
+            },
+            animation: {
+                animateRotate: true,
+                duration: 2000
+            }
+        }
+    });
+    
+    // Update percentage text
+    document.getElementById('gaugePercentage').textContent = storagePercentage + '%';
+    
+    // Update status indicator
+    updateStorageStatus(storagePercentage);
+}
+
+function updateStorageStatus(percentage) {
+    const statusIndicator = document.getElementById('storageStatus');
+    const statusText = statusIndicator.nextSibling;
+    
+    if (percentage < 50) {
+        statusIndicator.className = 'status-indicator status-good';
+        statusText.textContent = 'جيد';
+    } else if (percentage < 80) {
+        statusIndicator.className = 'status-indicator status-warning';
+        statusText.textContent = 'تحذير';
+    } else {
+        statusIndicator.className = 'status-indicator status-danger';
+        statusText.textContent = 'خطر';
+    }
+}
+
+function updateLastUpdateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('ar-SA', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    document.getElementById('lastUpdate').textContent = timeString;
+}
+
+function refreshStorageData() {
+    // Show loading state
+    const refreshBtn = document.querySelector('.refresh-btn');
+    const originalText = refreshBtn.innerHTML;
+    refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>جاري التحديث...';
+    refreshBtn.disabled = true;
+    
+    // Fetch updated storage data
+    fetch('{% url "storage_data_api" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update storage information
+                document.getElementById('databaseSize').textContent = data.database_size;
+                document.getElementById('mediaSize').textContent = data.total_size;
+                
+                // Update gauge
+                updateGauge(data.percentage);
+                
+                // Update status
+                updateStorageStatus(data.percentage);
+                
+                // Show success message
+                showNotification('تم تحديث بيانات التخزين بنجاح', 'success');
+            } else {
+                showNotification('خطأ في تحديث بيانات التخزين', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating storage data:', error);
+            showNotification('خطأ في تحديث بيانات التخزين', 'error');
+        })
+        .finally(() => {
+            // Restore button state
+            refreshBtn.innerHTML = originalText;
+            refreshBtn.disabled = false;
+        });
+}
+
+function updateGauge(percentage) {
+    // Update the chart with new percentage
+    const ctx = document.getElementById('storageGauge').getContext('2d');
+    
+    // Destroy existing chart
+    if (window.storageChart) {
+        window.storageChart.destroy();
+    }
+    
+    // Create new chart
+    window.storageChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [percentage, 100 - percentage],
+                backgroundColor: [
+                    '#667eea',
+                    '#e9ecef'
+                ],
+                borderWidth: 0,
+                cutout: '75%'
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: false
+                }
+            },
+            animation: {
+                animateRotate: true,
+                duration: 1000
+            }
+        }
+    });
+    
+    // Update percentage text
+    document.getElementById('gaugePercentage').textContent = percentage + '%';
+}
+
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

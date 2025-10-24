@@ -1,0 +1,438 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - نظام إدارة الأسطول{% endblock %}
+
+{% block extra_css %}
+<style>
+    .permission-form-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: none;
+    }
+    
+    .permission-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 20px;
+    }
+    
+    .permission-body {
+        padding: 30px;
+    }
+    
+    .user-info {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .user-avatar {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0 auto 15px;
+    }
+    
+    .permission-module {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .permission-module:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .permission-module h5 {
+        color: #495057;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 10px;
+    }
+    
+    .permission-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .permission-item:last-child {
+        border-bottom: none;
+    }
+    
+    .permission-name {
+        font-size: 1rem;
+        color: #495057;
+        font-weight: 500;
+    }
+    
+    .permission-description {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 2px;
+    }
+    
+    .form-check-input {
+        width: 1.2rem;
+        height: 1.2rem;
+        border-radius: 4px;
+    }
+    
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 30px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-cancel {
+        background: #6c757d;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 30px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-cancel:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+    
+    .permission-summary {
+        background: #e3f2fd;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .permission-summary h6 {
+        color: #1976d2;
+        margin-bottom: 10px;
+    }
+    
+    .permission-summary ul {
+        margin-bottom: 0;
+        padding-right: 20px;
+    }
+    
+    .permission-summary li {
+        color: #1976d2;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card permission-form-card">
+                <div class="permission-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-shield-check me-2"></i>
+                        {{ title }}
+                    </h4>
+                    <p class="mb-0 mt-2 opacity-75">
+                        إدارة صلاحيات المستخدم على الوحدات المختلفة
+                    </p>
+                </div>
+                
+                <div class="permission-body">
+                    <!-- User Information -->
+                    <div class="user-info text-center">
+                        <div class="user-avatar">
+                            {{ user.first_name|first|default:user.username|first|upper }}
+                        </div>
+                        <h5 class="mb-2">{{ user.get_full_name|default:user.username }}</h5>
+                        <p class="text-muted mb-1">
+                            <i class="bi bi-person me-1"></i>
+                            {{ user.username }}
+                        </p>
+                        <p class="text-muted mb-1">
+                            <i class="bi bi-envelope me-1"></i>
+                            {{ user.email|default:"غير محدد" }}
+                        </p>
+                        {% if user.profile %}
+                            <div class="mt-2">
+                                <span class="badge bg-info">
+                                    {{ user.profile.get_user_type_display }}
+                                </span>
+                                {% if user.profile.is_active %}
+                                    <span class="badge bg-success">نشط</span>
+                                {% else %}
+                                    <span class="badge bg-danger">غير نشط</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Permission Summary -->
+                    <div class="permission-summary">
+                        <h6><i class="bi bi-info-circle me-2"></i>معلومات الصلاحيات</h6>
+                        <ul>
+                            <li>يمكنك منح أو إلغاء صلاحيات محددة للمستخدم</li>
+                            <li>الصلاحيات الممنوحة تسمح للمستخدم بالوصول إلى الوظائف المقابلة</li>
+                            <li>المديرين لديهم جميع الصلاحيات بشكل افتراضي</li>
+                            <li>يمكن تغيير الصلاحيات في أي وقت</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Permission Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Cars Module -->
+                        <div class="permission-module">
+                            <h5><i class="bi bi-car-front me-2"></i>السيارات</h5>
+                            
+                            <div class="permission-item">
+                                <div>
+                                    <div class="permission-name">إنشاء</div>
+                                    <div class="permission-description">إضافة سيارات جديدة إلى النظام</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.cars_create }}
+                                </div>
+                            </div>
+                            
+                            <div class="permission-item">
+                                <div>
+                                    <div class="permission-name">قراءة</div>
+                                    <div class="permission-description">عرض قائمة السيارات وتفاصيلها</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.cars_read }}
+                                </div>
+                            </div>
+                            
+                            <div class="permission-item">
+                                <div>
+                                    <div class="permission-name">تحديث</div>
+                                    <div class="permission-description">تعديل بيانات السيارات الموجودة</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.cars_update }}
+                                </div>
+                            </div>
+                            
+                            <div class="permission-item">
+                                <div>
+                                    <div class="permission-name">حذف</div>
+                                    <div class="permission-description">حذف السيارات من النظام</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.cars_delete }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Equipment Module -->
+                        <div class="permission-module">
+                            <h5><i class="bi bi-tools me-2"></i>المعدات</h5>
+                            
+                            <div class="permission-item">
+                                <div>
+                                    <div class="permission-name">إنشاء</div>
+                                    <div class="permission-description">إضافة معدات جديدة إلى النظام</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.equipment_create }}
+                                </div>
+                            </div>
+                            
+                            <div class="permission-item">
+                                <div>
+                                    <div class="permission-name">قراءة</div>
+                                    <div class="permission-description">عرض قائمة المعدات وتفاصيلها</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.equipment_read }}
+                                </div>
+                            </div>
+                            
+                            <div class="permission-item">
+                                <div>
+                                    <div class="permission-name">تحديث</div>
+                                    <div class="permission-description">تعديل بيانات المعدات الموجودة</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.equipment_update }}
+                                </div>
+                            </div>
+                            
+                            <div class="permission-item">
+                                <div>
+                                    <div class="permission-name">حذف</div>
+                                    <div class="permission-description">حذف المعدات من النظام</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.equipment_delete }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Generic Tables Module -->
+                        <div class="permission-module">
+                            <h5><i class="bi bi-table me-2"></i>الجداول العامة</h5>
+                            
+                            <div class="permission-item">
+                                <div>
+                                    <div class="permission-name">إنشاء</div>
+                                    <div class="permission-description">إضافة سجلات جديدة إلى الجداول العامة</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.generic_tables_create }}
+                                </div>
+                            </div>
+                            
+                            <div class="permission-item">
+                                <div>
+                                    <div class="permission-name">قراءة</div>
+                                    <div class="permission-description">عرض الجداول العامة وسجلاتها</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.generic_tables_read }}
+                                </div>
+                            </div>
+                            
+                            <div class="permission-item">
+                                <div>
+                                    <div class="permission-name">تحديث</div>
+                                    <div class="permission-description">تعديل السجلات الموجودة في الجداول العامة</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.generic_tables_update }}
+                                </div>
+                            </div>
+                            
+                            <div class="permission-item">
+                                <div>
+                                    <div class="permission-name">حذف</div>
+                                    <div class="permission-description">حذف السجلات من الجداول العامة</div>
+                                </div>
+                                <div class="form-check form-switch">
+                                    {{ form.generic_tables_delete }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'permission_management' %}" class="btn btn-cancel text-white">
+                                <i class="bi bi-arrow-right me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-submit text-white">
+                                <i class="bi bi-check-lg me-2"></i>
+                                حفظ الصلاحيات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add form validation
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // You can add any validation logic here
+            console.log('Submitting permission form');
+        });
+    }
+    
+    // Add visual feedback for permission changes
+    const switches = document.querySelectorAll('.form-check-input');
+    switches.forEach(switchElement => {
+        switchElement.addEventListener('change', function() {
+            const permissionItem = this.closest('.permission-item');
+            if (this.checked) {
+                permissionItem.style.backgroundColor = '#e8f5e8';
+            } else {
+                permissionItem.style.backgroundColor = '#ffeaea';
+            }
+            
+            // Reset background after a short delay
+            setTimeout(() => {
+                permissionItem.style.backgroundColor = '';
+            }, 1000);
+        });
+    });
+    
+    // Add select all/none functionality for each module
+    const modules = document.querySelectorAll('.permission-module');
+    modules.forEach(module => {
+        const switches = module.querySelectorAll('.form-check-input');
+        const moduleTitle = module.querySelector('h5');
+        
+        // Add select all/none buttons
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'mb-3';
+        buttonContainer.innerHTML = `
+            <button type="button" class="btn btn-sm btn-outline-success me-2 select-all">
+                <i class="bi bi-check-all me-1"></i>اختيار الكل
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger select-none">
+                <i class="bi bi-x me-1"></i>إلغاء الكل
+            </button>
+        `;
+        
+        moduleTitle.parentNode.insertBefore(buttonContainer, moduleTitle.nextSibling);
+        
+        // Add event listeners
+        const selectAllBtn = buttonContainer.querySelector('.select-all');
+        const selectNoneBtn = buttonContainer.querySelector('.select-none');
+        
+        selectAllBtn.addEventListener('click', function() {
+            switches.forEach(switchElement => {
+                switchElement.checked = true;
+                switchElement.dispatchEvent(new Event('change'));
+            });
+        });
+        
+        selectNoneBtn.addEventListener('click', function() {
+            switches.forEach(switchElement => {
+                switchElement.checked = false;
+                switchElement.dispatchEvent(new Event('change'));
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
