@@ -5,7 +5,8 @@ from .models import (
     ContractType, Activity, Region, Car, Equipment, CalibrationCertificateImage,
     Maintenance, CarImage, EquipmentImage, CarLicenseRecord, CarInspectionRecord,
     EquipmentLicenseRecord, EquipmentInspectionRecord, FireExtinguisherInspectionRecord,
-    FireExtinguisherImage
+    FireExtinguisherImage, UserProfile, ModulePermission, UserPermission,
+    LoginLog, ActionLog
 )
 
 
@@ -108,8 +109,8 @@ class CarAdmin(admin.ModelAdmin):
             'fields': ('fleet_no', 'plate_no_en', 'plate_no_ar')
         }),
         ('Vehicle Details', {
-            'fields': ('department_code', 'driver_name', 'car_class', 'manufacturer', 'model', 
-                      'functional_location', 'ownership_type')
+            'fields': ('department_code', 'driver_name', 'car_class', 'manufacturer', 'model',
+                       'functional_location', 'ownership_type')
         }),
         ('Location', {
             'fields': ('room', 'location_description', 'address_details_1')
@@ -251,3 +252,90 @@ class FireExtinguisherInspectionRecordAdmin(admin.ModelAdmin):
 class FireExtinguisherImageAdmin(admin.ModelAdmin):
     list_display = ['equipment', 'uploaded_at']
     list_filter = ['equipment', 'uploaded_at']
+
+
+# =============================================================================
+# RBAC SYSTEM ADMIN - Phase 1 Implementation
+# =============================================================================
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ['user', 'user_type', 'is_active', 'created_by', 'created_at']
+    list_filter = ['user_type', 'is_active', 'created_at']
+    search_fields = ['user__username', 'user__first_name', 'user__last_name']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('معلومات المستخدم', {
+            'fields': ('user', 'user_type', 'is_active')
+        }),
+        ('معلومات الإنشاء', {
+            'fields': ('created_by', 'created_at', 'updated_at')
+        }),
+        ('الصلاحيات', {
+            'fields': ('permissions_json',)
+        }),
+    )
+
+
+@admin.register(ModulePermission)
+class ModulePermissionAdmin(admin.ModelAdmin):
+    list_display = ['module_name', 'permission_type', 'description', 'created_at']
+    list_filter = ['module_name', 'permission_type', 'created_at']
+    search_fields = ['module_name', 'permission_type', 'description']
+    readonly_fields = ['created_at']
+    fieldsets = (
+        ('معلومات الصلاحية', {
+            'fields': ('module_name', 'permission_type', 'description')
+        }),
+        ('معلومات النظام', {
+            'fields': ('created_at',)
+        }),
+    )
+
+
+@admin.register(UserPermission)
+class UserPermissionAdmin(admin.ModelAdmin):
+    list_display = ['user', 'module_permission', 'granted', 'created_at']
+    list_filter = ['granted', 'module_permission__module_name', 'created_at']
+    search_fields = ['user__username', 'module_permission__module_name']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('معلومات الصلاحية', {
+            'fields': ('user', 'module_permission', 'granted')
+        }),
+        ('معلومات النظام', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
+
+@admin.register(LoginLog)
+class LoginLogAdmin(admin.ModelAdmin):
+    list_display = ['user', 'login_time', 'ip_address', 'success', 'logout_time']
+    list_filter = ['success', 'login_time', 'logout_time']
+    search_fields = ['user__username', 'ip_address']
+    readonly_fields = ['login_time', 'logout_time']
+    fieldsets = (
+        ('معلومات تسجيل الدخول', {
+            'fields': ('user', 'login_time', 'logout_time', 'success')
+        }),
+        ('معلومات الشبكة', {
+            'fields': ('ip_address', 'user_agent')
+        }),
+    )
+
+
+@admin.register(ActionLog)
+class ActionLogAdmin(admin.ModelAdmin):
+    list_display = ['user', 'action_type', 'module_name', 'object_id', 'timestamp']
+    list_filter = ['action_type', 'module_name', 'timestamp']
+    search_fields = ['user__username', 'module_name', 'object_id', 'description']
+    readonly_fields = ['timestamp']
+    fieldsets = (
+        ('معلومات العملية', {
+            'fields': ('user', 'action_type', 'module_name', 'object_id', 'description')
+        }),
+        ('معلومات النظام', {
+            'fields': ('timestamp', 'ip_address')
+        }),
+    )
