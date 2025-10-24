@@ -177,11 +177,7 @@ class Car(models.Model):
     location_description = models.TextField(verbose_name="وصف الموقع")
     address_details_1 = models.TextField(blank=True, null=True, verbose_name="تفاصيل العنوان 1")
     
-    # Dates
-    car_license_start_date = models.DateField(blank=True, null=True, verbose_name="تاريخ بداية رخصة السيارة")
-    car_license_end_date = models.DateField(blank=True, null=True, verbose_name="تاريخ انتهاء رخصة السيارة")
-    annual_inspection_start_date = models.DateField(blank=True, null=True, verbose_name="تاريخ بداية الفحص السنوي")
-    annual_inspection_end_date = models.DateField(blank=True, null=True, verbose_name="تاريخ انتهاء الفحص السنوي")
+    # Dates - Removed old fields, now handled by historical records
     
     # Image
     car_image = models.ImageField(upload_to='cars/', blank=True, null=True, verbose_name="صورة السيارة")
@@ -205,18 +201,30 @@ class Car(models.Model):
         return f"{self.fleet_no} - {self.plate_no_en}"
     
     @property
+    def current_license_record(self):
+        """Get the current license record"""
+        return self.license_records.first()
+    
+    @property
+    def current_inspection_record(self):
+        """Get the current inspection record"""
+        return self.inspection_records.first()
+    
+    @property
     def is_inspection_expired(self):
         """Check if inspection is expired"""
-        if not self.annual_inspection_end_date:
+        current_record = self.current_inspection_record
+        if not current_record or not current_record.end_date:
             return True
-        return self.annual_inspection_end_date < date.today()
+        return current_record.end_date < date.today()
     
     @property
     def days_until_inspection_expiry(self):
         """Days until inspection expires"""
-        if not self.annual_inspection_end_date:
+        current_record = self.current_inspection_record
+        if not current_record or not current_record.end_date:
             return None
-        delta = self.annual_inspection_end_date - date.today()
+        delta = current_record.end_date - date.today()
         return delta.days
 
 
@@ -296,6 +304,74 @@ class CalibrationCertificateImage(models.Model):
     
     def __str__(self):
         return f"Certificate for {self.equipment.door_no}"
+
+
+class CarImage(models.Model):
+    """Model to store multiple car images"""
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='car_images', verbose_name="السيارة")
+    image = models.ImageField(upload_to='cars/', verbose_name="صورة السيارة")
+    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الرفع")
+    
+    class Meta:
+        verbose_name = "صورة سيارة"
+        verbose_name_plural = "صور السيارات"
+    
+    def __str__(self):
+        return f"Image for {self.car.fleet_no}"
+
+
+class EquipmentImage(models.Model):
+    """Model to store multiple equipment images"""
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='equipment_images', verbose_name="المعدة")
+    image = models.ImageField(upload_to='equipment/', verbose_name="صورة المعدة")
+    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الرفع")
+    
+    class Meta:
+        verbose_name = "صورة معدة"
+        verbose_name_plural = "صور المعدات"
+    
+    def __str__(self):
+        return f"Image for {self.equipment.door_no}"
+
+
+class CarLicenseRecord(models.Model):
+    """Car License Record model - سجل رخصة السيارة"""
+    
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='license_records', verbose_name="السيارة")
+    start_date = models.DateField(verbose_name="تاريخ بداية الرخصة")
+    end_date = models.DateField(verbose_name="تاريخ انتهاء الرخصة")
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الإنشاء")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاريخ التحديث")
+    
+    class Meta:
+        verbose_name = "سجل رخصة سيارة"
+        verbose_name_plural = "سجلات رخص السيارات"
+        ordering = ['-start_date']
+    
+    def __str__(self):
+        return f"License for {self.car.fleet_no} ({self.start_date} - {self.end_date})"
+
+
+class CarInspectionRecord(models.Model):
+    """Car Inspection Record model - سجل فحص السيارة السنوي"""
+    
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='inspection_records', verbose_name="السيارة")
+    start_date = models.DateField(verbose_name="تاريخ بداية الفحص")
+    end_date = models.DateField(verbose_name="تاريخ انتهاء الفحص")
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الإنشاء")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاريخ التحديث")
+    
+    class Meta:
+        verbose_name = "سجل فحص سيارة"
+        verbose_name_plural = "سجلات فحص السيارات"
+        ordering = ['-start_date']
+    
+    def __str__(self):
+        return f"Inspection for {self.car.fleet_no} ({self.start_date} - {self.end_date})"
 
 
 class Maintenance(models.Model):

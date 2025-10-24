@@ -2,6 +2,13 @@
 
 A comprehensive fleet and equipment management system built with Django, featuring bilingual support (Arabic/English) for managing vehicles, equipment, and maintenance records.
 
+## 📚 Documentation
+
+- **[PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md)** - Complete architectural reference for developers and AI agents
+- **[AI_AGENT_RULES.md](AI_AGENT_RULES.md)** - Guidelines for AI agents working on this project
+- **[QUICKSTART.md](QUICKSTART.md)** - Quick setup guide
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Production deployment instructions
+
 ## Features
 
 ### Core Functionality

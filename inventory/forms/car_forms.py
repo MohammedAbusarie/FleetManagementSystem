@@ -2,7 +2,7 @@
 from django import forms
 from crispy_forms.helper import FormHelper
 from django.contrib.contenttypes.forms import generic_inlineformset_factory
-from ..models import Car, Maintenance
+from ..models import Car, Maintenance, CarImage, CarLicenseRecord, CarInspectionRecord
 from .base import Select2Widget
 from .generic_forms import MaintenanceForm
 
@@ -16,8 +16,7 @@ class CarForm(forms.ModelForm):
             'fleet_no', 'plate_no_en', 'plate_no_ar', 'administrative_unit', 'department_code', 'driver_name',
             'car_class', 'manufacturer', 'model', 'functional_location', 'ownership_type',
             'room', 'location_description', 'address_details_1', 'notification_recipient',
-            'contract_type', 'activity', 'car_license_start_date', 'car_license_end_date',
-            'annual_inspection_start_date', 'annual_inspection_end_date', 'car_image', 'status'
+            'contract_type', 'activity', 'status'
         ]
         widgets = {
             # Foreign key fields with search functionality
@@ -35,10 +34,6 @@ class CarForm(forms.ModelForm):
             # Other fields
             'location_description': forms.Textarea(attrs={'rows': 3}),
             'address_details_1': forms.Textarea(attrs={'rows': 3}),
-            'car_license_start_date': forms.DateInput(attrs={'type': 'date'}),
-            'car_license_end_date': forms.DateInput(attrs={'type': 'date'}),
-            'annual_inspection_start_date': forms.DateInput(attrs={'type': 'date'}),
-            'annual_inspection_end_date': forms.DateInput(attrs={'type': 'date'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -47,9 +42,37 @@ class CarForm(forms.ModelForm):
         self.helper.form_method = 'post'
         self.helper.form_enctype = 'multipart/form-data'
 
-        # Handle image update logic
-        if self.instance and self.instance.car_image:
-            self.fields['car_image'].required = False
+
+class CarLicenseRecordForm(forms.ModelForm):
+    """Form for Car License Records"""
+    
+    class Meta:
+        model = CarLicenseRecord
+        fields = ['start_date', 'end_date']
+        widgets = {
+            'start_date': forms.DateInput(attrs={'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+
+class CarInspectionRecordForm(forms.ModelForm):
+    """Form for Car Inspection Records"""
+    
+    class Meta:
+        model = CarInspectionRecord
+        fields = ['start_date', 'end_date']
+        widgets = {
+            'start_date': forms.DateInput(attrs={'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+
+class CarImageForm(forms.ModelForm):
+    """Form for Car Images"""
+    
+    class Meta:
+        model = CarImage
+        fields = ['image']
 
 
 # Car Maintenance Formset
@@ -60,4 +83,26 @@ CarMaintenanceFormSet = generic_inlineformset_factory(
     can_delete=True,
     ct_field="content_type",
     fk_field="object_id"
+)
+
+# Car License Records Formset
+CarLicenseRecordFormSet = forms.inlineformset_factory(
+    Car,
+    CarLicenseRecord,
+    form=CarLicenseRecordForm,
+    extra=1,
+    can_delete=True,
+    min_num=1,  # At least one license record is required
+    validate_min=True
+)
+
+# Car Inspection Records Formset
+CarInspectionRecordFormSet = forms.inlineformset_factory(
+    Car,
+    CarInspectionRecord,
+    form=CarInspectionRecordForm,
+    extra=1,
+    can_delete=True,
+    min_num=1,  # At least one inspection record is required
+    validate_min=True
 )

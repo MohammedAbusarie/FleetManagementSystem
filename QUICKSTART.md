@@ -1,5 +1,7 @@
 # Fleet Management System - Quick Start Guide
 
+> **📚 For detailed architecture and development patterns, see [PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md)**
+
 ## What You Need
 - Python 3.11 or higher
 - PostgreSQL database

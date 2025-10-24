@@ -57,17 +57,46 @@ class CarService(BaseService):
         """Get cars with expiring inspections/licenses"""
         today = date.today()
         
+        # Get cars with their current license and inspection records
+        cars_with_records = self.get_cars_with_related().prefetch_related(
+            'license_records', 'inspection_records'
+        )
+        
         if expiry_status == 'expired':
-            return self.get_cars_with_related().filter(
-                Q(annual_inspection_end_date__lt=today) |
-                Q(car_license_end_date__lt=today) |
-                Q(annual_inspection_end_date__isnull=True) |
-                Q(car_license_end_date__isnull=True)
-            ).order_by('annual_inspection_end_date')
+            # Filter cars where current records are expired or missing
+            expired_cars = []
+            for car in cars_with_records:
+                current_license = car.current_license_record
+                current_inspection = car.current_inspection_record
+                
+                # Check if license is expired or missing
+                license_expired = (current_license and current_license.end_date < today) or not current_license
+                # Check if inspection is expired or missing  
+                inspection_expired = (current_inspection and current_inspection.end_date < today) or not current_inspection
+                
+                if license_expired or inspection_expired:
+                    expired_cars.append(car)
+            
+            return expired_cars
         else:
+            # Filter cars where current records are about to expire
             expiry_date = today + timedelta(days=days)
-            return self.get_cars_with_related().filter(
-                Q(annual_inspection_end_date__gte=today) | Q(annual_inspection_end_date__isnull=True),
-                Q(car_license_end_date__gte=today) | Q(car_license_end_date__isnull=True),
-                Q(annual_inspection_end_date__lte=expiry_date) | Q(annual_inspection_end_date__isnull=True)
-            ).order_by('annual_inspection_end_date')
+            about_to_expire_cars = []
+            
+            for car in cars_with_records:
+                current_license = car.current_license_record
+                current_inspection = car.current_inspection_record
+                
+                # Check if license is about to expire
+                license_about_to_expire = (current_license and 
+                                         current_license.end_date >= today and 
+                                         current_license.end_date <= expiry_date)
+                # Check if inspection is about to expire
+                inspection_about_to_expire = (current_inspection and 
+                                             current_inspection.end_date >= today and 
+                                             current_inspection.end_date <= expiry_date)
+                
+                if license_about_to_expire or inspection_about_to_expire:
+                    about_to_expire_cars.append(car)
+            
+            return about_to_expire_cars

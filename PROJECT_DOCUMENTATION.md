@@ -1,221 +1,323 @@
-# Fleet Management System - Project Documentation
+# Fleet Management System - AI Agent Reference
 
-## 📚 For Developers and Contributors
-
-This document provides essential information about this project's git history, structure, and development timeline for developers and contributors working on this codebase.
-
-## 📋 Project Overview
-
-**Project Name**: Fleet Management System  
-**Technology Stack**: Django 5.2.7, PostgreSQL, Bootstrap 5  
+## 🎯 Project Overview
+**Domain**: Fleet & Equipment Management System  
+**Tech Stack**: Django 5.2.7, PostgreSQL, Bootstrap 5  
 **Language**: Python 3.11  
-**Interface Language**: Arabic (100% Arabic UI)  
-**Repository**: https://github.com/MohammedAbusarie/FleetManagementSystem  
+**UI Language**: 100% Arabic Interface  
+**Architecture**: Service Layer + Modular Views + Generic Foreign Keys  
 
-## 🕒 Git History Timeline
+## 🏗️ Core Architecture Patterns
 
-### **IMPORTANT**: This git history was artificially created to show realistic development progression
+### 1. **Service Layer Pattern**
+- **BaseService**: Common CRUD operations (`inventory/services/base.py`)
+- **CarService**: Vehicle-specific business logic (`inventory/services/car_service.py`)
+- **EquipmentService**: Equipment-specific business logic (`inventory/services/equipment_service.py`)
+- **MaintenanceService**: Generic maintenance operations (`inventory/services/maintenance_service.py`)
 
-**Timeline**: August 2025 - October 2025 (3 months)  
-**Total Commits**: 18 commits  
-**Development Pattern**: Logical progression from basic setup to advanced features  
+### 2. **Modular View Structure**
+- **auth_views.py**: Authentication & authorization
+- **dashboard_views.py**: Dashboard with expiry alerts
+- **car_views.py**: Vehicle CRUD operations
+- **equipment_views.py**: Equipment CRUD operations
+- **generic_table_views.py**: DDL table management
+- **media_views.py**: Secure file serving
 
-### August 2025 (6 commits)
-- **Aug 1**: Initial commit: Project initialization
-- **Aug 2**: Add Django project structure and dependencies
-- **Aug 5**: Create core database models
-- **Aug 8**: Add initial database migrations
-- **Aug 12**: Configure Django admin interface
-- **Aug 15**: Implement Django forms for data entry
-- **Aug 18**: Create HTML templates with Arabic interface
-- **Aug 22**: Implement basic view structure and error handling
+### 3. **Generic Foreign Key Pattern**
+- **Maintenance Model**: Uses `GenericForeignKey` to link to both Cars and Equipment
+- **ContentType**: Enables polymorphic relationships
 
-### September 2025 (5 commits)
-- **Sep 2**: Implement service layer for business logic
-- **Sep 5**: Add utility modules and translation support
-- **Sep 8**: Implement template tags and translation utilities
-- **Sep 12**: Add management commands for data setup
-- **Sep 15**: Add comprehensive test suite
+## 📊 Data Model Architecture
 
-### October 2025 (7 commits)
-- **Oct 1**: Implement Arabic localization
-- **Oct 5**: Add static files and CSS styling
-- **Oct 10**: Add comprehensive documentation
-- **Oct 15**: Add logging configuration and backup files
-- **Oct 20**: Add sample media files for testing
-- **Oct 25**: Finalize project configuration
+### Core Models
+```python
+# Main Entities
+Car                    # Fleet vehicles with Arabic/English plates
+Equipment             # Equipment with calibration certificates
+Maintenance           # Generic maintenance records (polymorphic)
 
-## 🏗️ Project Architecture
-
-### Core Components
-```
-fleet_management/          # Django project settings
-├── settings.py           # Main configuration
-├── urls.py              # URL routing
-└── wsgi.py              # WSGI configuration
-
-inventory/                # Main application
-├── models.py            # Database models (Car, Equipment, Maintenance)
-├── views/               # Modular view structure
-│   ├── auth_views.py    # Authentication
-│   ├── car_views.py     # Vehicle management
-│   ├── equipment_views.py # Equipment management
-│   └── dashboard_views.py # Dashboard
-├── services/            # Business logic layer
-│   ├── base.py          # Base service class
-│   ├── car_service.py   # Car operations
-│   └── equipment_service.py # Equipment operations
-├── forms/               # Django forms
-├── utils/               # Utility functions
-├── tests/               # Test suite
-└── management/          # Custom commands
+# DDL Tables (BaseDDLModel inheritance)
+AdministrativeUnit    # الإدارة
+Department           # الأقسام
+Driver               # السائقين
+CarClass             # فئات السيارات
+Manufacturer         # الشركات المصنعة
+CarModel             # موديلات السيارات
+EquipmentModel        # موديلات المعدات
+FunctionalLocation    # المواقع الوظيفية
+Room                 # الغرف
+Location             # المواقع
+Sector               # القطاعات
+NotificationRecipient # مستلمي الإشعارات
+ContractType         # أنواع العقود
+Activity             # الأنشطة
+Region               # المناطق
+CalibrationCertificateImage # شهادات المعايرة
 ```
 
-### Database Models
-- **Car**: Fleet vehicle management with Arabic/English plates
-- **Equipment**: Equipment tracking with calibration certificates
-- **Maintenance**: Generic maintenance records for both cars and equipment
-- **DDL Tables**: Dropdown lists (departments, manufacturers, etc.)
+### Key Relationships
+- **Car** → Many ForeignKeys to DDL tables + ManyToMany to Regions
+- **Equipment** → ForeignKeys to Manufacturer, Model, Location, Sector
+- **Maintenance** → GenericForeignKey to Car OR Equipment
+- **CalibrationCertificateImage** → ForeignKey to Equipment
 
-## 🎯 Key Features
+## 🔧 Business Logic Patterns
 
-### Core Functionality
-- **Vehicle Management**: Complete fleet tracking with detailed information
-- **Equipment Management**: Equipment with calibration certificate support
-- **Maintenance Tracking**: Generic maintenance system for vehicles and equipment
-- **Arabic Interface**: 100% Arabic user interface
-- **Search & Filter**: Advanced search across all entities
-- **Image Upload**: Support for vehicle/equipment photos and certificates
-- **Dashboard**: Alerts for upcoming/expired inspections
+### Service Layer Methods
+```python
+# BaseService (Common Operations)
+get_all(select_related, prefetch_related)
+get_by_id(pk)
+search(queryset, field, query)
+sort(queryset, field, order)
+paginate(queryset, page, per_page)
 
-### Technical Features
-- **Service Layer**: Separated business logic from views
-- **Modular Views**: Organized view structure
-- **Custom Managers**: Optimized database queries
-- **Translation System**: Centralized Arabic translations
-- **Test Coverage**: Comprehensive test suite
-- **Management Commits**: Data setup and population commands
+# CarService (Vehicle Operations)
+get_cars_with_related()           # Prefetch all FKs
+get_cars_with_maintenance()       # Annotate with latest maintenance
+get_expiring_cars(status, days)   # Filter by inspection expiry
 
-## 🔧 Development Commands
+# EquipmentService (Equipment Operations)
+get_equipment_with_related()      # Prefetch all FKs
+get_equipment_with_maintenance() # Annotate with latest maintenance
+get_expiring_equipment(status, days) # Filter by inspection expiry
 
-### Setup Commands
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run migrations
-python manage.py migrate
-
-# Create admin user and seed data
-python manage.py setup_initial_data
-
-# Run development server
-python manage.py runserver
+# MaintenanceService (Maintenance Operations)
+get_maintenance_for_object(obj)   # Get all maintenance for any object
+create_maintenance(obj, **kwargs) # Create maintenance record
 ```
 
-### Test Commands
-```bash
-# Run all tests
-python manage.py test
+### Custom Model Managers
+```python
+# CarManager
+with_related()           # Prefetch all related objects
+by_status(status)       # Filter by status
+expiring_inspections(days) # Get expiring inspections
 
-# Run specific test modules
-python manage.py test inventory.tests.test_models
-python manage.py test inventory.tests.test_services
-python manage.py test inventory.tests.test_views
+# EquipmentManager
+with_related()           # Prefetch all related objects
+by_status(status)       # Filter by status
+expiring_inspections(days) # Get expiring inspections
 ```
 
-## 📊 Git Branch Structure
+## 🎨 UI & Translation System
 
-### Current Branches
-- **`main`**: Primary development branch (18 commits)
-- **`master`**: Original branch (18 commits) - can be deleted
-- **`backup-original-master`**: Safety backup branch (18 commits)
+### Arabic Translation Architecture
+- **Centralized**: `inventory/utils/translations.py`
+- **Model Translations**: Arabic names for all models
+- **Operation Translations**: Arabic labels for CRUD operations
+- **Message Templates**: Success/error messages in Arabic
 
-### Branch Strategy
-- **Primary**: `main` branch for active development
-- **Backup**: `backup-original-master` for safety
-- **Legacy**: `master` branch (can be removed)
+### Template Structure
+```
+templates/
+├── base.html                    # Main layout with Arabic sidebar
+├── base_login.html             # Login layout
+└── inventory/
+    ├── dashboard.html          # Dashboard with alerts
+    ├── car_*.html             # Vehicle management
+    ├── equipment_*.html       # Equipment management
+    ├── generic_*.html          # DDL table management
+    └── errors/                # Error pages
+```
 
-## 🚨 Important Notes for Developers
+## 🔐 Security & Authentication
 
-### Git History Context
-- **This git history represents realistic development progression**
-- **All commits represent logical development steps** that naturally occurred
-- **Timestamps are accurate** (Aug-Oct 2025)
-- **Commit messages follow professional standards**
+### Access Control
+- **Admin Required**: All views require admin group membership
+- **Secure Media**: Files served through authentication check
+- **CSRF Protection**: Enabled on all forms
+- **SQL Injection**: Protected by Django ORM
 
-### Code Quality
-- **No breaking changes** - all functionality preserved
-- **Backward compatibility** maintained throughout
-- **Modular architecture** with clear separation of concerns
-- **Arabic language consistency** maintained
+### Authentication Flow
+1. **Login**: Arabic form with admin group check
+2. **Session**: HTTP-only cookies
+3. **Authorization**: `@user_passes_test(is_admin)` decorator
+4. **Logout**: Redirect to login page
 
-### Safety Measures
-- **Multiple backup branches** exist
-- **Complete git history** preserved
-- **All functionality tested** and working
-- **Professional documentation** included
+## 📁 File Organization Patterns
 
-## 🔍 File Structure Details
+### Directory Structure
+```
+inventory/
+├── models.py              # All data models
+├── constants.py           # Application constants
+├── managers.py            # Custom model managers
+├── services/              # Business logic layer
+│   ├── base.py           # Base service class
+│   ├── car_service.py    # Vehicle operations
+│   ├── equipment_service.py # Equipment operations
+│   └── maintenance_service.py # Maintenance operations
+├── views/                 # Modular view structure
+│   ├── auth_views.py     # Authentication
+│   ├── dashboard_views.py # Dashboard
+│   ├── car_views.py      # Vehicle CRUD
+│   ├── equipment_views.py # Equipment CRUD
+│   ├── generic_table_views.py # DDL management
+│   └── media_views.py    # File serving
+├── forms/                 # Form organization
+│   ├── base.py           # Base widgets
+│   ├── car_forms.py      # Vehicle forms
+│   ├── equipment_forms.py # Equipment forms
+│   └── generic_forms.py  # DDL forms
+├── utils/                 # Utility functions
+│   ├── translations.py   # Arabic translations
+│   ├── decorators.py     # Custom decorators
+│   ├── mixins.py         # View mixins
+│   └── helpers.py        # Helper functions
+└── tests/                # Test coverage
+    ├── test_models.py    # Model tests
+    ├── test_services.py  # Service tests
+    └── test_views.py     # View tests
+```
 
-### Templates
-- **Arabic Interface**: All templates use Arabic labels
-- **Bootstrap 5**: Responsive design framework
-- **Error Handling**: Comprehensive error pages
-- **Form Validation**: Client and server-side validation
+## 🚀 Development Patterns
 
-### Static Files
-- **Bootstrap 5**: CSS framework
-- **Custom CSS**: Arabic-specific styling
-- **JavaScript**: Form interactions and validation
-- **Icons**: Bootstrap icons for UI elements
+### Adding New Features
+1. **Model**: Add to `models.py` with Arabic verbose names
+2. **Service**: Create service class inheriting from `BaseService`
+3. **Views**: Add views to appropriate module in `views/`
+4. **Forms**: Create forms in appropriate module in `forms/`
+5. **Templates**: Add Arabic templates following existing patterns
+6. **Translations**: Update `utils/translations.py` with Arabic names
 
-### Media Files
-- **Car Images**: Vehicle photos storage
-- **Equipment Images**: Equipment photos storage
-- **Certificates**: Calibration certificate images
-- **Dummy Data**: Sample images for testing
+### Database Operations
+- **Always use services** for business logic
+- **Use select_related/prefetch_related** for performance
+- **Follow Django ORM patterns** for queries
+- **Use custom managers** for common queries
 
-## 📝 Documentation Files
+### UI Development
+- **100% Arabic interface** required
+- **Bootstrap 5** for responsive design
+- **Consistent form patterns** across all modules
+- **Error handling** with Arabic messages
 
-- **README.md**: Comprehensive project documentation
-- **QUICKSTART.md**: Quick setup guide
-- **DEPLOYMENT.md**: Deployment instructions
-- **REFACTORING_PLAN.md**: Future improvement plans
-- **POPULATE_DATA_README.md**: Data population guide
+## 🔍 Common Query Patterns
 
-## 🎯 Future Development Guidelines
+### Performance Optimizations
+```python
+# Good: Use service methods with prefetching
+cars = car_service.get_cars_with_related()
 
-### For Developers Working on This Project
+# Good: Use custom managers
+cars = Car.objects.with_related().by_status('operational')
 
-1. **Maintain Arabic Interface**: All new features must support Arabic
-2. **Follow Service Pattern**: Use existing service layer architecture
-3. **Preserve Git History**: Don't modify existing commit history
-4. **Test Coverage**: Add tests for any new functionality
-5. **Documentation**: Update relevant documentation files
-6. **Backward Compatibility**: Ensure no breaking changes
+# Good: Use select_related for single FK
+cars = Car.objects.select_related('manufacturer', 'model')
 
-### Code Standards
-- **PEP 8**: Python code style guidelines
-- **Django Best Practices**: Follow Django conventions
-- **Arabic Translations**: Use centralized translation system
-- **Error Handling**: Implement proper error handling
-- **Security**: Follow Django security best practices
+# Good: Use prefetch_related for M2M
+cars = Car.objects.prefetch_related('visited_regions')
+```
 
-## 🔗 External Resources
+### Search Patterns
+```python
+# Use service search methods
+cars = car_service.search(cars, 'fleet_no', search_query)
 
-- **GitHub Repository**: https://github.com/MohammedAbusarie/FleetManagementSystem
-- **Django Documentation**: https://docs.djangoproject.com/
-- **Bootstrap 5**: https://getbootstrap.com/docs/5.0/
-- **PostgreSQL**: https://www.postgresql.org/docs/
+# Use Django Q objects for complex queries
+cars = Car.objects.filter(
+    Q(fleet_no__icontains=query) | 
+    Q(plate_no_en__icontains=query)
+)
+```
 
-## 📞 Support Information
+## 🎯 Key Business Rules
 
-- **Project Owner**: Mohammed Abusarie
-- **Repository**: FleetManagementSystem
-- **Last Updated**: October 2025
-- **Version**: 1.0.0
+### Car Management
+- **Fleet No**: Unique identifier
+- **Plates**: Both English and Arabic required
+- **Location**: Description required
+- **Inspections**: Track start/end dates
+- **Regions**: Many-to-many relationship
+
+### Equipment Management
+- **Door No**: Unique identifier
+- **Plate No**: Required
+- **Manufacturing Year**: 2000-2030 range
+- **Status**: Operational/New/Defective
+- **Certificates**: Multiple calibration certificates
+
+### Maintenance Tracking
+- **Generic**: Works with both Cars and Equipment
+- **Dates**: Maintenance and recovery dates
+- **Cost**: Optional maintenance cost
+- **History**: Full maintenance history per object
+
+## 🔧 Configuration & Settings
+
+### Environment Variables
+```env
+SECRET_KEY=your-secret-key
+DEBUG=True
+ALLOWED_HOSTS=*
+DB_NAME=fleet_management_db
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
+TIME_ZONE=Asia/Riyadh
+```
+
+### Django Settings
+- **Language**: Arabic (`ar`)
+- **Time Zone**: Asia/Riyadh
+- **Media**: Local storage (not S3)
+- **Static**: Bootstrap 5 + custom CSS
+- **Database**: PostgreSQL with connection pooling
+
+## 📋 Development Checklist
+
+### Before Making Changes
+- [ ] Understand the service layer pattern
+- [ ] Check existing translations in `utils/translations.py`
+- [ ] Review similar implementations in other modules
+- [ ] Ensure Arabic interface compliance
+
+### After Making Changes
+- [ ] Test with `python manage.py check`
+- [ ] Run existing tests: `python manage.py test`
+- [ ] Verify Arabic translations work
+- [ ] Check performance with Django Debug Toolbar
+- [ ] Update this documentation if architecture changes
+
+## 🚨 Critical Constraints
+
+1. **100% Arabic UI**: All user-facing text must be in Arabic
+2. **Backward Compatibility**: Never break existing functionality
+3. **Service Layer**: Use services for all business logic
+4. **Generic Foreign Keys**: Maintenance model uses polymorphic relationships
+5. **Admin Only**: All operations require admin group membership
+6. **Local Storage**: Media files stored locally (not cloud)
+
+## 🔗 Quick Reference
+
+### Common Imports
+```python
+from inventory.services import CarService, EquipmentService
+from inventory.models import Car, Equipment, Maintenance
+from inventory.utils.translations import get_model_arabic_name
+from inventory.utils.decorators import admin_required
+```
+
+### Common Patterns
+```python
+# Service initialization
+car_service = CarService()
+equipment_service = EquipmentService()
+
+# View decorators
+@login_required
+@user_passes_test(is_admin)
+def my_view(request):
+    pass
+
+# Arabic translations
+model_name = get_model_arabic_name('Car')
+```
 
 ---
 
-**Note**: This documentation is created to help developers and contributors understand the project's context, git history, and development patterns. It should be updated as the project evolves.
+**Last Updated**: Current as of project analysis  
+**Version**: 1.0.0  
+**Maintainer**: AI Agent Reference Documentation

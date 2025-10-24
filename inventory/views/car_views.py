@@ -6,8 +6,8 @@ from django.http import JsonResponse
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.contrib import messages
-from ..models import Car, Maintenance, Region
-from ..forms import CarForm, CarMaintenanceFormSet
+from ..models import Car, Maintenance, Region, CarImage
+from ..forms import CarForm, CarMaintenanceFormSet, CarLicenseRecordFormSet, CarInspectionRecordFormSet
 from ..services import CarService
 from ..translation_utils import get_message_template
 from .auth_views import is_admin
@@ -68,10 +68,17 @@ def car_create_view(request):
     if request.method == 'POST':
         form = CarForm(request.POST, request.FILES)
         maintenance_formset = CarMaintenanceFormSet(request.POST, request.FILES)
+        license_formset = CarLicenseRecordFormSet(request.POST)
+        inspection_formset = CarInspectionRecordFormSet(request.POST)
         
-        if form.is_valid() and maintenance_formset.is_valid():
+        if form.is_valid() and maintenance_formset.is_valid() and license_formset.is_valid() and inspection_formset.is_valid():
             car = form.save(commit=False)
             car.save()
+
+            # Handle multiple car images
+            files = request.FILES.getlist('car_images')
+            for f in files:
+                CarImage.objects.create(car=car, image=f)
 
             # Handle visited regions dynamically
             region_names = request.POST.getlist('visited_regions_dynamic')
@@ -82,6 +89,18 @@ def car_create_view(request):
                     region_obj, _ = Region.objects.get_or_create(name=name)
                     region_objs.append(region_obj)
             car.visited_regions.set(region_objs)
+
+            # Save license records
+            license_instances = license_formset.save(commit=False)
+            for obj in license_instances:
+                obj.car = car
+                obj.save()
+
+            # Save inspection records
+            inspection_instances = inspection_formset.save(commit=False)
+            for obj in inspection_instances:
+                obj.car = car
+                obj.save()
 
             # Save maintenance records if status is under_maintenance
             if car.status == 'under_maintenance':
@@ -97,10 +116,14 @@ def car_create_view(request):
     else:
         form = CarForm()
         maintenance_formset = CarMaintenanceFormSet()
+        license_formset = CarLicenseRecordFormSet()
+        inspection_formset = CarInspectionRecordFormSet()
 
     context = {
         'form': form,
         'maintenance_formset': maintenance_formset,
+        'license_formset': license_formset,
+        'inspection_formset': inspection_formset,
         'action': 'Create',
         'all_regions': Region.objects.all()
     }
@@ -117,10 +140,24 @@ def car_update_view(request, pk):
     if request.method == 'POST':
         form = CarForm(request.POST, request.FILES, instance=car)
         maintenance_formset = CarMaintenanceFormSet(request.POST, request.FILES, instance=car)
+        license_formset = CarLicenseRecordFormSet(request.POST, instance=car)
+        inspection_formset = CarInspectionRecordFormSet(request.POST, instance=car)
         
-        if form.is_valid() and maintenance_formset.is_valid():
+        if form.is_valid() and maintenance_formset.is_valid() and license_formset.is_valid() and inspection_formset.is_valid():
             car = form.save(commit=False)
             car.save()
+
+            # Handle multiple car images
+            files = request.FILES.getlist('car_images')
+            for f in files:
+                CarImage.objects.create(car=car, image=f)
+            
+            # Handle image deletion
+            images_to_delete = request.POST.get('images_to_delete', '')
+            if images_to_delete:
+                image_ids = [int(id) for id in images_to_delete.split(',') if id.strip()]
+                if image_ids:
+                    CarImage.objects.filter(id__in=image_ids).delete()
 
             # Handle visited regions dynamically
             region_names = request.POST.getlist('visited_regions_dynamic')
@@ -131,6 +168,26 @@ def car_update_view(request, pk):
                     region_obj, _ = Region.objects.get_or_create(name=name)
                     region_objs.append(region_obj)
             car.visited_regions.set(region_objs)
+            
+            # Save license records
+            license_instances = license_formset.save(commit=False)
+            for obj in license_instances:
+                obj.car = car
+                obj.save()
+            
+            # Handle deleted license instances
+            for obj in license_formset.deleted_objects:
+                obj.delete()
+            
+            # Save inspection records
+            inspection_instances = inspection_formset.save(commit=False)
+            for obj in inspection_instances:
+                obj.car = car
+                obj.save()
+            
+            # Handle deleted inspection instances
+            for obj in inspection_formset.deleted_objects:
+                obj.delete()
             
             # Save maintenance records
             instances = maintenance_formset.save(commit=False)
@@ -149,10 +206,14 @@ def car_update_view(request, pk):
     else:
         form = CarForm(instance=car)
         maintenance_formset = CarMaintenanceFormSet(instance=car)
+        license_formset = CarLicenseRecordFormSet(instance=car)
+        inspection_formset = CarInspectionRecordFormSet(instance=car)
     
     context = {
         'form': form,
         'maintenance_formset': maintenance_formset,
+        'license_formset': license_formset,
+        'inspection_formset': inspection_formset,
         'action': 'Update',
         'car': car,
         'all_regions': Region.objects.all()
@@ -174,9 +235,15 @@ def car_detail_view(request, pk):
         object_id=car.pk
     ).order_by('-maintenance_date')
     
+    # Get license and inspection records
+    license_records = car.license_records.all().order_by('-start_date')
+    inspection_records = car.inspection_records.all().order_by('-start_date')
+    
     context = {
         'car': car,
         'maintenance_records': maintenance_records,
+        'license_records': license_records,
+        'inspection_records': inspection_records,
     }
     return render(request, 'inventory/car_detail.html', context)
 

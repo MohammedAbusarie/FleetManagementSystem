@@ -205,10 +205,10 @@
                                 <th data-sort="status">الحالة</th>
                                 <th data-sort="location_description">وصف الموقع</th>
                                 <th data-sort="address_details_1">تفاصيل العنوان 1</th>
-                                <th data-sort="car_license_start_date">تاريخ بداية رخصة السيارة</th>
-                                <th data-sort="car_license_end_date">تاريخ انتهاء رخصة السيارة</th>
-                                <th data-sort="annual_inspection_start_date">تاريخ بداية الفحص السنوي</th>
-                                <th data-sort="annual_inspection_end_date">تاريخ انتهاء الفحص السنوي</th>
+                                <th>تاريخ بداية رخصة السيارة</th>
+                                <th>تاريخ انتهاء رخصة السيارة</th>
+                                <th>تاريخ بداية الفحص السنوي</th>
+                                <th>تاريخ انتهاء الفحص السنوي</th>
                                 <th>تاريخ آخر صيانة</th>
                                 <th>تكلفة آخر صيانة</th>
                                 <th>صورة</th>
@@ -246,10 +246,10 @@
                                 </td>
                                 <td>{{ car.location_description }}</td>
                                 <td>{{ car.address_details_1|default:"-" }}</td>
-                                <td>{{ car.car_license_start_date|date:"Y-m-d"|default:"-" }}</td>
-                                <td>{{ car.car_license_end_date|date:"Y-m-d"|default:"-" }}</td>
-                                <td>{{ car.annual_inspection_start_date|date:"Y-m-d"|default:"-" }}</td>
-                                <td>{{ car.annual_inspection_end_date|date:"Y-m-d"|default:"-" }}</td>
+                                <td>{{ car.current_license_record.start_date|date:"Y-m-d"|default:"-" }}</td>
+                                <td>{{ car.current_license_record.end_date|date:"Y-m-d"|default:"-" }}</td>
+                                <td>{{ car.current_inspection_record.start_date|date:"Y-m-d"|default:"-" }}</td>
+                                <td>{{ car.current_inspection_record.end_date|date:"Y-m-d"|default:"-" }}</td>
                                 <td>{{ car.last_maintenance_date|date:"Y-m-d"|default:"-" }}</td>
                                 <td>{{ car.last_maintenance_cost|default:"-" }}</td>
                                 <td>

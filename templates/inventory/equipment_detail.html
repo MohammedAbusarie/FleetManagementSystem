@@ -141,20 +141,26 @@
         </div>
     </div>
 
-    <!-- Equipment Image Section -->
-    {% if equipment.equipment_image %}
+    <!-- Equipment Images Section -->
+    {% if equipment.equipment_images.all %}
     <div class="detail-card">
         <div class="detail-card-header">
-            <i class="bi bi-image"></i> صورة المعدة
+            <i class="bi bi-images"></i> صور المعدة
         </div>
         <div class="detail-card-body">
-            <div class="equipment-image-container">
-                <img src="{{ equipment.equipment_image|secure_media_url }}" alt="{{ equipment.door_no }}" class="equipment-image">
-                <div class="mt-3">
-                    <a href="{{ equipment.equipment_image|secure_media_url }}" download="{{ equipment.door_no }}_image.jpg" class="btn btn-info">
-                        <i class="bi bi-download"></i> تحميل الصورة
-                    </a>
+            <div class="row">
+                {% for img in equipment.equipment_images.all %}
+                <div class="col-md-4 mb-3">
+                    <div class="equipment-image-container">
+                        <img src="{{ img.image|secure_media_url }}" alt="{{ equipment.door_no }}" class="equipment-image">
+                        <div class="mt-2">
+                            <a href="{{ img.image|secure_media_url }}" download="{{ equipment.door_no }}_image_{{ forloop.counter }}.jpg" class="btn btn-sm btn-info">
+                                <i class="bi bi-download"></i> تحميل الصورة
+                            </a>
+                        </div>
+                    </div>
                 </div>
+                {% endfor %}
             </div>
         </div>
     </div>

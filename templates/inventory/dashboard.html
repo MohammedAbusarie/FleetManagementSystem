@@ -82,34 +82,34 @@
                                 <td>{{ car.manufacturer.name }}</td>
                                 <td>{{ car.model.name }}</td>
                                 <td>
-                                    {% if car.annual_inspection_end_date %}
-                                        {{ car.annual_inspection_end_date }}
+                                    {% if car.current_inspection_record %}
+                                        {{ car.current_inspection_record.end_date }}
                                     {% else %}
                                         <span class="badge bg-warning">لم يتم التعيين</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if car.car_license_end_date %}
-                                        {{ car.car_license_end_date }}
+                                    {% if car.current_license_record %}
+                                        {{ car.current_license_record.end_date }}
                                     {% else %}
                                         <span class="badge bg-warning">لم يتم التعيين</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if car.annual_inspection_end_date and car.car_license_end_date %}
-                                        {% if car.annual_inspection_end_date < today or car.car_license_end_date < today %}
+                                    {% if car.current_inspection_record and car.current_license_record %}
+                                        {% if car.current_inspection_record.end_date < today or car.current_license_record.end_date < today %}
                                             <span class="badge bg-danger">منتهية الصلاحية</span>
                                         {% else %}
                                             <span class="badge bg-warning">تنتهي صلاحيتها قريباً</span>
                                         {% endif %}
-                                    {% elif car.annual_inspection_end_date %}
-                                        {% if car.annual_inspection_end_date < today %}
+                                    {% elif car.current_inspection_record %}
+                                        {% if car.current_inspection_record.end_date < today %}
                                             <span class="badge bg-danger">منتهية الصلاحية</span>
                                         {% else %}
                                             <span class="badge bg-warning">تنتهي صلاحيتها قريباً</span>
                                         {% endif %}
-                                    {% elif car.car_license_end_date %}
-                                        {% if car.car_license_end_date < today %}
+                                    {% elif car.current_license_record %}
+                                        {% if car.current_license_record.end_date < today %}
                                             <span class="badge bg-danger">منتهية الصلاحية</span>
                                         {% else %}
                                             <span class="badge bg-warning">تنتهي صلاحيتها قريباً</span>

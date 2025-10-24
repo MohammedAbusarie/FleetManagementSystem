@@ -3,7 +3,7 @@ from .models import (
     Department, Driver, CarClass, Manufacturer, CarModel, EquipmentModel,
     FunctionalLocation, Room, Location, Sector, NotificationRecipient,
     ContractType, Activity, Region, Car, Equipment, CalibrationCertificateImage,
-    Maintenance
+    Maintenance, CarImage, EquipmentImage, CarLicenseRecord, CarInspectionRecord
 )
 
 
@@ -115,12 +115,8 @@ class CarAdmin(admin.ModelAdmin):
         ('Contract & Activity', {
             'fields': ('notification_recipient', 'contract_type', 'activity')
         }),
-        ('Dates', {
-            'fields': ('car_license_start_date', 'car_license_end_date', 
-                      'annual_inspection_start_date', 'annual_inspection_end_date')
-        }),
-        ('Image & Regions', {
-            'fields': ('car_image', 'visited_regions')
+        ('Regions', {
+            'fields': ('visited_regions',)
         }),
     )
 
@@ -141,14 +137,23 @@ class EquipmentAdmin(admin.ModelAdmin):
             'fields': ('equipment_license_start_date', 'equipment_license_end_date',
                       'annual_inspection_start_date', 'annual_inspection_end_date')
         }),
-        ('Image', {
-            'fields': ('equipment_image',)
-        }),
     )
 
 
 @admin.register(CalibrationCertificateImage)
 class CalibrationCertificateImageAdmin(admin.ModelAdmin):
+    list_display = ['equipment', 'uploaded_at']
+    list_filter = ['equipment', 'uploaded_at']
+
+
+@admin.register(CarImage)
+class CarImageAdmin(admin.ModelAdmin):
+    list_display = ['car', 'uploaded_at']
+    list_filter = ['car', 'uploaded_at']
+
+
+@admin.register(EquipmentImage)
+class EquipmentImageAdmin(admin.ModelAdmin):
     list_display = ['equipment', 'uploaded_at']
     list_filter = ['equipment', 'uploaded_at']
 
@@ -164,5 +169,35 @@ class MaintenanceAdmin(admin.ModelAdmin):
         }),
         ('Maintenance Details', {
             'fields': ('maintenance_date', 'restoration_date', 'cost', 'description')
+        }),
+    )
+
+
+@admin.register(CarLicenseRecord)
+class CarLicenseRecordAdmin(admin.ModelAdmin):
+    list_display = ['car', 'start_date', 'end_date', 'created_at']
+    list_filter = ['start_date', 'end_date', 'created_at']
+    search_fields = ['car__fleet_no', 'car__plate_no_en']
+    fieldsets = (
+        ('Car Information', {
+            'fields': ('car',)
+        }),
+        ('License Details', {
+            'fields': ('start_date', 'end_date')
+        }),
+    )
+
+
+@admin.register(CarInspectionRecord)
+class CarInspectionRecordAdmin(admin.ModelAdmin):
+    list_display = ['car', 'start_date', 'end_date', 'created_at']
+    list_filter = ['start_date', 'end_date', 'created_at']
+    search_fields = ['car__fleet_no', 'car__plate_no_en']
+    fieldsets = (
+        ('Car Information', {
+            'fields': ('car',)
+        }),
+        ('Inspection Details', {
+            'fields': ('start_date', 'end_date')
         }),
     )

@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.contrib import messages
-from ..models import Equipment, Maintenance, CalibrationCertificateImage, Region
+from ..models import Equipment, Maintenance, CalibrationCertificateImage, Region, EquipmentImage
 from ..forms import EquipmentForm, EquipmentMaintenanceFormSet
 from ..services import EquipmentService
 from ..translation_utils import get_message_template
@@ -97,6 +97,11 @@ def equipment_create_view(request):
         if form.is_valid() and maintenance_formset.is_valid():
             equipment = form.save()
             
+            # Handle multiple equipment images
+            files = request.FILES.getlist('equipment_images')
+            for f in files:
+                EquipmentImage.objects.create(equipment=equipment, image=f)
+            
             # Handle multiple calibration certificate images
             files = request.FILES.getlist('calibration_certificates')
             for f in files:
@@ -143,6 +148,18 @@ def equipment_update_view(request, pk):
             # Handle image update: if a new image is uploaded, it overwrites the old one.
             # If no new image is uploaded, the old one is kept (default behavior of ModelForm).
             equipment.save()
+            
+            # Handle multiple equipment images
+            files = request.FILES.getlist('equipment_images')
+            for f in files:
+                EquipmentImage.objects.create(equipment=equipment, image=f)
+            
+            # Handle equipment image deletion
+            images_to_delete = request.POST.get('images_to_delete', '')
+            if images_to_delete:
+                image_ids = [int(id) for id in images_to_delete.split(',') if id.strip()]
+                if image_ids:
+                    EquipmentImage.objects.filter(id__in=image_ids).delete()
             
             # Handle multiple calibration certificate images
             files = request.FILES.getlist('calibration_certificates')

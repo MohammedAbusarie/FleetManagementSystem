@@ -129,20 +129,26 @@
         </div>
     </div>
 
-    <!-- Car Image Section -->
-    {% if car.car_image %}
+    <!-- Car Images Section -->
+    {% if car.car_images.all %}
     <div class="detail-card">
         <div class="detail-card-header">
-            <i class="bi bi-image"></i> صورة السيارة
+            <i class="bi bi-images"></i> صور السيارة
         </div>
         <div class="detail-card-body">
-            <div class="car-image-container">
-                <img src="{{ car.car_image|secure_media_url }}" alt="{{ car.fleet_no }}" class="car-image">
-                <div class="mt-3">
-                    <a href="{{ car.car_image|secure_media_url }}" download="{{ car.fleet_no }}_image.jpg" class="btn btn-info">
-                        <i class="bi bi-download"></i> تحميل الصورة
-                    </a>
+            <div class="row">
+                {% for img in car.car_images.all %}
+                <div class="col-md-4 mb-3">
+                    <div class="car-image-container">
+                        <img src="{{ img.image|secure_media_url }}" alt="{{ car.fleet_no }}" class="car-image">
+                        <div class="mt-2">
+                            <a href="{{ img.image|secure_media_url }}" download="{{ car.fleet_no }}_image_{{ forloop.counter }}.jpg" class="btn btn-sm btn-info">
+                                <i class="bi bi-download"></i> تحميل الصورة
+                            </a>
+                        </div>
+                    </div>
                 </div>
+                {% endfor %}
             </div>
         </div>
     </div>
@@ -260,36 +266,71 @@
         </div>
     </div>
 
-    <!-- License and Inspection Information -->
+    <!-- License Records -->
+    {% if license_records %}
     <div class="detail-card">
         <div class="detail-card-header">
-            <i class="bi bi-calendar-check"></i> معلومات الرخصة والفحص
+            <i class="bi bi-card-text"></i> سجلات رخصة السيارة
         </div>
         <div class="detail-card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="detail-row">
-                        <div class="detail-label">تاريخ بداية رخصة السيارة:</div>
-                        <div class="detail-value">{{ car.car_license_start_date|date:"Y-m-d"|default:"-" }}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">تاريخ انتهاء رخصة السيارة:</div>
-                        <div class="detail-value">{{ car.car_license_end_date|date:"Y-m-d"|default:"-" }}</div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="detail-row">
-                        <div class="detail-label">تاريخ بداية الفحص السنوي:</div>
-                        <div class="detail-value">{{ car.annual_inspection_start_date|date:"Y-m-d"|default:"-" }}</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">تاريخ انتهاء الفحص السنوي:</div>
-                        <div class="detail-value">{{ car.annual_inspection_end_date|date:"Y-m-d"|default:"-" }}</div>
-                    </div>
-                </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>تاريخ بداية الرخصة</th>
+                            <th>تاريخ انتهاء الرخصة</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>تاريخ آخر تحديث</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for license in license_records %}
+                        <tr>
+                            <td>{{ license.start_date|date:"Y-m-d" }}</td>
+                            <td>{{ license.end_date|date:"Y-m-d" }}</td>
+                            <td>{{ license.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ license.updated_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
+    {% endif %}
+
+    <!-- Inspection Records -->
+    {% if inspection_records %}
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <i class="bi bi-clipboard-check"></i> سجلات الفحص السنوي
+        </div>
+        <div class="detail-card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>تاريخ بداية الفحص</th>
+                            <th>تاريخ انتهاء الفحص</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>تاريخ آخر تحديث</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inspection in inspection_records %}
+                        <tr>
+                            <td>{{ inspection.start_date|date:"Y-m-d" }}</td>
+                            <td>{{ inspection.end_date|date:"Y-m-d" }}</td>
+                            <td>{{ inspection.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ inspection.updated_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Visited Regions -->
     {% if car.visited_regions.exists %}

@@ -2,7 +2,7 @@
 from django import forms
 from crispy_forms.helper import FormHelper
 from django.contrib.contenttypes.forms import generic_inlineformset_factory
-from ..models import Equipment, CalibrationCertificateImage, Maintenance
+from ..models import Equipment, CalibrationCertificateImage, Maintenance, EquipmentImage
 from .base import Select2Widget
 from .generic_forms import MaintenanceForm
 
@@ -16,7 +16,7 @@ class EquipmentForm(forms.ModelForm):
             'door_no', 'plate_no', 'manufacture_year', 'manufacturer', 'model',
             'location', 'sector', 'status', 'equipment_license_start_date',
             'equipment_license_end_date', 'annual_inspection_start_date',
-            'annual_inspection_end_date', 'equipment_image'
+            'annual_inspection_end_date'
         ]
         widgets = {
             # Foreign key fields with search functionality
@@ -37,16 +37,20 @@ class EquipmentForm(forms.ModelForm):
         self.helper.form_method = 'post'
         self.helper.form_enctype = 'multipart/form-data'
 
-        # Handle image update logic
-        if self.instance and self.instance.equipment_image:
-            self.fields['equipment_image'].required = False
-
 
 class CalibrationCertificateImageForm(forms.ModelForm):
     """Form for Calibration Certificate Images"""
     
     class Meta:
         model = CalibrationCertificateImage
+        fields = ['image']
+
+
+class EquipmentImageForm(forms.ModelForm):
+    """Form for Equipment Images"""
+    
+    class Meta:
+        model = EquipmentImage
         fields = ['image']
 
 

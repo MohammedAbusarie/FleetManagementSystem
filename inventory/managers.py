@@ -25,10 +25,19 @@ class CarManager(models.Manager):
         """Get cars with inspections expiring in X days"""
         today = date.today()
         expiry_date = today + timedelta(days=days)
-        return self.with_related().filter(
-            Q(annual_inspection_end_date__gte=today),
-            Q(annual_inspection_end_date__lte=expiry_date)
-        )
+        
+        # Get cars with their current inspection records
+        cars_with_inspections = self.with_related().prefetch_related('inspection_records')
+        
+        expiring_cars = []
+        for car in cars_with_inspections:
+            current_inspection = car.current_inspection_record
+            if (current_inspection and 
+                current_inspection.end_date >= today and 
+                current_inspection.end_date <= expiry_date):
+                expiring_cars.append(car)
+        
+        return expiring_cars
 
 
 class EquipmentManager(models.Manager):
