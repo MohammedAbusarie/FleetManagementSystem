@@ -169,34 +169,34 @@
                                 <td>{{ equipment.manufacturer.name }}</td>
                                 <td>{{ equipment.model.name }}</td>
                                 <td>
-                                    {% if equipment.annual_inspection_end_date %}
-                                        {{ equipment.annual_inspection_end_date }}
+                                    {% if equipment.current_inspection_record %}
+                                        {{ equipment.current_inspection_record.end_date }}
                                     {% else %}
                                         <span class="badge bg-warning">لم يتم التعيين</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if equipment.equipment_license_end_date %}
-                                        {{ equipment.equipment_license_end_date }}
+                                    {% if equipment.current_license_record %}
+                                        {{ equipment.current_license_record.end_date }}
                                     {% else %}
                                         <span class="badge bg-warning">لم يتم التعيين</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if equipment.annual_inspection_end_date and equipment.equipment_license_end_date %}
-                                        {% if equipment.annual_inspection_end_date < today or equipment.equipment_license_end_date < today %}
+                                    {% if equipment.current_inspection_record and equipment.current_license_record %}
+                                        {% if equipment.current_inspection_record.end_date < today or equipment.current_license_record.end_date < today %}
                                             <span class="badge bg-danger">منتهية الصلاحية</span>
                                         {% else %}
                                             <span class="badge bg-warning">تنتهي صلاحيتها قريباً</span>
                                         {% endif %}
-                                    {% elif equipment.annual_inspection_end_date %}
-                                        {% if equipment.annual_inspection_end_date < today %}
+                                    {% elif equipment.current_inspection_record %}
+                                        {% if equipment.current_inspection_record.end_date < today %}
                                             <span class="badge bg-danger">منتهية الصلاحية</span>
                                         {% else %}
                                             <span class="badge bg-warning">تنتهي صلاحيتها قريباً</span>
                                         {% endif %}
-                                    {% elif equipment.equipment_license_end_date %}
-                                        {% if equipment.equipment_license_end_date < today %}
+                                    {% elif equipment.current_license_record %}
+                                        {% if equipment.current_license_record.end_date < today %}
                                             <span class="badge bg-danger">منتهية الصلاحية</span>
                                         {% else %}
                                             <span class="badge bg-warning">تنتهي صلاحيتها قريباً</span>

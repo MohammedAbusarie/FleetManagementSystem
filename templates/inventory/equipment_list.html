@@ -163,10 +163,10 @@
                                 <th data-sort="location__name">الموقع</th>
                                 <th data-sort="sector__name">القطاع</th>
                                 <th data-sort="status">الحالة</th>
-                                <th data-sort="equipment_license_start_date">تاريخ بداية رخصة المعدة</th>
-                                <th data-sort="equipment_license_end_date">تاريخ انتهاء رخصة المعدة</th>
-                                <th data-sort="annual_inspection_start_date">تاريخ بداية الفحص السنوي</th>
-                                <th data-sort="annual_inspection_end_date">تاريخ انتهاء الفحص السنوي</th>
+                                <th data-sort="license_records__start_date">تاريخ بداية رخصة المعدة</th>
+                                <th data-sort="license_records__end_date">تاريخ انتهاء رخصة المعدة</th>
+                                <th data-sort="inspection_records__start_date">تاريخ بداية الفحص السنوي</th>
+                                <th data-sort="inspection_records__end_date">تاريخ انتهاء الفحص السنوي</th>
                                 <th data-sort="last_maintenance_date">تاريخ آخر صيانة</th>
                                 <th data-sort="last_maintenance_cost">تكلفة آخر صيانة</th>
                                 <th>صورة</th>
@@ -194,10 +194,10 @@
                                         <span class="badge bg-warning">تحت الصيانة</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ equipment.equipment_license_start_date|date:"Y-m-d"|default:"-" }}</td>
-                                <td>{{ equipment.equipment_license_end_date|date:"Y-m-d"|default:"-" }}</td>
-                                <td>{{ equipment.annual_inspection_start_date|date:"Y-m-d"|default:"-" }}</td>
-                                <td>{{ equipment.annual_inspection_end_date|date:"Y-m-d"|default:"-" }}</td>
+                                <td>{% if equipment.current_license_record %}{{ equipment.current_license_record.start_date|date:"Y-m-d" }}{% else %}-{% endif %}</td>
+                                <td>{% if equipment.current_license_record %}{{ equipment.current_license_record.end_date|date:"Y-m-d" }}{% else %}-{% endif %}</td>
+                                <td>{% if equipment.current_inspection_record %}{{ equipment.current_inspection_record.start_date|date:"Y-m-d" }}{% else %}-{% endif %}</td>
+                                <td>{% if equipment.current_inspection_record %}{{ equipment.current_inspection_record.end_date|date:"Y-m-d" }}{% else %}-{% endif %}</td>
                                 <td dir="ltr">{% if equipment.last_maintenance_date %}{{ equipment.last_maintenance_date|date:"Y-m-d" }}{% else %}-{% endif %}</td>
                                 <td dir="ltr">{% if equipment.last_maintenance_cost %}{{ equipment.last_maintenance_cost|floatformat:2 }}{% else %}-{% endif %}</td>
                                 <td>

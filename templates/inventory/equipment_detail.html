@@ -233,26 +233,92 @@
                 <div class="col-md-6">
                     <div class="detail-row">
                         <div class="detail-label">تاريخ بداية رخصة المعدة:</div>
-                        <div class="detail-value">{{ equipment.equipment_license_start_date|date:"Y-m-d"|default:"-" }}</div>
+                        <div class="detail-value">{% if equipment.current_license_record %}{{ equipment.current_license_record.start_date|date:"Y-m-d" }}{% else %}-{% endif %}</div>
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">تاريخ انتهاء رخصة المعدة:</div>
-                        <div class="detail-value">{{ equipment.equipment_license_end_date|date:"Y-m-d"|default:"-" }}</div>
+                        <div class="detail-value">{% if equipment.current_license_record %}{{ equipment.current_license_record.end_date|date:"Y-m-d" }}{% else %}-{% endif %}</div>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="detail-row">
                         <div class="detail-label">تاريخ بداية الفحص السنوي:</div>
-                        <div class="detail-value">{{ equipment.annual_inspection_start_date|date:"Y-m-d"|default:"-" }}</div>
+                        <div class="detail-value">{% if equipment.current_inspection_record %}{{ equipment.current_inspection_record.start_date|date:"Y-m-d" }}{% else %}-{% endif %}</div>
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">تاريخ انتهاء الفحص السنوي:</div>
-                        <div class="detail-value">{{ equipment.annual_inspection_end_date|date:"Y-m-d"|default:"-" }}</div>
+                        <div class="detail-value">{% if equipment.current_inspection_record %}{{ equipment.current_inspection_record.end_date|date:"Y-m-d" }}{% else %}-{% endif %}</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- License Records -->
+    {% if license_records %}
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <i class="bi bi-card-text"></i> سجلات رخصة المعدة
+        </div>
+        <div class="detail-card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>تاريخ بداية الرخصة</th>
+                            <th>تاريخ انتهاء الرخصة</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>تاريخ آخر تحديث</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for license in license_records %}
+                        <tr>
+                            <td>{{ license.start_date|date:"Y-m-d" }}</td>
+                            <td>{{ license.end_date|date:"Y-m-d" }}</td>
+                            <td>{{ license.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ license.updated_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Inspection Records -->
+    {% if inspection_records %}
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <i class="bi bi-clipboard-check"></i> سجلات الفحص السنوي
+        </div>
+        <div class="detail-card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>تاريخ بداية الفحص</th>
+                            <th>تاريخ انتهاء الفحص</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>تاريخ آخر تحديث</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inspection in inspection_records %}
+                        <tr>
+                            <td>{{ inspection.start_date|date:"Y-m-d" }}</td>
+                            <td>{{ inspection.end_date|date:"Y-m-d" }}</td>
+                            <td>{{ inspection.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ inspection.updated_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Calibration Certificates -->
     {% if calibration_certificates %}

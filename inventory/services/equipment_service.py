@@ -51,18 +51,41 @@ class EquipmentService(BaseService):
     def get_expiring_equipment(self, expiry_status='about_to_expire', days=30):
         """Get equipment with expiring inspections/licenses"""
         today = date.today()
+        expiry_date = today + timedelta(days=days)
         
-        if expiry_status == 'expired':
-            return self.get_equipment_with_related().filter(
-                Q(annual_inspection_end_date__lt=today) |
-                Q(equipment_license_end_date__lt=today) |
-                Q(annual_inspection_end_date__isnull=True) |
-                Q(equipment_license_end_date__isnull=True)
-            ).order_by('annual_inspection_end_date')
-        else:
-            expiry_date = today + timedelta(days=days)
-            return self.get_equipment_with_related().filter(
-                Q(annual_inspection_end_date__gte=today) | Q(annual_inspection_end_date__isnull=True),
-                Q(equipment_license_end_date__gte=today) | Q(equipment_license_end_date__isnull=True),
-                Q(annual_inspection_end_date__lte=expiry_date) | Q(annual_inspection_end_date__isnull=True)
-            ).order_by('annual_inspection_end_date')
+        # Get equipment with their current inspection and license records
+        equipment_with_records = self.get_equipment_with_related().prefetch_related(
+            'inspection_records', 'license_records'
+        )
+        
+        expiring_equipment = []
+        for equipment in equipment_with_records:
+            current_inspection = equipment.current_inspection_record
+            current_license = equipment.current_license_record
+            
+            if expiry_status == 'expired':
+                # Check if inspection or license is expired
+                inspection_expired = (not current_inspection or 
+                                   not current_inspection.end_date or 
+                                   current_inspection.end_date < today)
+                license_expired = (not current_license or 
+                                 not current_license.end_date or 
+                                 current_license.end_date < today)
+                
+                if inspection_expired or license_expired:
+                    expiring_equipment.append(equipment)
+            else:
+                # Check if inspection or license is about to expire
+                inspection_expiring = (current_inspection and 
+                                     current_inspection.end_date and
+                                     current_inspection.end_date >= today and 
+                                     current_inspection.end_date <= expiry_date)
+                license_expiring = (current_license and 
+                                  current_license.end_date and
+                                  current_license.end_date >= today and 
+                                  current_license.end_date <= expiry_date)
+                
+                if inspection_expiring or license_expiring:
+                    expiring_equipment.append(equipment)
+        
+        return expiring_equipment

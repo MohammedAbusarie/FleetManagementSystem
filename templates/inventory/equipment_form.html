@@ -21,6 +21,122 @@
                 {% csrf_token %}
                 {{ form|crispy }}
                 
+                <!-- License Records Formset -->
+                <div class="mb-4">
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="mb-0"><i class="bi bi-card-checklist text-primary"></i> سجلات رخص المعدة</h5>
+                        <button type="button" class="btn btn-success btn-sm" onclick="addLicenseForm()">
+                            <i class="bi bi-plus-circle"></i> إضافة سجل رخصة
+                        </button>
+                    </div>
+                    {{ license_formset.management_form }}
+                    <div id="license-forms-container">
+                        {% for form in license_formset %}
+                            <div class="license-form card mb-3" data-form-index="{{ forloop.counter0 }}">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0"><i class="bi bi-file-text"></i> سجل رخصة {{ forloop.counter }}</h6>
+                                    {% if form.instance.pk %}
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeLicenseForm(this)">
+                                            <i class="bi bi-trash"></i> حذف السجل
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeLicenseForm(this)">
+                                            <i class="bi bi-x-circle"></i> إزالة
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label class="form-label fw-bold">تاريخ بداية رخصة المعدة *</label>
+                                                {{ form.start_date }}
+                                                {% if form.start_date.errors %}
+                                                    <div class="text-danger small">{{ form.start_date.errors.0 }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label class="form-label fw-bold">تاريخ انتهاء رخصة المعدة *</label>
+                                                {{ form.end_date }}
+                                                {% if form.end_date.errors %}
+                                                    <div class="text-danger small">{{ form.end_date.errors.0 }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if form.instance.pk %}
+                                        {{ form.DELETE }}
+                                    {% endif %}
+                                    {% for hidden_field in form.hidden_fields %}
+                                        {{ hidden_field }}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Inspection Records Formset -->
+                <div class="mb-4">
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="mb-0"><i class="bi bi-search text-success"></i> سجلات الفحص السنوي</h5>
+                        <button type="button" class="btn btn-success btn-sm" onclick="addInspectionForm()">
+                            <i class="bi bi-plus-circle"></i> إضافة سجل فحص
+                        </button>
+                    </div>
+                    {{ inspection_formset.management_form }}
+                    <div id="inspection-forms-container">
+                        {% for form in inspection_formset %}
+                            <div class="inspection-form card mb-3" data-form-index="{{ forloop.counter0 }}">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0"><i class="bi bi-clipboard-check"></i> سجل فحص {{ forloop.counter }}</h6>
+                                    {% if form.instance.pk %}
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeInspectionForm(this)">
+                                            <i class="bi bi-trash"></i> حذف السجل
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeInspectionForm(this)">
+                                            <i class="bi bi-x-circle"></i> إزالة
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label class="form-label fw-bold">تاريخ بداية الفحص السنوي *</label>
+                                                {{ form.start_date }}
+                                                {% if form.start_date.errors %}
+                                                    <div class="text-danger small">{{ form.start_date.errors.0 }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label class="form-label fw-bold">تاريخ انتهاء الفحص السنوي *</label>
+                                                {{ form.end_date }}
+                                                {% if form.end_date.errors %}
+                                                    <div class="text-danger small">{{ form.end_date.errors.0 }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if form.instance.pk %}
+                                        {{ form.DELETE }}
+                                    {% endif %}
+                                    {% for hidden_field in form.hidden_fields %}
+                                        {{ hidden_field }}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
                 <!-- Maintenance Formset -->
                 <div id="maintenance-records" style="display: none;">
                     <hr>
@@ -529,6 +645,46 @@
         const statusField = document.getElementById('id_status');
         const maintenanceRecords = document.getElementById('maintenance-records');
         
+        // Add a new license form
+        window.addLicenseForm = function() {
+            const totalForms = document.getElementById('id_license_records-TOTAL_FORMS');
+            const formNum = parseInt(totalForms.value);
+            const formRegex = RegExp(`license_records-(\\d+)-`,'g');
+            
+            let emptyForm = document.getElementById('empty-license-form');
+            if (!emptyForm) return;
+            
+            let newForm = emptyForm.innerHTML.replace(formRegex, `license_records-${formNum}-`);
+            const formContainer = document.createElement('div');
+            formContainer.className = 'license-form card mb-3';
+            formContainer.setAttribute('data-form-index', formNum);
+            formContainer.innerHTML = newForm;
+            
+            const container = document.getElementById('license-forms-container');
+            container.appendChild(formContainer);
+            totalForms.value = formNum + 1;
+        };
+        
+        // Add a new inspection form
+        window.addInspectionForm = function() {
+            const totalForms = document.getElementById('id_inspection_records-TOTAL_FORMS');
+            const formNum = parseInt(totalForms.value);
+            const formRegex = RegExp(`inspection_records-(\\d+)-`,'g');
+            
+            let emptyForm = document.getElementById('empty-inspection-form');
+            if (!emptyForm) return;
+            
+            let newForm = emptyForm.innerHTML.replace(formRegex, `inspection_records-${formNum}-`);
+            const formContainer = document.createElement('div');
+            formContainer.className = 'inspection-form card mb-3';
+            formContainer.setAttribute('data-form-index', formNum);
+            formContainer.innerHTML = newForm;
+            
+            const container = document.getElementById('inspection-forms-container');
+            container.appendChild(formContainer);
+            totalForms.value = formNum + 1;
+        };
+        
         // Add a new maintenance form
         window.addMaintenanceForm = function() {
             if (!maintenanceRecords) return;
@@ -549,6 +705,50 @@
             const container = document.getElementById('maintenance-forms-container');
             container.appendChild(formContainer);
             totalForms.value = formNum + 1;
+        };
+        
+        // Remove a license form
+        window.removeLicenseForm = function(button) {
+            const formContainer = button.closest('.license-form');
+            const deleteCheckbox = formContainer.querySelector('input[name$="-DELETE"]');
+            
+            if (deleteCheckbox) {
+                // This is an existing record, mark it for deletion
+                deleteCheckbox.checked = true;
+                formContainer.style.opacity = '0.5';
+                formContainer.style.backgroundColor = '#f8d7da';
+                button.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> إلغاء الحذف';
+                button.classList.remove('btn-outline-danger');
+                button.classList.add('btn-warning');
+                button.onclick = function() { undoRemoveLicenseForm(this); };
+            } else {
+                // This is a new form, remove it completely
+                formContainer.remove();
+                updateLicenseFormNumbers();
+                updateLicenseTotalForms();
+            }
+        };
+        
+        // Remove an inspection form
+        window.removeInspectionForm = function(button) {
+            const formContainer = button.closest('.inspection-form');
+            const deleteCheckbox = formContainer.querySelector('input[name$="-DELETE"]');
+            
+            if (deleteCheckbox) {
+                // This is an existing record, mark it for deletion
+                deleteCheckbox.checked = true;
+                formContainer.style.opacity = '0.5';
+                formContainer.style.backgroundColor = '#f8d7da';
+                button.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> إلغاء الحذف';
+                button.classList.remove('btn-outline-danger');
+                button.classList.add('btn-warning');
+                button.onclick = function() { undoRemoveInspectionForm(this); };
+            } else {
+                // This is a new form, remove it completely
+                formContainer.remove();
+                updateInspectionFormNumbers();
+                updateInspectionTotalForms();
+            }
         };
         
         // Remove a maintenance form
@@ -573,6 +773,34 @@
             }
         };
         
+        // Undo removal of a license form
+        window.undoRemoveLicenseForm = function(button) {
+            const formContainer = button.closest('.license-form');
+            const deleteCheckbox = formContainer.querySelector('input[name$="-DELETE"]');
+            
+            deleteCheckbox.checked = false;
+            formContainer.style.opacity = '';
+            formContainer.style.backgroundColor = '';
+            button.innerHTML = '<i class="bi bi-trash"></i> حذف السجل';
+            button.classList.remove('btn-warning');
+            button.classList.add('btn-danger');
+            button.onclick = function() { removeLicenseForm(this); };
+        };
+        
+        // Undo removal of an inspection form
+        window.undoRemoveInspectionForm = function(button) {
+            const formContainer = button.closest('.inspection-form');
+            const deleteCheckbox = formContainer.querySelector('input[name$="-DELETE"]');
+            
+            deleteCheckbox.checked = false;
+            formContainer.style.opacity = '';
+            formContainer.style.backgroundColor = '';
+            button.innerHTML = '<i class="bi bi-trash"></i> حذف السجل';
+            button.classList.remove('btn-warning');
+            button.classList.add('btn-danger');
+            button.onclick = function() { removeInspectionForm(this); };
+        };
+        
         // Undo removal of a maintenance form
         window.undoRemoveMaintenanceForm = function(button) {
             const formContainer = button.closest('.maintenance-form');
@@ -586,6 +814,48 @@
             button.classList.add('btn-danger');
             button.onclick = function() { removeMaintenanceForm(this); };
         };
+        
+        // Update license form numbers in labels
+        function updateLicenseFormNumbers() {
+            const forms = document.querySelectorAll('#license-forms-container .license-form');
+            forms.forEach((form, index) => {
+                const label = form.querySelector('h6');
+                if (label) {
+                    label.innerHTML = `<i class="bi bi-file-text"></i> سجل رخصة ${index + 1}`;
+                }
+                form.setAttribute('data-form-index', index);
+            });
+        }
+        
+        // Update license total forms count
+        function updateLicenseTotalForms() {
+            const totalForms = document.getElementById('id_license_records-TOTAL_FORMS');
+            if (totalForms) {
+                const visibleForms = document.querySelectorAll('#license-forms-container .license-form');
+                totalForms.value = visibleForms.length;
+            }
+        }
+        
+        // Update inspection form numbers in labels
+        function updateInspectionFormNumbers() {
+            const forms = document.querySelectorAll('#inspection-forms-container .inspection-form');
+            forms.forEach((form, index) => {
+                const label = form.querySelector('h6');
+                if (label) {
+                    label.innerHTML = `<i class="bi bi-clipboard-check"></i> سجل فحص ${index + 1}`;
+                }
+                form.setAttribute('data-form-index', index);
+            });
+        }
+        
+        // Update inspection total forms count
+        function updateInspectionTotalForms() {
+            const totalForms = document.getElementById('id_inspection_records-TOTAL_FORMS');
+            if (totalForms) {
+                const visibleForms = document.querySelectorAll('#inspection-forms-container .inspection-form');
+                totalForms.value = visibleForms.length;
+            }
+        }
         
         // Update form numbers in labels
         function updateFormNumbers() {

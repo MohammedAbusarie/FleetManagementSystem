@@ -57,7 +57,16 @@ class EquipmentManager(models.Manager):
         """Get equipment with inspections expiring in X days"""
         today = date.today()
         expiry_date = today + timedelta(days=days)
-        return self.with_related().filter(
-            Q(annual_inspection_end_date__gte=today),
-            Q(annual_inspection_end_date__lte=expiry_date)
-        )
+        
+        # Get equipment with their current inspection records
+        equipment_with_inspections = self.with_related().prefetch_related('inspection_records')
+        
+        expiring_equipment = []
+        for equipment in equipment_with_inspections:
+            current_inspection = equipment.current_inspection_record
+            if (current_inspection and 
+                current_inspection.end_date >= today and 
+                current_inspection.end_date <= expiry_date):
+                expiring_equipment.append(equipment)
+        
+        return expiring_equipment

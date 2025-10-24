@@ -252,11 +252,7 @@ class Equipment(models.Model):
     # Status
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='new', verbose_name="الحالة")
     
-    # Dates
-    equipment_license_start_date = models.DateField(blank=True, null=True, verbose_name="تاريخ بداية رخصة المعدة")
-    equipment_license_end_date = models.DateField(blank=True, null=True, verbose_name="تاريخ انتهاء رخصة المعدة")
-    annual_inspection_start_date = models.DateField(blank=True, null=True, verbose_name="تاريخ بداية الفحص السنوي")
-    annual_inspection_end_date = models.DateField(blank=True, null=True, verbose_name="تاريخ انتهاء الفحص السنوي")
+    # Dates - Removed old fields, now handled by historical records
     
     # Image
     equipment_image = models.ImageField(upload_to='equipment/', blank=True, null=True, verbose_name="صورة المعدة")
@@ -277,18 +273,30 @@ class Equipment(models.Model):
         return f"{self.door_no} - {self.plate_no}"
     
     @property
+    def current_license_record(self):
+        """Get the current license record"""
+        return self.license_records.first()
+    
+    @property
+    def current_inspection_record(self):
+        """Get the current inspection record"""
+        return self.inspection_records.first()
+    
+    @property
     def is_inspection_expired(self):
         """Check if inspection is expired"""
-        if not self.annual_inspection_end_date:
+        current_record = self.current_inspection_record
+        if not current_record or not current_record.end_date:
             return True
-        return self.annual_inspection_end_date < date.today()
+        return current_record.end_date < date.today()
     
     @property
     def days_until_inspection_expiry(self):
         """Days until inspection expires"""
-        if not self.annual_inspection_end_date:
+        current_record = self.current_inspection_record
+        if not current_record or not current_record.end_date:
             return None
-        delta = self.annual_inspection_end_date - date.today()
+        delta = current_record.end_date - date.today()
         return delta.days
 
 
@@ -372,6 +380,46 @@ class CarInspectionRecord(models.Model):
     
     def __str__(self):
         return f"Inspection for {self.car.fleet_no} ({self.start_date} - {self.end_date})"
+
+
+class EquipmentLicenseRecord(models.Model):
+    """Equipment License Record model - سجل رخصة المعدة"""
+    
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='license_records', verbose_name="المعدة")
+    start_date = models.DateField(verbose_name="تاريخ بداية رخصة المعدة")
+    end_date = models.DateField(verbose_name="تاريخ انتهاء رخصة المعدة")
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الإنشاء")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاريخ التحديث")
+    
+    class Meta:
+        verbose_name = "سجل رخصة معدة"
+        verbose_name_plural = "سجلات رخص المعدات"
+        ordering = ['-start_date']
+    
+    def __str__(self):
+        return f"License for {self.equipment.door_no} ({self.start_date} - {self.end_date})"
+
+
+class EquipmentInspectionRecord(models.Model):
+    """Equipment Inspection Record model - سجل فحص المعدة السنوي"""
+    
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='inspection_records', verbose_name="المعدة")
+    start_date = models.DateField(verbose_name="تاريخ بداية الفحص السنوي")
+    end_date = models.DateField(verbose_name="تاريخ انتهاء الفحص السنوي")
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاريخ الإنشاء")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاريخ التحديث")
+    
+    class Meta:
+        verbose_name = "سجل فحص معدة"
+        verbose_name_plural = "سجلات فحص المعدات"
+        ordering = ['-start_date']
+    
+    def __str__(self):
+        return f"Inspection for {self.equipment.door_no} ({self.start_date} - {self.end_date})"
 
 
 class Maintenance(models.Model):

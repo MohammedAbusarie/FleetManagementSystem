@@ -3,7 +3,8 @@ from .models import (
     Department, Driver, CarClass, Manufacturer, CarModel, EquipmentModel,
     FunctionalLocation, Room, Location, Sector, NotificationRecipient,
     ContractType, Activity, Region, Car, Equipment, CalibrationCertificateImage,
-    Maintenance, CarImage, EquipmentImage, CarLicenseRecord, CarInspectionRecord
+    Maintenance, CarImage, EquipmentImage, CarLicenseRecord, CarInspectionRecord,
+    EquipmentLicenseRecord, EquipmentInspectionRecord
 )
 
 
@@ -133,10 +134,7 @@ class EquipmentAdmin(admin.ModelAdmin):
         ('Equipment Details', {
             'fields': ('manufacturer', 'model', 'location', 'sector', 'status')
         }),
-        ('Dates', {
-            'fields': ('equipment_license_start_date', 'equipment_license_end_date',
-                      'annual_inspection_start_date', 'annual_inspection_end_date')
-        }),
+        # Dates are now handled by historical records
     )
 
 
@@ -196,6 +194,36 @@ class CarInspectionRecordAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Car Information', {
             'fields': ('car',)
+        }),
+        ('Inspection Details', {
+            'fields': ('start_date', 'end_date')
+        }),
+    )
+
+
+@admin.register(EquipmentLicenseRecord)
+class EquipmentLicenseRecordAdmin(admin.ModelAdmin):
+    list_display = ['equipment', 'start_date', 'end_date', 'created_at']
+    list_filter = ['start_date', 'end_date', 'created_at']
+    search_fields = ['equipment__door_no', 'equipment__plate_no']
+    fieldsets = (
+        ('Equipment Information', {
+            'fields': ('equipment',)
+        }),
+        ('License Details', {
+            'fields': ('start_date', 'end_date')
+        }),
+    )
+
+
+@admin.register(EquipmentInspectionRecord)
+class EquipmentInspectionRecordAdmin(admin.ModelAdmin):
+    list_display = ['equipment', 'start_date', 'end_date', 'created_at']
+    list_filter = ['start_date', 'end_date', 'created_at']
+    search_fields = ['equipment__door_no', 'equipment__plate_no']
+    fieldsets = (
+        ('Equipment Information', {
+            'fields': ('equipment',)
         }),
         ('Inspection Details', {
             'fields': ('start_date', 'end_date')

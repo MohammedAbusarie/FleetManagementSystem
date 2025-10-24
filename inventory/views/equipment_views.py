@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.contrib import messages
 from ..models import Equipment, Maintenance, CalibrationCertificateImage, Region, EquipmentImage
-from ..forms import EquipmentForm, EquipmentMaintenanceFormSet
+from ..forms import EquipmentForm, EquipmentMaintenanceFormSet, EquipmentLicenseRecordFormSet, EquipmentInspectionRecordFormSet
 from ..services import EquipmentService
 from ..translation_utils import get_message_template
 from .auth_views import is_admin
@@ -70,10 +70,10 @@ def equipment_detail_json(request, pk):
         'sector': equipment.sector.name,
         'status': equipment.status,
         'status_display': equipment.get_status_display(),
-        'equipment_license_start_date': equipment.equipment_license_start_date.strftime('%Y-%m-%d') if equipment.equipment_license_start_date else None,
-        'equipment_license_end_date': equipment.equipment_license_end_date.strftime('%Y-%m-%d') if equipment.equipment_license_end_date else None,
-        'annual_inspection_start_date': equipment.annual_inspection_start_date.strftime('%Y-%m-%d') if equipment.annual_inspection_start_date else None,
-        'annual_inspection_end_date': equipment.annual_inspection_end_date.strftime('%Y-%m-%d') if equipment.annual_inspection_end_date else None,
+        'equipment_license_start_date': equipment.current_license_record.start_date.strftime('%Y-%m-%d') if equipment.current_license_record else None,
+        'equipment_license_end_date': equipment.current_license_record.end_date.strftime('%Y-%m-%d') if equipment.current_license_record else None,
+        'annual_inspection_start_date': equipment.current_inspection_record.start_date.strftime('%Y-%m-%d') if equipment.current_inspection_record else None,
+        'annual_inspection_end_date': equipment.current_inspection_record.end_date.strftime('%Y-%m-%d') if equipment.current_inspection_record else None,
         'equipment_image_url': reverse('secure_media', kwargs={'path': str(equipment.equipment_image)}) if equipment.equipment_image else None,
         'calibration_certificates': [{'image_url': reverse('secure_media', kwargs={'path': str(cert.image)})} for cert in equipment.calibration_certificates.all()],
         'maintenance_records': [{
@@ -93,9 +93,12 @@ def equipment_create_view(request):
     if request.method == 'POST':
         form = EquipmentForm(request.POST, request.FILES)
         maintenance_formset = EquipmentMaintenanceFormSet(request.POST, request.FILES)
+        license_formset = EquipmentLicenseRecordFormSet(request.POST)
+        inspection_formset = EquipmentInspectionRecordFormSet(request.POST)
         
-        if form.is_valid() and maintenance_formset.is_valid():
-            equipment = form.save()
+        if form.is_valid() and maintenance_formset.is_valid() and license_formset.is_valid() and inspection_formset.is_valid():
+            equipment = form.save(commit=False)
+            equipment.save()
             
             # Handle multiple equipment images
             files = request.FILES.getlist('equipment_images')
@@ -106,6 +109,18 @@ def equipment_create_view(request):
             files = request.FILES.getlist('calibration_certificates')
             for f in files:
                 CalibrationCertificateImage.objects.create(equipment=equipment, image=f)
+            
+            # Save license records
+            license_instances = license_formset.save(commit=False)
+            for obj in license_instances:
+                obj.equipment = equipment
+                obj.save()
+            
+            # Save inspection records
+            inspection_instances = inspection_formset.save(commit=False)
+            for obj in inspection_instances:
+                obj.equipment = equipment
+                obj.save()
             
             # Save maintenance records if status is under_maintenance
             if equipment.status == 'under_maintenance':
@@ -121,10 +136,14 @@ def equipment_create_view(request):
     else:
         form = EquipmentForm()
         maintenance_formset = EquipmentMaintenanceFormSet()
+        license_formset = EquipmentLicenseRecordFormSet()
+        inspection_formset = EquipmentInspectionRecordFormSet()
     
     context = {
         'form': form,
         'maintenance_formset': maintenance_formset,
+        'license_formset': license_formset,
+        'inspection_formset': inspection_formset,
         'action': 'Create',
         'all_regions': Region.objects.all()
     }
@@ -143,7 +162,10 @@ def equipment_update_view(request, pk):
             request.FILES,
             instance=equipment,
         )
-        if form.is_valid() and maintenance_formset.is_valid():
+        license_formset = EquipmentLicenseRecordFormSet(request.POST, instance=equipment)
+        inspection_formset = EquipmentInspectionRecordFormSet(request.POST, instance=equipment)
+        
+        if form.is_valid() and maintenance_formset.is_valid() and license_formset.is_valid() and inspection_formset.is_valid():
             equipment = form.save(commit=False)
             # Handle image update: if a new image is uploaded, it overwrites the old one.
             # If no new image is uploaded, the old one is kept (default behavior of ModelForm).
@@ -172,6 +194,26 @@ def equipment_update_view(request, pk):
                 cert_ids = [int(id) for id in certificates_to_delete.split(',') if id.strip()]
                 if cert_ids:
                     CalibrationCertificateImage.objects.filter(id__in=cert_ids).delete()
+            
+            # Save license records
+            license_instances = license_formset.save(commit=False)
+            for obj in license_instances:
+                obj.equipment = equipment
+                obj.save()
+            
+            # Handle deleted license instances
+            for obj in license_formset.deleted_objects:
+                obj.delete()
+            
+            # Save inspection records
+            inspection_instances = inspection_formset.save(commit=False)
+            for obj in inspection_instances:
+                obj.equipment = equipment
+                obj.save()
+            
+            # Handle deleted inspection instances
+            for obj in inspection_formset.deleted_objects:
+                obj.delete()
                 
             # Save maintenance records
             instances = maintenance_formset.save(commit=False)
@@ -192,10 +234,14 @@ def equipment_update_view(request, pk):
         maintenance_formset = EquipmentMaintenanceFormSet(
             instance=equipment,
         )
+        license_formset = EquipmentLicenseRecordFormSet(instance=equipment)
+        inspection_formset = EquipmentInspectionRecordFormSet(instance=equipment)
     
     context = {
         'form': form,
         'maintenance_formset': maintenance_formset,
+        'license_formset': license_formset,
+        'inspection_formset': inspection_formset,
         'action': 'Update',
         'equipment': equipment,
         'all_regions': Region.objects.all()
@@ -220,10 +266,16 @@ def equipment_detail_view(request, pk):
     # Get calibration certificates
     calibration_certificates = equipment.calibration_certificates.all()
     
+    # Get historical records
+    license_records = equipment.license_records.all().order_by('-start_date')
+    inspection_records = equipment.inspection_records.all().order_by('-start_date')
+    
     context = {
         'equipment': equipment,
         'maintenance_records': maintenance_records,
         'calibration_certificates': calibration_certificates,
+        'license_records': license_records,
+        'inspection_records': inspection_records,
     }
     return render(request, 'inventory/equipment_detail.html', context)
 
