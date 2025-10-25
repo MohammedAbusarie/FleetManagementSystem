@@ -54,7 +54,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
+dummy_media/
 # Logs
 logs/
 *.log
