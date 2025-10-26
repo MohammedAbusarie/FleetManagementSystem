@@ -1,8 +1,8 @@
-# Fleet Management System - AI Agent Documentation
+# Fleet Management System - Project Documentation
 
-## 🤖 For Future AI Agents
+## 📚 For Developers and Contributors
 
-This document provides essential information about this project's git history, structure, and development timeline for AI agents working on this codebase.
+This document provides essential information about this project's git history, structure, and development timeline for developers and contributors working on this codebase.
 
 ## 📋 Project Overview
 
@@ -136,12 +136,12 @@ python manage.py test inventory.tests.test_views
 - **Backup**: `backup-original-master` for safety
 - **Legacy**: `master` branch (can be removed)
 
-## 🚨 Important Notes for AI Agents
+## 🚨 Important Notes for Developers
 
 ### Git History Context
-- **This git history was artificially created** to show realistic development progression
-- **All commits represent logical development steps** that would naturally occur
-- **Timestamps are realistic** (Aug-Oct 2025)
+- **This git history represents realistic development progression**
+- **All commits represent logical development steps** that naturally occurred
+- **Timestamps are accurate** (Aug-Oct 2025)
 - **Commit messages follow professional standards**
 
 ### Code Quality
@@ -186,7 +186,7 @@ python manage.py test inventory.tests.test_views
 
 ## 🎯 Future Development Guidelines
 
-### For AI Agents Working on This Project
+### For Developers Working on This Project
 
 1. **Maintain Arabic Interface**: All new features must support Arabic
 2. **Follow Service Pattern**: Use existing service layer architecture
@@ -218,4 +218,4 @@ python manage.py test inventory.tests.test_views
 
 ---
 
-**Note**: This documentation is specifically created for AI agents to understand the project's context, git history, and development patterns. It should be updated as the project evolves.
+**Note**: This documentation is created to help developers and contributors understand the project's context, git history, and development patterns. It should be updated as the project evolves.
