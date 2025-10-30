@@ -14,7 +14,7 @@ from ..services.rbac_service import (
     UserProfileService, PermissionService, LoggingService
 )
 from ..forms.rbac_forms import UserCreateForm, UserUpdateForm, PermissionAssignmentForm
-from ..models import UserProfile
+from ..models import UserProfile, LoginLog, ActionLog
 
 
 @admin_required_with_message()
@@ -300,8 +300,8 @@ def login_logs_view(request):
         success_filter = request.GET.get('success', '')
         page_number = request.GET.get('page', 1)
         
-        # Get login logs
-        login_logs = logging_service.get_recent_logins(limit=1000)
+        # Base queryset: avoid slicing before ordering to prevent errors when reordering
+        login_logs = LoginLog.objects.select_related('user').all()
         
         # Apply search filter
         if search_query:
@@ -348,8 +348,8 @@ def action_logs_view(request):
         module_filter = request.GET.get('module', '')
         page_number = request.GET.get('page', 1)
         
-        # Get action logs
-        action_logs = logging_service.get_recent_actions(limit=1000)
+        # Base queryset: avoid slicing before ordering to prevent errors when reordering
+        action_logs = ActionLog.objects.select_related('user').all()
         
         # Apply search filter
         if search_query:
