@@ -31,6 +31,10 @@ def admin_panel_view(request):
         active_users = user_service.get_active_users().count()
         admin_users = user_service.get_users_by_type('admin').count()
         normal_users = user_service.get_users_by_type('normal').count()
+        # Count super admins (include Django superusers even without profiles)
+        super_admin_users = User.objects.filter(
+            Q(profile__user_type='super_admin', profile__is_active=True) | Q(is_superuser=True)
+        ).distinct().count()
         
         # Recent activity
         recent_logins = logging_service.get_recent_logins(limit=10)
@@ -43,6 +47,7 @@ def admin_panel_view(request):
             'title': 'لوحة الإدارة',
             'total_users': total_users,
             'active_users': active_users,
+            'super_admin_users': super_admin_users,
             'admin_users': admin_users,
             'normal_users': normal_users,
             'recent_logins': recent_logins,
