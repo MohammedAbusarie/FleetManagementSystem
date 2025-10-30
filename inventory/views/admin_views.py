@@ -420,9 +420,12 @@ def get_database_storage_info():
         with connection.cursor() as cursor:
             # Get database size
             cursor.execute("""
-                SELECT pg_size_pretty(pg_database_size(current_database())) as size
+                SELECT pg_database_size(current_database()) as size_bytes
             """)
-            db_size = cursor.fetchone()[0]
+            db_size_bytes = cursor.fetchone()[0] or 0
+            # Pretty string (GB with 2 decimals)
+            db_size_gb = round(db_size_bytes / (1024 ** 3), 2) if db_size_bytes else 0.0
+            db_size = f"{db_size_gb:.2f} GB"
             
             # Get table sizes
             cursor.execute("""
@@ -451,17 +454,22 @@ def get_database_storage_info():
                 
                 # Convert to human readable format
                 if media_size > 0:
+                    media_tmp = float(media_size)
                     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-                        if media_size < 1024.0:
-                            media_size_pretty = f"{media_size:.1f} {unit}"
+                        if media_tmp < 1024.0:
+                            media_size_pretty = f"{media_tmp:.1f} {unit}"
                             break
-                        media_size /= 1024.0
+                        media_tmp /= 1024.0
+            media_size_gb = round(media_size / (1024 ** 3), 2) if media_size else 0.0
             
             return {
                 'database_size': db_size,
+                'database_size_bytes': db_size_bytes,
+                'database_size_gb': db_size_gb,
                 'table_sizes': table_sizes,
                 'media_size': media_size_pretty,
                 'media_size_bytes': media_size,
+                'media_size_gb': media_size_gb,
             }
             
     except Exception as e:
@@ -480,20 +488,42 @@ def storage_data_api(request):
     try:
         storage_info = get_database_storage_info()
         
-        # Calculate percentage for gauge
-        total_size_bytes = 0
-        if storage_info.get('media_size_bytes', 0) > 0:
-            total_size_bytes = storage_info['media_size_bytes']
+        # Capacity and quotas (override via settings if provided)
+        capacity_gb = getattr(settings, 'STORAGE_CAPACITY_LIMIT_GB', 20)
+        db_quota_gb = getattr(settings, 'DATABASE_QUOTA_GB', 5)
+
+        capacity_bytes = int(capacity_gb * (1024 ** 3))
+        db_quota_bytes = int(db_quota_gb * (1024 ** 3))
+
+        db_bytes = int(storage_info.get('database_size_bytes') or 0)
+        media_bytes = int(storage_info.get('media_size_bytes') or 0)
+        total_size_bytes = db_bytes + media_bytes
+
+        percentage = 0.0
+        if capacity_bytes > 0:
+            percentage = min((total_size_bytes / capacity_bytes) * 100.0, 100.0)
         
-        # Simple calculation - you might want to adjust this based on your needs
-        max_size = 10 * 1024 * 1024 * 1024  # 10GB max
-        percentage = min((total_size_bytes / max_size) * 100, 100)
+        total_gb = round(total_size_bytes / (1024 ** 3), 2)
+        db_gb = round(db_bytes / (1024 ** 3), 2)
+        media_gb = round(media_bytes / (1024 ** 3), 2)
+        db_quota_used_pct = round((db_bytes / db_quota_bytes) * 100.0, 2) if db_quota_bytes > 0 else 0.0
         
         return JsonResponse({
+            'success': True,
             'percentage': round(percentage, 1),
-            'total_size': storage_info.get('media_size', '0 B'),
-            'database_size': storage_info.get('database_size', 'غير متاح'),
-            'success': True
+            'capacity_gb': float(capacity_gb),
+            'capacity_bytes': capacity_bytes,
+            'total_bytes': total_size_bytes,
+            'total_gb': total_gb,
+            'database_bytes': db_bytes,
+            'database_gb': db_gb,
+            'media_bytes': media_bytes,
+            'media_gb': media_gb,
+            'database_quota_gb': float(db_quota_gb),
+            'database_quota_bytes': db_quota_bytes,
+            'database_quota_used_pct': db_quota_used_pct,
+            'database_size_pretty': storage_info.get('database_size', 'غير متاح'),
+            'media_size_pretty': storage_info.get('media_size', '0 B'),
         })
         
     except Exception as e:
