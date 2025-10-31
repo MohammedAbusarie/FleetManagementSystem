@@ -31,12 +31,87 @@ class UserCreateForm(UserCreationForm):
         self.created_by = kwargs.pop('created_by', None)
         super().__init__(*args, **kwargs)
 
+        # Ensure Arabic labels are set
+        self.fields['password1'].label = 'كلمة المرور'
+        self.fields['password2'].label = 'تأكيد كلمة المرور'
+        self.fields['username'].label = 'اسم المستخدم'
+        self.fields['email'].label = 'البريد الإلكتروني'
+        self.fields['first_name'].label = 'الاسم الأول'
+        self.fields['last_name'].label = 'الاسم الأخير'
+        self.fields['user_type'].label = 'نوع المستخدم'
+
+        # Override password validation error messages with Arabic translations
+        password_error_messages = {
+            'password_mismatch': 'كلمات المرور غير متطابقة.',
+            'password_too_short': 'كلمة المرور قصيرة جداً. يجب أن تحتوي على 8 أحرف على الأقل.',
+            'password_too_common': 'كلمة المرور شائعة جداً. يرجى اختيار كلمة مرور أقوى.',
+            'password_entirely_numeric': 'كلمة المرور لا يمكن أن تكون أرقاماً فقط.',
+            'password_similar': 'كلمة المرور مشابهة جداً لمعلومات المستخدم الأخرى.',
+        }
+        
+        # Set Arabic error messages for password fields
+        if 'password1' in self.fields:
+            self.fields['password1'].error_messages.update({
+                'required': 'هذا الحقل مطلوب.',
+                'password_too_short': password_error_messages['password_too_short'],
+                'password_too_common': password_error_messages['password_too_common'],
+                'password_entirely_numeric': password_error_messages['password_entirely_numeric'],
+            })
+        
+        if 'password2' in self.fields:
+            self.fields['password2'].error_messages.update({
+                'required': 'هذا الحقل مطلوب.',
+                'password_mismatch': password_error_messages['password_mismatch'],
+            })
+
         # Add Arabic styling
         for field_name, field in self.fields.items():
             if isinstance(field.widget, forms.TextInput) or isinstance(field.widget, forms.EmailInput):
                 field.widget.attrs.update({'class': 'form-control'})
             elif isinstance(field.widget, forms.PasswordInput):
                 field.widget.attrs.update({'class': 'form-control'})
+
+    def clean(self):
+        """Override clean to translate password validation errors to Arabic"""
+        from django.core.exceptions import ValidationError
+        
+        # Call parent's clean method which validates passwords
+        cleaned_data = super().clean()
+        
+        # Translate password validation errors to Arabic
+        if 'password1' in self.errors:
+            translated_errors = []
+            for error in self.errors['password1']:
+                error_msg = str(error).lower()
+                if 'too short' in error_msg:
+                    translated_errors.append('كلمة المرور قصيرة جداً. يجب أن تحتوي على 8 أحرف على الأقل.')
+                elif 'too common' in error_msg:
+                    translated_errors.append('كلمة المرور شائعة جداً. يرجى اختيار كلمة مرور أقوى.')
+                elif 'entirely numeric' in error_msg or 'numeric' in error_msg:
+                    translated_errors.append('كلمة المرور لا يمكن أن تكون أرقاماً فقط.')
+                elif 'too similar' in error_msg or 'similar' in error_msg:
+                    translated_errors.append('كلمة المرور مشابهة جداً لمعلومات المستخدم الأخرى.')
+                else:
+                    # Keep original error if we can't translate
+                    translated_errors.append(str(error))
+            
+            if translated_errors:
+                self.errors['password1'] = translated_errors
+        
+        # Translate password mismatch error
+        if 'password2' in self.errors:
+            translated_errors = []
+            for error in self.errors['password2']:
+                error_msg = str(error).lower()
+                if 'mismatch' in error_msg or 'match' in error_msg:
+                    translated_errors.append('كلمات المرور غير متطابقة.')
+                else:
+                    translated_errors.append(str(error))
+            
+            if translated_errors:
+                self.errors['password2'] = translated_errors
+        
+        return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)

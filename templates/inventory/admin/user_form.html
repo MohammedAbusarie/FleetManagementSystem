@@ -79,6 +79,40 @@
         margin-top: 5px;
     }
     
+    /* Password input wrapper with toggle icon */
+    .password-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    
+    .password-input-wrapper .form-control {
+        padding-right: 45px;
+    }
+    
+    .password-toggle-icon {
+        position: absolute;
+        right: 15px;
+        cursor: pointer;
+        color: #6c757d;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        transition: color 0.3s ease;
+        z-index: 10;
+    }
+    
+    .password-toggle-icon:hover {
+        color: #667eea;
+    }
+    
+    .password-toggle-icon i {
+        pointer-events: none;
+    }
+    
     .user-type-info {
         background: #f8f9fa;
         border-radius: 8px;
@@ -115,10 +149,10 @@
                         {{ title }}
                     </h4>
                     <p class="mb-0 mt-2 opacity-75">
-                        {% if user %}
-                            تعديل معلومات المستخدم
-                        {% else %}
+                        {% if form.password1 %}
                             إضافة مستخدم جديد إلى النظام
+                        {% else %}
+                            تعديل معلومات المستخدم
                         {% endif %}
                     </p>
                 </div>
@@ -219,14 +253,19 @@
                         </div>
                         
                         <!-- Password Fields (only for new users) -->
-                        {% if not user %}
+                        {% if form.password1 %}
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="{{ form.password1.id_for_label }}" class="form-label">
                                         {{ form.password1.label }}
                                     </label>
-                                    {{ form.password1 }}
+                                    <div class="password-input-wrapper">
+                                        {{ form.password1 }}
+                                        <span class="password-toggle-icon" data-target="{{ form.password1.id_for_label }}">
+                                            <i class="bi bi-eye" id="toggle-icon-{{ form.password1.id_for_label }}"></i>
+                                        </span>
+                                    </div>
                                     {% if form.password1.errors %}
                                         <div class="text-danger mt-1">
                                             {% for error in form.password1.errors %}
@@ -244,7 +283,12 @@
                                     <label for="{{ form.password2.id_for_label }}" class="form-label">
                                         {{ form.password2.label }}
                                     </label>
-                                    {{ form.password2 }}
+                                    <div class="password-input-wrapper">
+                                        {{ form.password2 }}
+                                        <span class="password-toggle-icon" data-target="{{ form.password2.id_for_label }}">
+                                            <i class="bi bi-eye" id="toggle-icon-{{ form.password2.id_for_label }}"></i>
+                                        </span>
+                                    </div>
                                     {% if form.password2.errors %}
                                         <div class="text-danger mt-1">
                                             {% for error in form.password2.errors %}
@@ -258,7 +302,7 @@
                         {% endif %}
                         
                         <!-- Active Status (only for existing users) -->
-                        {% if user and form.is_active %}
+                        {% if not form.password1 and form.is_active %}
                         <div class="form-group">
                             <div class="form-check">
                                 {{ form.is_active }}
@@ -294,7 +338,7 @@
                             </a>
                             <button type="submit" class="btn btn-submit text-white">
                                 <i class="bi bi-check-lg me-2"></i>
-                                {% if user %}تحديث المستخدم{% else %}إنشاء المستخدم{% endif %}
+                                {% if form.password1 %}إضافة مستخدم{% else %}تحديث المستخدم{% endif %}
                             </button>
                         </div>
                     </form>
@@ -306,8 +350,124 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'admin/js/vendor/select2/select2.full.min.js' %}"></script>
+<script src="{% static 'admin/js/vendor/select2/i18n/ar.js' %}"></script>
+<link rel="stylesheet" href="{% static 'admin/css/vendor/select2/select2.min.css' %}">
+<style>
+    /* Fix Select2 RTL styling and prevent glitches */
+    .select2-container {
+        width: 100% !important;
+        direction: rtl;
+    }
+    .select2-container--default .select2-selection--single {
+        height: 48px;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    .select2-container--default .select2-selection--single:hover {
+        border-color: #667eea;
+    }
+    .select2-container--default.select2-container--focus .select2-selection--single {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 48px;
+        padding-right: 15px;
+        padding-left: 40px;
+        text-align: right;
+        color: #495057;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 46px;
+        right: auto;
+        left: 10px;
+        width: 30px;
+    }
+    .select2-container--default.select2-container--rtl .select2-selection--single .select2-selection__arrow {
+        left: 10px;
+        right: auto;
+    }
+    .select2-dropdown {
+        direction: rtl;
+        text-align: right;
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .select2-results__option {
+        text-align: right;
+        padding-right: 20px;
+        padding-left: 20px;
+        direction: rtl;
+        color: #495057;
+    }
+    /* Regular options on hover - white text on purple */
+    .select2-results__option:hover,
+    .select2-results__option--highlighted {
+        background-color: #667eea;
+        color: #ffffff;
+    }
+    /* Selected option - dark text on light background (always readable) */
+    .select2-results__option[aria-selected=true] {
+        background-color: #e9ecef !important;
+        color: #212529 !important;
+        font-weight: 500;
+    }
+    /* When hovering over selected option, change to purple with white text */
+    .select2-results__option[aria-selected=true]:hover,
+    .select2-results__option[aria-selected=true].select2-results__option--highlighted {
+        background-color: #667eea !important;
+        color: #ffffff !important;
+    }
+    .select2-search--dropdown .select2-search__field {
+        direction: rtl;
+        text-align: right;
+        border-radius: 8px;
+        padding-right: 15px;
+    }
+</style>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+$(document).ready(function() {
+    // Wait for jQuery and Select2 to be fully loaded
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+        // Initialize Select2 for user_type dropdown with proper RTL support
+        $('.select2-search').each(function() {
+            const $this = $(this);
+            
+            // Skip if already initialized
+            if ($this.hasClass('select2-hidden-accessible')) {
+                $this.select2('destroy');
+            }
+            
+            // Initialize Select2 with proper configuration for RTL
+            $this.select2({
+                language: 'ar',
+                placeholder: {
+                    id: null,
+                    text: 'اختر نوع المستخدم...'
+                },
+                allowClear: true,
+                width: '100%',
+                dir: 'rtl',
+                dropdownAutoWidth: false,
+                theme: 'default',
+                minimumResultsForSearch: Infinity  // Hide search for small lists
+            });
+            
+            // Ensure RTL on open
+            $this.on('select2:open', function() {
+                setTimeout(function() {
+                    $('.select2-container--open').css('direction', 'rtl');
+                    $('.select2-results__options').css('direction', 'rtl');
+                    $('.select2-search__field').css('direction', 'rtl');
+                }, 10);
+            });
+        });
+    }
+    
     // Initialize Bootstrap tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -329,22 +489,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', function(e) {
-            const username = document.getElementById('{{ form.username.id_for_label }}');
-            const email = document.getElementById('{{ form.email.id_for_label }}');
+            // Use querySelector with name attribute for reliable field access
+            const username = form.querySelector('input[name="username"]');
+            const email = form.querySelector('input[name="email"]');
+            const password1 = form.querySelector('input[name="password1"]');
+            const password2 = form.querySelector('input[name="password2"]');
             
             // Basic validation
             if (username && username.value.trim() === '') {
                 e.preventDefault();
                 alert('يرجى إدخال اسم المستخدم');
                 username.focus();
-                return;
+                return false;
             }
             
             if (email && email.value.trim() === '') {
                 e.preventDefault();
                 alert('يرجى إدخال البريد الإلكتروني');
                 email.focus();
-                return;
+                return false;
             }
             
             // Email validation
@@ -354,16 +517,64 @@ document.addEventListener('DOMContentLoaded', function() {
                     e.preventDefault();
                     alert('يرجى إدخال بريد إلكتروني صحيح');
                     email.focus();
-                    return;
+                    return false;
+                }
+            }
+            
+            // Password validation (only for new users)
+            if (password1 && password2) {
+                if (password1.value.trim() === '') {
+                    e.preventDefault();
+                    alert('يرجى إدخال كلمة المرور');
+                    password1.focus();
+                    return false;
+                }
+                
+                if (password1.value.length < 8) {
+                    e.preventDefault();
+                    alert('يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل');
+                    password1.focus();
+                    return false;
+                }
+                
+                if (password1.value !== password2.value) {
+                    e.preventDefault();
+                    alert('كلمات المرور غير متطابقة');
+                    password2.focus();
+                    return false;
                 }
             }
         });
     }
     
+    // Password toggle show/hide functionality
+    const passwordToggleIcons = document.querySelectorAll('.password-toggle-icon');
+    passwordToggleIcons.forEach(function(toggleIcon) {
+        toggleIcon.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const passwordInput = document.getElementById(targetId);
+            const iconElement = this.querySelector('i');
+            
+            if (passwordInput && iconElement) {
+                if (passwordInput.type === 'password') {
+                    // Show password
+                    passwordInput.type = 'text';
+                    iconElement.classList.remove('bi-eye');
+                    iconElement.classList.add('bi-eye-slash');
+                } else {
+                    // Hide password
+                    passwordInput.type = 'password';
+                    iconElement.classList.remove('bi-eye-slash');
+                    iconElement.classList.add('bi-eye');
+                }
+            }
+        });
+    });
+    
     // Password strength indicator
-    const password1 = document.getElementById('{{ form.password1.id_for_label }}');
-    if (password1) {
-        password1.addEventListener('input', function() {
+    const password1Field = form ? form.querySelector('input[name="password1"]') : null;
+    if (password1Field) {
+        password1Field.addEventListener('input', function() {
             const password = this.value;
             const strength = calculatePasswordStrength(password);
             updatePasswordStrengthIndicator(strength);
