@@ -137,7 +137,8 @@ class PermissionAssignmentForm(forms.Form):
                 field_name = f"{module}_{permission}"
                 self.fields[field_name] = forms.BooleanField(
                     required=False,
-                    label=f"{self.get_module_display(module)} - {self.get_permission_display(permission)}"
+                    label=f"{self.get_module_display(module)} - {self.get_permission_display(permission)}",
+                    widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
                 )
 
                 # Set initial value

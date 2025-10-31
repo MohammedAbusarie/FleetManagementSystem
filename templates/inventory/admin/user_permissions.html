@@ -397,39 +397,80 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add select all/none functionality for each module
     const modules = document.querySelectorAll('.permission-module');
-    modules.forEach(module => {
-        const switches = module.querySelectorAll('.form-check-input');
+    
+    modules.forEach((module, index) => {
         const moduleTitle = module.querySelector('h5');
+        if (!moduleTitle) return;
         
-        // Add select all/none buttons
+        // Find all checkboxes in this module - search within permission-items
+        const checkboxes = module.querySelectorAll('.permission-item input[type="checkbox"]');
+        if (checkboxes.length === 0) {
+            // Fallback: try finding any checkbox in the module
+            const fallbackCheckboxes = module.querySelectorAll('input[type="checkbox"]');
+            if (fallbackCheckboxes.length === 0) return;
+        }
+        
+        // Create button container div
         const buttonContainer = document.createElement('div');
         buttonContainer.className = 'mb-3';
-        buttonContainer.innerHTML = `
-            <button type="button" class="btn btn-sm btn-outline-success me-2 select-all">
-                <i class="bi bi-check-all me-1"></i>اختيار الكل
-            </button>
-            <button type="button" class="btn btn-sm btn-outline-danger select-none">
-                <i class="bi bi-x me-1"></i>إلغاء الكل
-            </button>
-        `;
+        buttonContainer.style.marginTop = '10px';
         
-        moduleTitle.parentNode.insertBefore(buttonContainer, moduleTitle.nextSibling);
+        // Create select all button
+        const selectAllBtn = document.createElement('button');
+        selectAllBtn.type = 'button';
+        selectAllBtn.className = 'btn btn-sm btn-outline-success me-2';
+        selectAllBtn.innerHTML = '<i class="bi bi-check-all me-1"></i>إختيار الكل';
+        selectAllBtn.style.cursor = 'pointer';
         
-        // Add event listeners
-        const selectAllBtn = buttonContainer.querySelector('.select-all');
-        const selectNoneBtn = buttonContainer.querySelector('.select-none');
+        // Create deselect all button
+        const selectNoneBtn = document.createElement('button');
+        selectNoneBtn.type = 'button';
+        selectNoneBtn.className = 'btn btn-sm btn-outline-danger';
+        selectNoneBtn.innerHTML = '<i class="bi bi-x me-1"></i>إلغاء الكل';
+        selectNoneBtn.style.cursor = 'pointer';
         
-        selectAllBtn.addEventListener('click', function() {
-            switches.forEach(switchElement => {
-                switchElement.checked = true;
-                switchElement.dispatchEvent(new Event('change'));
+        buttonContainer.appendChild(selectAllBtn);
+        buttonContainer.appendChild(selectNoneBtn);
+        
+        // Insert buttons right after the h5 title
+        if (moduleTitle.nextSibling) {
+            moduleTitle.parentNode.insertBefore(buttonContainer, moduleTitle.nextSibling);
+        } else {
+            moduleTitle.parentNode.appendChild(buttonContainer);
+        }
+        
+        // Function to get all checkboxes in this module
+        function getModuleCheckboxes() {
+            return module.querySelectorAll('input[type="checkbox"]');
+        }
+        
+        // Add click handler for select all
+        selectAllBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const switches = getModuleCheckboxes();
+            console.log('Select All: Found', switches.length, 'checkboxes');
+            switches.forEach(function(checkbox) {
+                checkbox.checked = true;
+                // Trigger change event
+                const changeEvent = new Event('change', { bubbles: true, cancelable: true });
+                checkbox.dispatchEvent(changeEvent);
             });
         });
         
-        selectNoneBtn.addEventListener('click', function() {
-            switches.forEach(switchElement => {
-                switchElement.checked = false;
-                switchElement.dispatchEvent(new Event('change'));
+        // Add click handler for deselect all
+        selectNoneBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const switches = getModuleCheckboxes();
+            console.log('Deselect All: Found', switches.length, 'checkboxes');
+            switches.forEach(function(checkbox) {
+                checkbox.checked = false;
+                // Trigger change event
+                const changeEvent = new Event('change', { bubbles: true, cancelable: true });
+                checkbox.dispatchEvent(changeEvent);
             });
         });
     });
