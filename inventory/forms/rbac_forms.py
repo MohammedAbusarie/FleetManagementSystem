@@ -82,6 +82,8 @@ class UserUpdateForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        # Extract current_user from kwargs if provided (needed for validation)
+        self.current_user = kwargs.pop('current_user', None)
         super().__init__(*args, **kwargs)
 
         # Add Arabic styling
@@ -100,6 +102,74 @@ class UserUpdateForm(forms.ModelForm):
             except UserProfile.DoesNotExist:
                 pass
 
+    def clean_user_type(self):
+        """Validate user type changes"""
+        from django.core.exceptions import ValidationError
+        from django.contrib.auth.models import User
+        from ..utils.helpers import is_super_admin, is_admin_user
+        
+        if not self.instance.pk:
+            # New user - validation handled in UserCreateForm
+            return self.cleaned_data['user_type']
+        
+        new_user_type = self.cleaned_data['user_type']
+        
+        # Get current user type
+        try:
+            current_profile = self.instance.profile
+            current_user_type = current_profile.user_type
+        except UserProfile.DoesNotExist:
+            # Fallback: check if user is superuser
+            current_user_type = 'admin' if self.instance.is_superuser else 'normal'
+        
+        # If user type hasn't changed, no validation needed
+        if new_user_type == current_user_type:
+            return new_user_type
+        
+        # Check if current_user (person making the change) is provided
+        if not self.current_user:
+            # If current_user not provided, only allow if user is super admin (for backward compatibility)
+            # In production, current_user should always be provided
+            return new_user_type
+        
+        current_user_type_changer = None
+        try:
+            changer_profile = self.current_user.profile
+            current_user_type_changer = changer_profile.user_type
+        except (UserProfile.DoesNotExist, AttributeError):
+            current_user_type_changer = 'admin' if self.current_user.is_superuser else 'normal'
+        
+        # Validation rules:
+        # 1. Only super admins can change users to super_admin
+        if new_user_type == 'super_admin' and current_user_type_changer != 'super_admin':
+            raise ValidationError('فقط المدير العام يمكنه تغيير نوع المستخدم إلى مدير عام.')
+        
+        # 2. Only super admins can change users to admin
+        if new_user_type == 'admin' and current_user_type_changer != 'super_admin':
+            raise ValidationError('فقط المدير العام يمكنه تغيير نوع المستخدم إلى مدير.')
+        
+        # 3. Prevent changing super admin to lower privilege (unless done by another super admin)
+        if current_user_type == 'super_admin' and new_user_type != 'super_admin':
+            if current_user_type_changer != 'super_admin':
+                raise ValidationError('لا يمكن تغيير نوع المدير العام إلا بواسطة مدير عام آخر.')
+            
+            # Check if this is the last super admin
+            from ..models import UserProfile
+            active_super_admins = UserProfile.objects.filter(
+                user_type='super_admin',
+                is_active=True
+            ).exclude(user=self.instance).count()
+            
+            # Also count Django superusers
+            django_superusers = User.objects.filter(
+                is_superuser=True
+            ).exclude(id=self.instance.id).count()
+            
+            if active_super_admins == 0 and django_superusers == 0:
+                raise ValidationError('لا يمكن تغيير نوع آخر مدير عام في النظام. يجب أن يكون هناك مدير عام واحد على الأقل.')
+        
+        return new_user_type
+    
     def save(self, commit=True):
         user = super().save(commit=False)
 
@@ -108,9 +178,19 @@ class UserUpdateForm(forms.ModelForm):
             # Update user profile
             try:
                 profile = user.profile
+                old_user_type = profile.user_type
                 profile.user_type = self.cleaned_data['user_type']
                 profile.is_active = self.cleaned_data['is_active']
                 profile.save()
+                
+                # If user was downgraded from admin/super_admin, clean up permissions
+                if old_user_type in ['admin', 'super_admin'] and self.cleaned_data['user_type'] == 'normal':
+                    # Keep permissions - they might be upgraded again
+                    pass
+                elif old_user_type == 'normal' and self.cleaned_data['user_type'] in ['admin', 'super_admin']:
+                    # User upgraded to admin/super_admin - permissions are automatic, but don't delete records
+                    # They might be downgraded again
+                    pass
             except UserProfile.DoesNotExist:
                 UserProfile.objects.create(
                     user=user,

@@ -173,8 +173,22 @@ def user_update_view(request, user_id):
     """Update user information"""
     user = get_object_or_404(User, id=user_id)
     
+    # Prevent self-modification (users cannot modify themselves)
+    if user.id == request.user.id:
+        messages.error(
+            request,
+            'لا يمكنك تعديل معلوماتك الشخصية من هذه الصفحة. يرجى استخدام صفحة الملف الشخصي.'
+        )
+        log_user_action(
+            request.user,
+            'self_modification_attempt_blocked',
+            object_id=str(user.id),
+            description=f"محاولة تعديل المستخدم لنفسه محظورة: {user.username}"
+        )
+        return redirect('user_management')
+    
     if request.method == 'POST':
-        form = UserUpdateForm(request.POST, instance=user)
+        form = UserUpdateForm(request.POST, instance=user, current_user=request.user)
         if form.is_valid():
             try:
                 updated_user = form.save()
@@ -189,10 +203,19 @@ def user_update_view(request, user_id):
                 )
                 
                 return redirect('user_management')
+            except (forms.ValidationError, DjangoValidationError) as e:
+                # Handle form validation errors
+                if hasattr(e, 'message'):
+                    messages.error(request, e.message)
+                elif hasattr(e, 'messages'):
+                    for message in e.messages:
+                        messages.error(request, message)
+                else:
+                    messages.error(request, str(e))
             except Exception as e:
                 messages.error(request, f'خطأ في تحديث المستخدم: {str(e)}')
     else:
-        form = UserUpdateForm(instance=user)
+        form = UserUpdateForm(instance=user, current_user=request.user)
     
     context = {
         'title': f'تعديل المستخدم: {user.username}',
@@ -206,6 +229,59 @@ def user_update_view(request, user_id):
 def user_delete_view(request, user_id):
     """Delete user (soft delete)"""
     user = get_object_or_404(User, id=user_id)
+    
+    # Prevent self-deletion (users cannot delete themselves)
+    if user.id == request.user.id:
+        messages.error(
+            request,
+            'لا يمكنك حذف حسابك الشخصي. يرجى الاتصال بمدير آخر لحذف حسابك.'
+        )
+        log_user_action(
+            request.user,
+            'self_deletion_attempt_blocked',
+            object_id=str(user.id),
+            description=f"محاولة حذف المستخدم لنفسه محظورة: {user.username}"
+        )
+        return redirect('user_management')
+    
+    # Prevent deleting/deactivating super admins and protect last super admin
+    if is_super_admin(user):
+        # Protect last super admin - check if this is the last one
+        active_super_admins = UserProfile.objects.filter(
+            user_type='super_admin',
+            is_active=True
+        ).exclude(user=user).count()
+        
+        # Also count Django superusers excluding this user
+        django_superusers = User.objects.filter(
+            is_superuser=True
+        ).exclude(id=user.id).count()
+        
+        if active_super_admins == 0 and django_superusers == 0:
+            messages.error(
+                request,
+                'لا يمكن حذف آخر مدير عام في النظام. يجب أن يكون هناك مدير عام واحد على الأقل.'
+            )
+            log_user_action(
+                request.user,
+                'last_super_admin_deletion_attempt_blocked',
+                object_id=str(user.id),
+                description=f"محاولة حذف آخر مدير عام محظورة: {user.username}"
+            )
+            return redirect('user_management')
+        
+        # General super admin deletion prevention
+        messages.error(
+            request,
+            f'لا يمكن حذف المدير العام "{user.username}". يرجى تغيير نوع المستخدم أولاً إذا كنت تريد تقليل صلاحياته.'
+        )
+        log_user_action(
+            request.user,
+            'super_admin_deletion_attempt_blocked',
+            object_id=str(user.id),
+            description=f"محاولة حذف مدير عام محظورة: {user.username}"
+        )
+        return redirect('user_management')
     
     if request.method == 'POST':
         try:
@@ -282,6 +358,20 @@ def permission_management_view(request):
 def user_permissions_view(request, user_id):
     """View and edit user permissions"""
     user = get_object_or_404(User, id=user_id)
+    
+    # Prevent self-modification (users cannot modify their own permissions)
+    if user.id == request.user.id:
+        messages.error(
+            request,
+            'لا يمكنك تعديل صلاحياتك الشخصية. يرجى الاتصال بمدير آخر لتعديل صلاحياتك.'
+        )
+        log_user_action(
+            request.user,
+            'self_permission_modification_attempt_blocked',
+            object_id=str(user.id),
+            description=f"محاولة تعديل المستخدم لصلاحياته الشخصية محظورة: {user.username}"
+        )
+        return redirect('permission_management')
     
     # Prevent modifying super admin permissions
     # Super admins have all permissions automatically and shouldn't be modified
