@@ -313,7 +313,8 @@ def user_delete_view(request, user_id):
         )
         return redirect('user_management')
     
-    # Prevent deleting/deactivating super admins and protect last super admin
+    # Prevent deleting/deactivating super admins entirely
+    # Super admins should never be deleted - they must be downgraded first
     if is_super_admin(user):
         # Protect last super admin - check if this is the last one
         active_super_admins = UserProfile.objects.filter(
@@ -339,16 +340,16 @@ def user_delete_view(request, user_id):
             )
             return redirect('user_management')
         
-        # General super admin deletion prevention
+        # Prevent any deletion of super admins - they must be downgraded first
         messages.error(
             request,
-            f'لا يمكن حذف المدير العام "{user.username}". يرجى تغيير نوع المستخدم أولاً إذا كنت تريد تقليل صلاحياته.'
+            f'لا يمكن حذف المدير العام "{user.username}". يجب تغيير نوع المستخدم إلى "مدير" أو "مستخدم عادي" أولاً قبل الحذف.'
         )
         log_user_action(
             request.user,
             'super_admin_deletion_attempt_blocked',
             object_id=str(user.id),
-            description=f"محاولة حذف مدير عام محظورة: {user.username}"
+            description=f"محاولة حذف مدير عام محظورة: {user.username}. يجب تغيير نوع المستخدم أولاً."
         )
         return redirect('user_management')
     
@@ -392,13 +393,14 @@ def permission_management_view(request):
         # Admins can only see normal users
         if is_super_admin(request.user):
             # Super admins can see all users except super admins
+            # Show admins and normal users - admins are read-only (permissions automatic)
             users = User.objects.select_related('profile').filter(
                 profile__is_active=True
             ).exclude(
                 Q(profile__user_type='super_admin') | Q(is_superuser=True)
             ).order_by('username')
         else:
-            # Admins can only see normal users
+            # Admins can only see normal users (fully editable)
             users = User.objects.select_related('profile').filter(
                 profile__is_active=True,
                 profile__user_type='normal'
@@ -413,7 +415,7 @@ def permission_management_view(request):
                 Q(last_name__icontains=search_query)
             )
         
-        # Paginate results
+        # Paginate results (users is already filtered QuerySet)
         page_number = request.GET.get('page', 1)
         users_page = paginate_queryset(users, page_number, per_page=20)
         
@@ -423,6 +425,7 @@ def permission_management_view(request):
             'search_query': search_query,
             'modules': ['cars', 'equipment', 'generic_tables'],
             'permissions': ['create', 'read', 'update', 'delete'],
+            'is_super_admin': is_super_admin(request.user),
         }
         
         return render(request, 'inventory/admin/permission_management.html', context)

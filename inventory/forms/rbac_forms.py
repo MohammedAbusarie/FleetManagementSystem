@@ -179,24 +179,40 @@ class UserUpdateForm(forms.ModelForm):
             try:
                 profile = user.profile
                 old_user_type = profile.user_type
-                profile.user_type = self.cleaned_data['user_type']
+                new_user_type = self.cleaned_data['user_type']
+                profile.user_type = new_user_type
                 profile.is_active = self.cleaned_data['is_active']
                 profile.save()
                 
-                # If user was downgraded from admin/super_admin, clean up permissions
-                if old_user_type in ['admin', 'super_admin'] and self.cleaned_data['user_type'] == 'normal':
-                    # Keep permissions - they might be upgraded again
-                    pass
-                elif old_user_type == 'normal' and self.cleaned_data['user_type'] in ['admin', 'super_admin']:
-                    # User upgraded to admin/super_admin - permissions are automatic, but don't delete records
-                    # They might be downgraded again
-                    pass
+                # Cascade permission cleanup based on user type changes
+                if old_user_type != new_user_type:
+                    # User upgraded to admin/super_admin - permissions are automatic
+                    # Clean up UserPermission records since they're not needed
+                    if old_user_type == 'normal' and new_user_type in ['admin', 'super_admin']:
+                        UserPermission.objects.filter(user=user).delete()
+                        
+                    # User downgraded from admin/super_admin to normal
+                    # Keep UserPermission records - they define the user's actual permissions
+                    # (They might be upgraded again, but for now permissions should remain)
+                    elif old_user_type in ['admin', 'super_admin'] and new_user_type == 'normal':
+                        # Permissions remain - they define what the normal user can do
+                        pass
+                    
+                    # User changed from admin to super_admin or vice versa
+                    # Both have all permissions automatically, so clean up records
+                    elif old_user_type in ['admin', 'super_admin'] and new_user_type in ['admin', 'super_admin']:
+                        UserPermission.objects.filter(user=user).delete()
+                        
             except UserProfile.DoesNotExist:
                 UserProfile.objects.create(
                     user=user,
                     user_type=self.cleaned_data['user_type'],
                     is_active=self.cleaned_data['is_active']
                 )
+                
+                # If creating profile as admin/super_admin, clean up any existing permissions
+                if self.cleaned_data['user_type'] in ['admin', 'super_admin']:
+                    UserPermission.objects.filter(user=user).delete()
 
         return user
 
