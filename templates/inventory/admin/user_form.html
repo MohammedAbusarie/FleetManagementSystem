@@ -150,6 +150,16 @@
                                         {{ form.user_type.label }}
                                     </label>
                                     {{ form.user_type }}
+                                    {% if form.user_type.field.widget.attrs.disabled %}
+                                        <small class="text-muted d-block mt-1">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            {% if form.user_type.field.widget.attrs.title %}
+                                                {{ form.user_type.field.widget.attrs.title }}
+                                            {% else %}
+                                                هذا الحقل غير قابل للتعديل
+                                            {% endif %}
+                                        </small>
+                                    {% endif %}
                                     {% if form.user_type.errors %}
                                         <div class="text-danger mt-1">
                                             {% for error in form.user_type.errors %}
@@ -298,6 +308,23 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Handle disabled select fields - ensure they're included in form submission
+    const disabledSelects = document.querySelectorAll('select[disabled]');
+    disabledSelects.forEach(select => {
+        // Create hidden input with the same name and value to ensure it's submitted
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = select.name;
+        hiddenInput.value = select.value;
+        select.parentNode.appendChild(hiddenInput);
+    });
+    
     // Add form validation
     const form = document.querySelector('form');
     if (form) {

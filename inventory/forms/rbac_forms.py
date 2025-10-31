@@ -99,6 +99,29 @@ class UserUpdateForm(forms.ModelForm):
                 profile = self.instance.profile
                 self.fields['user_type'].initial = profile.user_type
                 self.fields['is_active'].initial = profile.is_active
+                
+                # Disable fields for protected users
+                from ..utils.helpers import is_super_admin
+                
+                # If user is super admin, disable user_type field (can't change super admin type easily)
+                if is_super_admin(self.instance):
+                    self.fields['user_type'].widget.attrs['disabled'] = True
+                    self.fields['user_type'].widget.attrs['title'] = 'لا يمكن تغيير نوع المدير العام بسهولة. يجب تغييره من قبل مدير عام آخر.'
+                
+                # If current_user is admin (not super admin), disable user_type field
+                # (admins can't change user types - only super admins can)
+                if self.current_user:
+                    current_user_type = None
+                    try:
+                        changer_profile = self.current_user.profile
+                        current_user_type = changer_profile.user_type
+                    except (UserProfile.DoesNotExist, AttributeError):
+                        current_user_type = 'admin' if self.current_user.is_superuser else 'normal'
+                    
+                    if current_user_type == 'admin' and not is_super_admin(self.current_user):
+                        self.fields['user_type'].widget.attrs['disabled'] = True
+                        self.fields['user_type'].widget.attrs['title'] = 'يمكن فقط للمدير العام تغيير نوع المستخدم.'
+                        
             except UserProfile.DoesNotExist:
                 pass
 
@@ -179,7 +202,17 @@ class UserUpdateForm(forms.ModelForm):
             try:
                 profile = user.profile
                 old_user_type = profile.user_type
-                new_user_type = self.cleaned_data['user_type']
+                # Handle disabled fields - if user_type was disabled, use current value
+                # Django doesn't submit disabled fields, so we need to get it from initial or current value
+                if 'user_type' in self.fields and self.fields['user_type'].widget.attrs.get('disabled'):
+                    # Field was disabled - use the current value (not from POST data)
+                    new_user_type = old_user_type
+                elif 'user_type' not in self.cleaned_data:
+                    # Field not in cleaned_data (might be disabled) - use current value
+                    new_user_type = old_user_type
+                else:
+                    new_user_type = self.cleaned_data.get('user_type', old_user_type)
+                
                 profile.user_type = new_user_type
                 profile.is_active = self.cleaned_data['is_active']
                 profile.save()

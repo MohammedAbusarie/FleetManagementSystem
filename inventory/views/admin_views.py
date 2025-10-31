@@ -143,6 +143,8 @@ def user_management_view(request):
             'super_admin_users': super_admin_users,
             'admin_users': admin_users,
             'normal_users': normal_users,
+            'current_user': request.user,
+            'is_super_admin': is_super_admin(request.user),
         }
         
         return render(request, 'inventory/admin/user_management.html', context)
@@ -233,15 +235,35 @@ def user_update_view(request, user_id):
         form = UserUpdateForm(request.POST, instance=user, current_user=request.user)
         if form.is_valid():
             try:
+                # Get old user type before update
+                try:
+                    old_profile = user.profile
+                    old_user_type = old_profile.user_type
+                except UserProfile.DoesNotExist:
+                    old_user_type = 'admin' if user.is_superuser else 'normal'
+                
                 updated_user = form.save()
+                
+                # Get new user type after update
+                try:
+                    new_profile = updated_user.profile
+                    new_user_type = new_profile.user_type
+                except UserProfile.DoesNotExist:
+                    new_user_type = 'admin' if updated_user.is_superuser else 'normal'
+                
                 messages.success(request, f'تم تحديث المستخدم "{updated_user.username}" بنجاح.')
+                
+                # Enhanced logging - log user type changes
+                description = f"تحديث مستخدم: {updated_user.username}"
+                if old_user_type != new_user_type:
+                    description += f" | تغيير النوع: {old_user_type} → {new_user_type}"
                 
                 # Log user update
                 log_user_action(
                     request.user,
                     'user_update',
                     object_id=str(user.id),
-                    description=f"تحديث مستخدم: {user.username}"
+                    description=description
                 )
                 
                 return redirect('user_management')
@@ -503,15 +525,36 @@ def user_permissions_view(request, user_id):
         form = PermissionAssignmentForm(user, request.POST)
         if form.is_valid():
             try:
+                # Get current permissions before update for logging
+                from ..models import UserPermission
+                old_permissions = {}
+                user_perms = UserPermission.objects.filter(user=user, granted=True).select_related('module_permission')
+                for up in user_perms:
+                    key = f"{up.module_permission.module_name}.{up.module_permission.permission_type}"
+                    old_permissions[key] = True
+                
                 form.save(current_user=request.user)
                 messages.success(request, f'تم تحديث صلاحيات المستخدم "{user.username}" بنجاح.')
+                
+                # Get new permissions after update for logging
+                new_permissions = {}
+                user_perms = UserPermission.objects.filter(user=user, granted=True).select_related('module_permission')
+                for up in user_perms:
+                    key = f"{up.module_permission.module_name}.{up.module_permission.permission_type}"
+                    new_permissions[key] = True
+                
+                # Enhanced logging - log permission changes
+                description = f"تحديث صلاحيات مستخدم: {user.username}"
+                granted_perms = [k for k in new_permissions.keys() if new_permissions.get(k)]
+                if granted_perms:
+                    description += f" | الصلاحيات الممنوحة: {', '.join(granted_perms)}"
                 
                 # Log permission update
                 log_user_action(
                     request.user,
                     'permission_update',
                     object_id=str(user.id),
-                    description=f"تحديث صلاحيات مستخدم: {user.username}"
+                    description=description
                 )
                 
                 return redirect('permission_management')

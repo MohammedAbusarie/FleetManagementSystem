@@ -198,16 +198,62 @@
                                     <i class="bi bi-three-dots-vertical"></i>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="{% url 'user_update' user.id %}">
-                                        <i class="bi bi-pencil me-2"></i>تعديل
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="{% url 'user_permissions' user.id %}">
-                                        <i class="bi bi-shield-check me-2"></i>الصلاحيات
-                                    </a></li>
+                                    {% if user.id == current_user.id %}
+                                        <li><span class="dropdown-item-text text-muted" data-bs-toggle="tooltip" title="لا يمكنك تعديل معلوماتك الشخصية من هذه الصفحة">
+                                            <i class="bi bi-pencil me-2"></i>تعديل
+                                            <small class="d-block text-muted ms-4" style="font-size: 0.75rem;">غير متاح لنفسك</small>
+                                        </span></li>
+                                        <li><span class="dropdown-item-text text-muted" data-bs-toggle="tooltip" title="لا يمكنك تعديل صلاحياتك الشخصية">
+                                            <i class="bi bi-shield-check me-2"></i>الصلاحيات
+                                            <small class="d-block text-muted ms-4" style="font-size: 0.75rem;">غير متاح لنفسك</small>
+                                        </span></li>
+                                    {% elif user.profile.user_type == 'super_admin' or user.is_superuser %}
+                                        <li><span class="dropdown-item-text text-muted" data-bs-toggle="tooltip" title="لا يمكن تعديل المدير العام">
+                                            <i class="bi bi-pencil me-2"></i>تعديل
+                                            <small class="d-block text-muted ms-4" style="font-size: 0.75rem;">غير متاح للمدير العام</small>
+                                        </span></li>
+                                        <li><span class="dropdown-item-text text-muted" data-bs-toggle="tooltip" title="لا يمكن تعديل صلاحيات المدير العام">
+                                            <i class="bi bi-shield-check me-2"></i>الصلاحيات
+                                            <small class="d-block text-muted ms-4" style="font-size: 0.75rem;">غير متاح للمدير العام</small>
+                                        </span></li>
+                                    {% elif not is_super_admin and user.profile.user_type == 'admin' %}
+                                        <li><span class="dropdown-item-text text-muted" data-bs-toggle="tooltip" title="يمكن فقط للمدير العام تعديل المديرين">
+                                            <i class="bi bi-pencil me-2"></i>تعديل
+                                            <small class="d-block text-muted ms-4" style="font-size: 0.75rem;">غير متاح للمدير</small>
+                                        </span></li>
+                                        <li><span class="dropdown-item-text text-muted" data-bs-toggle="tooltip" title="يمكن فقط للمدير العام تعديل صلاحيات المديرين">
+                                            <i class="bi bi-shield-check me-2"></i>الصلاحيات
+                                            <small class="d-block text-muted ms-4" style="font-size: 0.75rem;">غير متاح للمدير</small>
+                                        </span></li>
+                                    {% else %}
+                                        <li><a class="dropdown-item" href="{% url 'user_update' user.id %}">
+                                            <i class="bi bi-pencil me-2"></i>تعديل
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="{% url 'user_permissions' user.id %}">
+                                            <i class="bi bi-shield-check me-2"></i>الصلاحيات
+                                        </a></li>
+                                    {% endif %}
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" href="{% url 'user_delete' user.id %}">
-                                        <i class="bi bi-trash me-2"></i>حذف
-                                    </a></li>
+                                    {% if user.id == current_user.id %}
+                                        <li><span class="dropdown-item-text text-muted" data-bs-toggle="tooltip" title="لا يمكنك حذف حسابك الشخصي">
+                                            <i class="bi bi-trash me-2"></i>حذف
+                                            <small class="d-block text-muted ms-4" style="font-size: 0.75rem;">غير متاح لنفسك</small>
+                                        </span></li>
+                                    {% elif user.profile.user_type == 'super_admin' or user.is_superuser %}
+                                        <li><span class="dropdown-item-text text-muted" data-bs-toggle="tooltip" title="لا يمكن حذف المدير العام - يجب تغيير نوع المستخدم أولاً">
+                                            <i class="bi bi-trash me-2"></i>حذف
+                                            <small class="d-block text-muted ms-4" style="font-size: 0.75rem;">غير متاح للمدير العام</small>
+                                        </span></li>
+                                    {% elif not is_super_admin and user.profile.user_type == 'admin' %}
+                                        <li><span class="dropdown-item-text text-muted" data-bs-toggle="tooltip" title="يمكن فقط للمدير العام حذف المديرين">
+                                            <i class="bi bi-trash me-2"></i>حذف
+                                            <small class="d-block text-muted ms-4" style="font-size: 0.75rem;">غير متاح للمدير</small>
+                                        </span></li>
+                                    {% else %}
+                                        <li><a class="dropdown-item text-danger" href="{% url 'user_delete' user.id %}">
+                                            <i class="bi bi-trash me-2"></i>حذف
+                                        </a></li>
+                                    {% endif %}
                                 </ul>
                             </div>
                         </div>
@@ -386,6 +432,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.preventDefault();
             }
         });
+    });
+    
+    // Initialize Bootstrap tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 });
 </script>
