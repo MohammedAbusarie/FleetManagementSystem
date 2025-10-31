@@ -10,6 +10,9 @@ import os
 
 from ..utils.decorators import super_admin_required, admin_required, super_admin_required_with_message, admin_required_with_message
 from ..utils.helpers import paginate_queryset, log_user_action
+from django.http import HttpResponse
+from datetime import datetime, timedelta
+import csv
 from ..services.rbac_service import (
     UserProfileService, PermissionService, LoggingService
 )
@@ -298,7 +301,18 @@ def login_logs_view(request):
         # Get filter parameters
         search_query = request.GET.get('search', '')
         success_filter = request.GET.get('success', '')
+        role_filter = request.GET.get('role', '')
+        start_date_str = request.GET.get('start_date', '')
+        end_date_str = request.GET.get('end_date', '')
         page_number = request.GET.get('page', 1)
+        try:
+            per_page = int(request.GET.get('per_page', 25))
+        except (ValueError, TypeError):
+            per_page = 25
+        
+        # Validate per_page to prevent abuse
+        if per_page not in [10, 25, 50, 100]:
+            per_page = 25
         
         # Base queryset: avoid slicing before ordering to prevent errors when reordering
         login_logs = LoginLog.objects.select_related('user').all()
@@ -315,18 +329,41 @@ def login_logs_view(request):
         # Apply success filter
         if success_filter != '':
             login_logs = login_logs.filter(success=success_filter == 'true')
+
+        # Apply role filter (via user profile)
+        if role_filter:
+            login_logs = login_logs.filter(user__profile__user_type=role_filter)
+
+        # Apply date range filter (inclusive)
+        if start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+                login_logs = login_logs.filter(login_time__date__gte=start_date.date())
+            except ValueError:
+                pass
+        if end_date_str:
+            try:
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+                login_logs = login_logs.filter(login_time__date__lte=end_date.date())
+            except ValueError:
+                pass
         
         # Order by login time
         login_logs = login_logs.order_by('-login_time')
         
         # Paginate results
-        logs_page = paginate_queryset(login_logs, page_number, per_page=50)
+        logs_page = paginate_queryset(login_logs, page_number, per_page=per_page)
         
         context = {
             'title': 'سجل تسجيل الدخول',
             'logs_page': logs_page,
             'search_query': search_query,
             'success_filter': success_filter,
+            'role_filter': role_filter,
+            'start_date': start_date_str,
+            'end_date': end_date_str,
+            'role_choices': getattr(UserProfile, 'USER_TYPE_CHOICES', []),
+            'per_page': per_page,
         }
         
         return render(request, 'inventory/admin/login_logs.html', context)
@@ -346,7 +383,18 @@ def action_logs_view(request):
         search_query = request.GET.get('search', '')
         action_type_filter = request.GET.get('action_type', '')
         module_filter = request.GET.get('module', '')
+        role_filter = request.GET.get('role', '')
+        start_date_str = request.GET.get('start_date', '')
+        end_date_str = request.GET.get('end_date', '')
         page_number = request.GET.get('page', 1)
+        try:
+            per_page = int(request.GET.get('per_page', 25))
+        except (ValueError, TypeError):
+            per_page = 25
+        
+        # Validate per_page to prevent abuse
+        if per_page not in [10, 25, 50, 100]:
+            per_page = 25
         
         # Base queryset: avoid slicing before ordering to prevent errors when reordering
         action_logs = ActionLog.objects.select_related('user').all()
@@ -368,16 +416,39 @@ def action_logs_view(request):
         # Apply module filter
         if module_filter:
             action_logs = action_logs.filter(module_name=module_filter)
+
+        # Apply role filter (via user profile)
+        if role_filter:
+            action_logs = action_logs.filter(user__profile__user_type=role_filter)
+
+        # Apply date range filter (inclusive)
+        if start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+                action_logs = action_logs.filter(timestamp__date__gte=start_date.date())
+            except ValueError:
+                pass
+        if end_date_str:
+            try:
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+                action_logs = action_logs.filter(timestamp__date__lte=end_date.date())
+            except ValueError:
+                pass
         
         # Order by timestamp
         action_logs = action_logs.order_by('-timestamp')
         
         # Paginate results
-        logs_page = paginate_queryset(action_logs, page_number, per_page=50)
+        logs_page = paginate_queryset(action_logs, page_number, per_page=per_page)
         
-        # Get unique action types and modules for filter dropdowns
-        action_types = action_logs.values_list('action_type', flat=True).distinct()
-        modules = action_logs.values_list('module_name', flat=True).distinct()
+        # Get action type choices (from model) and unique modules for filter dropdowns
+        action_type_choices = getattr(ActionLog, 'ACTION_CHOICES', [])
+        modules = (
+            ActionLog.objects.order_by()
+            .values_list('module_name', flat=True)
+            .distinct()
+        )
+        modules = [m for m in modules if m]
         
         context = {
             'title': 'سجل العمليات',
@@ -385,8 +456,13 @@ def action_logs_view(request):
             'search_query': search_query,
             'action_type_filter': action_type_filter,
             'module_filter': module_filter,
-            'action_types': action_types,
+            'action_type_choices': action_type_choices,
             'modules': modules,
+            'role_filter': role_filter,
+            'start_date': start_date_str,
+            'end_date': end_date_str,
+            'role_choices': getattr(UserProfile, 'USER_TYPE_CHOICES', []),
+            'per_page': per_page,
         }
         
         return render(request, 'inventory/admin/action_logs.html', context)
@@ -394,6 +470,142 @@ def action_logs_view(request):
     except Exception as e:
         messages.error(request, f'خطأ في تحميل سجل العمليات: {str(e)}')
         return redirect('admin_panel')
+
+
+@admin_required_with_message()
+def login_logs_export(request):
+    """Export login logs to CSV with optional filters and date range"""
+    try:
+        search_query = request.GET.get('search', '')
+        success_filter = request.GET.get('success', '')
+        role_filter = request.GET.get('role', '')
+        start_date_str = request.GET.get('start_date', '')
+        end_date_str = request.GET.get('end_date', '')
+
+        logs = LoginLog.objects.select_related('user').all()
+
+        if search_query:
+            logs = logs.filter(
+                Q(user__username__icontains=search_query) |
+                Q(user__first_name__icontains=search_query) |
+                Q(user__last_name__icontains=search_query) |
+                Q(ip_address__icontains=search_query)
+            )
+        if success_filter != '':
+            logs = logs.filter(success=success_filter == 'true')
+        if role_filter:
+            logs = logs.filter(user__profile__user_type=role_filter)
+        if start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                logs = logs.filter(login_time__date__gte=start_date)
+            except ValueError:
+                pass
+        if end_date_str:
+            try:
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+                logs = logs.filter(login_time__date__lte=end_date)
+            except ValueError:
+                pass
+
+        logs = logs.order_by('-login_time')
+
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        filename = 'سجل_تسجيل_الدخول.csv'
+        response['Content-Disposition'] = f"attachment; filename*=UTF-8''{filename}"
+
+        # Write UTF-8 BOM for Excel compatibility with Arabic
+        response.write('\ufeff')
+
+        writer = csv.writer(response)
+        writer.writerow(['المستخدم', 'اسم المستخدم', 'عنوان IP', 'المتصفح', 'نجاح', 'وقت الدخول', 'وقت الخروج', 'الدور'])
+        for l in logs:
+            role = getattr(getattr(l.user, 'profile', None), 'user_type', '')
+            writer.writerow([
+                l.user.get_full_name() or '',
+                l.user.username,
+                l.ip_address,
+                (l.user_agent or '')[:250],
+                'نجح' if l.success else 'فشل',
+                l.login_time.strftime('%Y-%m-%d %H:%M:%S'),
+                l.logout_time.strftime('%Y-%m-%d %H:%M:%S') if l.logout_time else '',
+                role,
+            ])
+
+        return response
+    except Exception as e:
+        messages.error(request, f'خطأ في تصدير سجل تسجيل الدخول: {str(e)}')
+        return redirect('login_logs')
+
+
+@admin_required_with_message()
+def action_logs_export(request):
+    """Export action logs to CSV with optional filters and date range"""
+    try:
+        search_query = request.GET.get('search', '')
+        action_type_filter = request.GET.get('action_type', '')
+        module_filter = request.GET.get('module', '')
+        role_filter = request.GET.get('role', '')
+        start_date_str = request.GET.get('start_date', '')
+        end_date_str = request.GET.get('end_date', '')
+
+        logs = ActionLog.objects.select_related('user').all()
+
+        if search_query:
+            logs = logs.filter(
+                Q(user__username__icontains=search_query) |
+                Q(user__first_name__icontains=search_query) |
+                Q(user__last_name__icontains=search_query) |
+                Q(description__icontains=search_query) |
+                Q(action_type__icontains=search_query)
+            )
+        if action_type_filter:
+            logs = logs.filter(action_type=action_type_filter)
+        if module_filter:
+            logs = logs.filter(module_name=module_filter)
+        if role_filter:
+            logs = logs.filter(user__profile__user_type=role_filter)
+        if start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                logs = logs.filter(timestamp__date__gte=start_date)
+            except ValueError:
+                pass
+        if end_date_str:
+            try:
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+                logs = logs.filter(timestamp__date__lte=end_date)
+            except ValueError:
+                pass
+
+        logs = logs.order_by('-timestamp')
+
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        filename = 'سجل_العمليات.csv'
+        response['Content-Disposition'] = f"attachment; filename*=UTF-8''{filename}"
+
+        # Write UTF-8 BOM for Excel compatibility with Arabic
+        response.write('\ufeff')
+
+        writer = csv.writer(response)
+        writer.writerow(['المستخدم', 'اسم المستخدم', 'نوع العملية', 'الوحدة', 'الوصف', 'عنوان IP', 'الوقت', 'الدور'])
+        for l in logs:
+            role = getattr(getattr(l.user, 'profile', None), 'user_type', '')
+            writer.writerow([
+                l.user.get_full_name() or '',
+                l.user.username,
+                l.get_action_type_display() if hasattr(l, 'get_action_type_display') else l.action_type,
+                l.module_name or '',
+                (l.description or '')[:250],
+                l.ip_address or '',
+                l.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                role,
+            ])
+
+        return response
+    except Exception as e:
+        messages.error(request, f'خطأ في تصدير سجل العمليات: {str(e)}')
+        return redirect('action_logs')
 
 
 @admin_required_with_message()

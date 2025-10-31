@@ -21,43 +21,45 @@
     
     .logs-body {
         padding: 0;
+        overflow-x: auto;
     }
     
-    .log-item {
-        padding: 15px 20px;
-        border-bottom: 1px solid #f8f9fa;
-        transition: all 0.3s ease;
+    .logs-table {
+        width: 100%;
+        margin: 0;
+        border-collapse: collapse;
     }
     
-    .log-item:hover {
+    .logs-table thead {
         background-color: #f8f9fa;
     }
     
-    .log-item:last-child {
-        border-bottom: none;
-    }
-    
-    .log-user {
-        font-weight: 500;
+    .logs-table th {
+        padding: 12px 15px;
+        text-align: right;
+        font-weight: 600;
         color: #495057;
-        margin-bottom: 5px;
+        border-bottom: 2px solid #dee2e6;
+        white-space: nowrap;
     }
     
-    .log-action {
+    .logs-table td {
+        padding: 10px 15px;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
         font-size: 0.9rem;
-        color: #495057;
-        margin-bottom: 5px;
     }
     
-    .log-description {
-        font-size: 0.85rem;
-        color: #6c757d;
-        margin-bottom: 5px;
+    .logs-table tbody tr {
+        transition: background-color 0.2s ease;
     }
     
-    .log-time {
-        font-size: 0.85rem;
-        color: #adb5bd;
+    .logs-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .logs-table tbody tr:last-child td {
+        border-bottom: none;
     }
     
     .module-badge {
@@ -65,6 +67,7 @@
         border-radius: 20px;
         font-size: 0.8rem;
         font-weight: 500;
+        white-space: nowrap;
     }
     
     .module-cars {
@@ -85,6 +88,26 @@
     .module-admin {
         background-color: #f8d7da;
         color: #721c24;
+    }
+    
+    .user-name {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .log-action {
+        color: #495057;
+        font-weight: 500;
+    }
+    
+    .log-description {
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+    
+    .log-time {
+        color: #6c757d;
+        font-size: 0.85rem;
     }
     
     .search-form {
@@ -109,23 +132,32 @@
         color: white;
     }
     
-    .stats-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 20px;
+    .pagination-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #dee2e6;
     }
     
-    .stats-number {
-        font-size: 2rem;
-        font-weight: bold;
-        margin-bottom: 5px;
+    .page-size-selector {
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
     
-    .stats-label {
+    .page-size-selector label {
+        margin: 0;
         font-size: 0.9rem;
-        opacity: 0.9;
+        color: #495057;
+    }
+    
+    .page-size-selector select {
+        padding: 5px 10px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        font-size: 0.9rem;
     }
 </style>
 {% endblock %}
@@ -153,37 +185,9 @@
         </div>
     </div>
 
-    <!-- Statistics -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="stats-card text-center">
-                <div class="stats-number">{{ logs_page.paginator.count }}</div>
-                <div class="stats-label">إجمالي العمليات</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card text-center">
-                <div class="stats-number">{{ logs_page.paginator.count }}</div>
-                <div class="stats-label">عمليات السيارات</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card text-center">
-                <div class="stats-number">{{ logs_page.paginator.count }}</div>
-                <div class="stats-label">عمليات المعدات</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card text-center">
-                <div class="stats-number">{{ logs_page.paginator.count }}</div>
-                <div class="stats-label">عمليات الإدارة</div>
-            </div>
-        </div>
-    </div>
-
     <!-- Search and Filter Form -->
     <div class="search-form">
-        <form method="get" class="row g-3">
+        <form method="get" class="row g-3" id="filterForm">
             <div class="col-md-3">
                 <label for="search" class="form-label">البحث</label>
                 <input type="text" class="form-control" id="search" name="search" 
@@ -193,10 +197,8 @@
                 <label for="action_type" class="form-label">نوع العملية</label>
                 <select class="form-select" id="action_type" name="action_type">
                     <option value="">جميع الأنواع</option>
-                    {% for action_type in action_types %}
-                        <option value="{{ action_type }}" {% if action_type_filter == action_type %}selected{% endif %}>
-                            {{ action_type }}
-                        </option>
+                    {% for value,label in action_type_choices %}
+                        <option value="{{ value }}" {% if action_type_filter == value %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -216,6 +218,23 @@
                 </select>
             </div>
             <div class="col-md-3">
+                <label for="role" class="form-label">الدور</label>
+                <select class="form-select" id="role" name="role">
+                    <option value="">جميع الأدوار</option>
+                    {% for value,label in role_choices %}
+                        <option value="{{ value }}" {% if role_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="start_date" class="form-label">من تاريخ</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+            </div>
+            <div class="col-md-3">
+                <label for="end_date" class="form-label">إلى تاريخ</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+            </div>
+            <div class="col-md-3">
                 <label class="form-label">&nbsp;</label>
                 <div class="d-grid">
                     <button type="submit" class="btn btn-outline-primary">
@@ -224,27 +243,29 @@
                     </button>
                 </div>
             </div>
-        </form>
-        <div class="row mt-3">
-            <div class="col-12">
-                <a href="{% url 'action_logs' %}" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-arrow-clockwise me-2"></i>
-                    إعادة تعيين
-                </a>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <a href="{% url 'action_logs' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise me-2"></i>
+                        إعادة تعيين
+                    </a>
+                </div>
             </div>
-        </div>
+            <input type="hidden" name="per_page" id="per_page_hidden" value="{{ per_page }}">
+        </form>
     </div>
 
     <!-- Active Filters -->
-    {% if search_query or action_type_filter or module_filter %}
+    {% if search_query or action_type_filter or module_filter or role_filter or start_date or end_date %}
     <div class="row mb-3">
         <div class="col-12">
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center flex-wrap">
                 <span class="me-2">الفلاتر النشطة:</span>
                 {% if search_query %}
                     <span class="filter-badge active">
                         البحث: "{{ search_query }}"
-                        <a href="?{% if action_type_filter %}action_type={{ action_type_filter }}{% endif %}{% if module_filter %}{% if action_type_filter %}&{% endif %}module={{ module_filter }}{% endif %}" class="text-white ms-1">
+                        <a href="?{% if action_type_filter %}action_type={{ action_type_filter }}{% endif %}{% if module_filter %}{% if action_type_filter %}&{% endif %}module={{ module_filter }}{% endif %}{% if role_filter %}{% if action_type_filter or module_filter %}&{% endif %}role={{ role_filter }}{% endif %}{% if start_date %}{% if action_type_filter or module_filter or role_filter %}&{% endif %}start_date={{ start_date }}{% endif %}{% if end_date %}{% if action_type_filter or module_filter or role_filter or start_date %}&{% endif %}end_date={{ end_date }}{% endif %}{% if per_page %}{% if action_type_filter or module_filter or role_filter or start_date or end_date %}&{% endif %}per_page={{ per_page }}{% endif %}" class="text-white ms-1">
                             <i class="bi bi-x"></i>
                         </a>
                     </span>
@@ -252,7 +273,7 @@
                 {% if action_type_filter %}
                     <span class="filter-badge active">
                         النوع: {{ action_type_filter }}
-                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}{% if module_filter %}{% if search_query %}&{% endif %}module={{ module_filter }}{% endif %}" class="text-white ms-1">
+                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}{% if module_filter %}{% if search_query %}&{% endif %}module={{ module_filter }}{% endif %}{% if role_filter %}{% if search_query or module_filter %}&{% endif %}role={{ role_filter }}{% endif %}{% if start_date %}{% if search_query or module_filter or role_filter %}&{% endif %}start_date={{ start_date }}{% endif %}{% if end_date %}{% if search_query or module_filter or role_filter or start_date %}&{% endif %}end_date={{ end_date }}{% endif %}{% if per_page %}{% if search_query or module_filter or role_filter or start_date or end_date %}&{% endif %}per_page={{ per_page }}{% endif %}" class="text-white ms-1">
                             <i class="bi bi-x"></i>
                         </a>
                     </span>
@@ -264,7 +285,31 @@
                         {% elif module_filter == 'generic_tables' %}الجداول العامة
                         {% elif module_filter == 'admin' %}الإدارة
                         {% else %}{{ module_filter }}{% endif %}
-                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}{% if action_type_filter %}{% if search_query %}&{% endif %}action_type={{ action_type_filter }}{% endif %}" class="text-white ms-1">
+                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}{% if action_type_filter %}{% if search_query %}&{% endif %}action_type={{ action_type_filter }}{% endif %}{% if role_filter %}{% if search_query or action_type_filter %}&{% endif %}role={{ role_filter }}{% endif %}{% if start_date %}{% if search_query or action_type_filter or role_filter %}&{% endif %}start_date={{ start_date }}{% endif %}{% if end_date %}{% if search_query or action_type_filter or role_filter or start_date %}&{% endif %}end_date={{ end_date }}{% endif %}{% if per_page %}{% if search_query or action_type_filter or role_filter or start_date or end_date %}&{% endif %}per_page={{ per_page }}{% endif %}" class="text-white ms-1">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    </span>
+                {% endif %}
+                {% if role_filter %}
+                    <span class="filter-badge active">
+                        الدور: {{ role_filter }}
+                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}{% if action_type_filter %}{% if search_query %}&{% endif %}action_type={{ action_type_filter }}{% endif %}{% if module_filter %}{% if search_query or action_type_filter %}&{% endif %}module={{ module_filter }}{% endif %}{% if start_date %}{% if search_query or action_type_filter or module_filter %}&{% endif %}start_date={{ start_date }}{% endif %}{% if end_date %}{% if search_query or action_type_filter or module_filter or start_date %}&{% endif %}end_date={{ end_date }}{% endif %}{% if per_page %}{% if search_query or action_type_filter or module_filter or start_date or end_date %}&{% endif %}per_page={{ per_page }}{% endif %}" class="text-white ms-1">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    </span>
+                {% endif %}
+                {% if start_date %}
+                    <span class="filter-badge active">
+                        من: {{ start_date }}
+                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}{% if action_type_filter %}{% if search_query %}&{% endif %}action_type={{ action_type_filter }}{% endif %}{% if module_filter %}{% if search_query or action_type_filter %}&{% endif %}module={{ module_filter }}{% endif %}{% if role_filter %}{% if search_query or action_type_filter or module_filter %}&{% endif %}role={{ role_filter }}{% endif %}{% if end_date %}{% if search_query or action_type_filter or module_filter or role_filter %}&{% endif %}end_date={{ end_date }}{% endif %}{% if per_page %}{% if search_query or action_type_filter or module_filter or role_filter or end_date %}&{% endif %}per_page={{ per_page }}{% endif %}" class="text-white ms-1">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    </span>
+                {% endif %}
+                {% if end_date %}
+                    <span class="filter-badge active">
+                        إلى: {{ end_date }}
+                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}{% if action_type_filter %}{% if search_query %}&{% endif %}action_type={{ action_type_filter }}{% endif %}{% if module_filter %}{% if search_query or action_type_filter %}&{% endif %}module={{ module_filter }}{% endif %}{% if role_filter %}{% if search_query or action_type_filter or module_filter %}&{% endif %}role={{ role_filter }}{% endif %}{% if start_date %}{% if search_query or action_type_filter or module_filter or role_filter %}&{% endif %}start_date={{ start_date }}{% endif %}{% if per_page %}{% if search_query or action_type_filter or module_filter or role_filter or start_date %}&{% endif %}per_page={{ per_page }}{% endif %}" class="text-white ms-1">
                             <i class="bi bi-x"></i>
                         </a>
                     </span>
@@ -274,7 +319,7 @@
     </div>
     {% endif %}
 
-    <!-- Logs List -->
+    <!-- Logs Table -->
     <div class="card logs-card">
         <div class="logs-header">
             <h5 class="mb-0">
@@ -283,66 +328,106 @@
             </h5>
         </div>
         <div class="logs-body">
-            {% for log in logs_page %}
-            <div class="log-item">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="log-user">
-                            <i class="bi bi-person me-2"></i>
-                            {{ log.user.get_full_name|default:log.user.username }}
-                        </div>
-                        <div class="log-action">
-                            <i class="bi bi-gear me-2"></i>
-                            {{ log.action_type }}
-                        </div>
-                        {% if log.description %}
-                        <div class="log-description">
-                            <i class="bi bi-chat-text me-2"></i>
-                            {{ log.description }}
-                        </div>
-                        {% endif %}
-                        <div class="log-time">
-                            <i class="bi bi-clock me-2"></i>
-                            {{ log.timestamp|date:"Y/m/d H:i:s" }}
-                        </div>
-                    </div>
-                    <div>
-                        {% if log.module_name %}
-                            <span class="module-badge module-{{ log.module_name }}">
-                                {% if log.module_name == 'cars' %}السيارات
-                                {% elif log.module_name == 'equipment' %}المعدات
-                                {% elif log.module_name == 'generic_tables' %}الجداول العامة
-                                {% elif log.module_name == 'admin' %}الإدارة
-                                {% else %}{{ log.module_name }}{% endif %}
-                            </span>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% empty %}
+            {% if logs_page %}
+            <table class="logs-table">
+                <thead>
+                    <tr>
+                        <th>المستخدم</th>
+                        <th>نوع العملية</th>
+                        <th>الوصف</th>
+                        <th>الوحدة</th>
+                        <th>الوقت</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs_page %}
+                    <tr>
+                        <td>
+                            <div class="user-name">
+                                <i class="bi bi-person me-2"></i>
+                                {{ log.user.get_full_name|default:log.user.username }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="log-action">
+                                <i class="bi bi-gear me-2"></i>
+                                {{ log.action_type }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if log.description %}
+                            <div class="log-description" title="{{ log.description }}">
+                                <i class="bi bi-chat-text me-2"></i>
+                                {{ log.description|truncatechars:60 }}
+                            </div>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if log.module_name %}
+                                <span class="module-badge module-{{ log.module_name }}">
+                                    {% if log.module_name == 'cars' %}السيارات
+                                    {% elif log.module_name == 'equipment' %}المعدات
+                                    {% elif log.module_name == 'generic_tables' %}الجداول العامة
+                                    {% elif log.module_name == 'admin' %}الإدارة
+                                    {% else %}{{ log.module_name }}{% endif %}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="log-time">
+                                <i class="bi bi-clock me-2"></i>
+                                {{ log.timestamp|date:"Y/m/d H:i:s" }}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-inbox fs-1 text-muted"></i>
+                            <h5 class="text-muted mt-3">لا توجد سجلات</h5>
+                            <p class="text-muted">لم يتم العثور على سجلات عمليات تطابق معايير البحث.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
             <div class="text-center py-5">
                 <i class="bi bi-inbox fs-1 text-muted"></i>
                 <h5 class="text-muted mt-3">لا توجد سجلات</h5>
                 <p class="text-muted">لم يتم العثور على سجلات عمليات تطابق معايير البحث.</p>
             </div>
-            {% endfor %}
+            {% endif %}
         </div>
-    </div>
-
-    <!-- Pagination -->
-    {% if logs_page.has_other_pages %}
-    <div class="row mt-4">
-        <div class="col-12">
+        
+        <!-- Pagination Controls -->
+        {% if logs_page.has_other_pages or per_page %}
+        <div class="pagination-controls">
+            <div class="page-size-selector">
+                <label for="per_page_select">عدد السجلات في الصفحة:</label>
+                <select id="per_page_select" onchange="changePageSize(this.value)">
+                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                    <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                </select>
+            </div>
+            
+            {% if logs_page.has_other_pages %}
             <nav aria-label="صفحات السجلات">
-                <ul class="pagination justify-content-center">
+                <ul class="pagination mb-0">
                     {% if logs_page.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if action_type_filter %}&action_type={{ action_type_filter }}{% endif %}{% if module_filter %}&module={{ module_filter }}{% endif %}">
+                            <a class="page-link" href="{% url 'action_logs' %}?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if action_type_filter %}&action_type={{ action_type_filter }}{% endif %}{% if module_filter %}&module={{ module_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
                                 <i class="bi bi-chevron-double-right"></i>
                             </a>
                         </li>
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ logs_page.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_type_filter %}&action_type={{ action_type_filter }}{% endif %}{% if module_filter %}&module={{ module_filter }}{% endif %}">
+                            <a class="page-link" href="{% url 'action_logs' %}?page={{ logs_page.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_type_filter %}&action_type={{ action_type_filter }}{% endif %}{% if module_filter %}&module={{ module_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
                                 <i class="bi bi-chevron-right"></i>
                             </a>
                         </li>
@@ -355,7 +440,7 @@
                             </li>
                         {% elif num > logs_page.number|add:'-3' and num < logs_page.number|add:'3' %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_type_filter %}&action_type={{ action_type_filter }}{% endif %}{% if module_filter %}&module={{ module_filter }}{% endif %}">
+                                <a class="page-link" href="{% url 'action_logs' %}?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_type_filter %}&action_type={{ action_type_filter }}{% endif %}{% if module_filter %}&module={{ module_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
                                     {{ num }}
                                 </a>
                             </li>
@@ -364,21 +449,22 @@
                     
                     {% if logs_page.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ logs_page.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_type_filter %}&action_type={{ action_type_filter }}{% endif %}{% if module_filter %}&module={{ module_filter }}{% endif %}">
+                            <a class="page-link" href="{% url 'action_logs' %}?page={{ logs_page.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_type_filter %}&action_type={{ action_type_filter }}{% endif %}{% if module_filter %}&module={{ module_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
                                 <i class="bi bi-chevron-left"></i>
                             </a>
                         </li>
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ logs_page.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_type_filter %}&action_type={{ action_type_filter }}{% endif %}{% if module_filter %}&module={{ module_filter }}{% endif %}">
+                            <a class="page-link" href="{% url 'action_logs' %}?page={{ logs_page.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if action_type_filter %}&action_type={{ action_type_filter }}{% endif %}{% if module_filter %}&module={{ module_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
                                 <i class="bi bi-chevron-double-left"></i>
                             </a>
                         </li>
                     {% endif %}
                 </ul>
             </nav>
+            {% endif %}
         </div>
+        {% endif %}
     </div>
-    {% endif %}
 
     <!-- Export Options -->
     <div class="row mt-4">
@@ -392,17 +478,11 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <button class="btn btn-outline-success w-100" onclick="exportToCSV()">
+                        <div class="col-md-12">
+                            <a class="btn btn-outline-success w-100" href="{% url 'action_logs_export' %}?search={{ search_query }}&action_type={{ action_type_filter }}&module={{ module_filter }}&role={{ role_filter }}&start_date={{ start_date }}&end_date={{ end_date }}">
                                 <i class="bi bi-file-earmark-spreadsheet me-2"></i>
-                                تصدير إلى CSV
-                            </button>
-                        </div>
-                        <div class="col-md-6">
-                            <button class="btn btn-outline-primary w-100" onclick="exportToPDF()">
-                                <i class="bi bi-file-earmark-pdf me-2"></i>
-                                تصدير إلى PDF
-                            </button>
+                                تصدير CSV (يحترم الفلاتر)
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -418,6 +498,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-submit form on filter change
     const actionTypeSelect = document.getElementById('action_type');
     const moduleSelect = document.getElementById('module');
+    const roleSelect = document.getElementById('role');
     
     if (actionTypeSelect) {
         actionTypeSelect.addEventListener('change', function() {
@@ -430,26 +511,31 @@ document.addEventListener('DOMContentLoaded', function() {
             this.form.submit();
         });
     }
+    if (roleSelect) {
+        roleSelect.addEventListener('change', function() {
+            this.form.submit();
+        });
+    }
     
     // Auto-refresh every 30 seconds
     setInterval(function() {
         // Only refresh if no filters are applied
         if (!document.getElementById('search').value && 
             !document.getElementById('action_type').value && 
-            !document.getElementById('module').value) {
+            !document.getElementById('module').value &&
+            !document.getElementById('role').value &&
+            !document.getElementById('start_date').value &&
+            !document.getElementById('end_date').value) {
             window.location.reload();
         }
     }, 30000);
 });
 
-function exportToCSV() {
-    // Implement CSV export functionality
-    alert('سيتم تنفيذ تصدير CSV قريباً');
-}
-
-function exportToPDF() {
-    // Implement PDF export functionality
-    alert('سيتم تنفيذ تصدير PDF قريباً');
+function changePageSize(size) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('per_page', size);
+    url.searchParams.set('page', '1'); // Reset to first page when changing page size
+    window.location.href = url.toString();
 }
 </script>
 {% endblock %}

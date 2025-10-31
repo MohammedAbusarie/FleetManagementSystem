@@ -21,37 +21,45 @@
     
     .logs-body {
         padding: 0;
+        overflow-x: auto;
     }
     
-    .log-item {
-        padding: 15px 20px;
-        border-bottom: 1px solid #f8f9fa;
-        transition: all 0.3s ease;
+    .logs-table {
+        width: 100%;
+        margin: 0;
+        border-collapse: collapse;
     }
     
-    .log-item:hover {
+    .logs-table thead {
         background-color: #f8f9fa;
     }
     
-    .log-item:last-child {
-        border-bottom: none;
-    }
-    
-    .log-user {
-        font-weight: 500;
+    .logs-table th {
+        padding: 12px 15px;
+        text-align: right;
+        font-weight: 600;
         color: #495057;
-        margin-bottom: 5px;
+        border-bottom: 2px solid #dee2e6;
+        white-space: nowrap;
     }
     
-    .log-details {
+    .logs-table td {
+        padding: 10px 15px;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
         font-size: 0.9rem;
-        color: #6c757d;
-        margin-bottom: 5px;
     }
     
-    .log-time {
-        font-size: 0.85rem;
-        color: #adb5bd;
+    .logs-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+    
+    .logs-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .logs-table tbody tr:last-child td {
+        border-bottom: none;
     }
     
     .status-badge {
@@ -59,6 +67,7 @@
         border-radius: 20px;
         font-size: 0.8rem;
         font-weight: 500;
+        white-space: nowrap;
     }
     
     .status-success {
@@ -69,6 +78,16 @@
     .status-danger {
         background-color: #f8d7da;
         color: #721c24;
+    }
+    
+    .user-name {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .log-detail {
+        color: #6c757d;
+        font-size: 0.85rem;
     }
     
     .search-form {
@@ -93,23 +112,32 @@
         color: white;
     }
     
-    .stats-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 20px;
+    .pagination-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #dee2e6;
     }
     
-    .stats-number {
-        font-size: 2rem;
-        font-weight: bold;
-        margin-bottom: 5px;
+    .page-size-selector {
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
     
-    .stats-label {
+    .page-size-selector label {
+        margin: 0;
         font-size: 0.9rem;
-        opacity: 0.9;
+        color: #495057;
+    }
+    
+    .page-size-selector select {
+        padding: 5px 10px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        font-size: 0.9rem;
     }
 </style>
 {% endblock %}
@@ -137,37 +165,9 @@
         </div>
     </div>
 
-    <!-- Statistics -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="stats-card text-center">
-                <div class="stats-number">{{ logs_page.paginator.count }}</div>
-                <div class="stats-label">إجمالي المحاولات</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card text-center">
-                <div class="stats-number">{{ logs_page.paginator.count }}</div>
-                <div class="stats-label">المحاولات الناجحة</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card text-center">
-                <div class="stats-number">{{ logs_page.paginator.count }}</div>
-                <div class="stats-label">المحاولات الفاشلة</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card text-center">
-                <div class="stats-number">{{ logs_page.paginator.count }}</div>
-                <div class="stats-label">المستخدمين النشطين</div>
-            </div>
-        </div>
-    </div>
-
     <!-- Search and Filter Form -->
     <div class="search-form">
-        <form method="get" class="row g-3">
+        <form method="get" class="row g-3" id="filterForm">
             <div class="col-md-4">
                 <label for="search" class="form-label">البحث</label>
                 <input type="text" class="form-control" id="search" name="search" 
@@ -180,6 +180,23 @@
                     <option value="true" {% if success_filter == 'true' %}selected{% endif %}>نجح</option>
                     <option value="false" {% if success_filter == 'false' %}selected{% endif %}>فشل</option>
                 </select>
+            </div>
+            <div class="col-md-3">
+                <label for="role" class="form-label">الدور</label>
+                <select class="form-select" id="role" name="role">
+                    <option value="">جميع الأدوار</option>
+                    {% for value,label in role_choices %}
+                        <option value="{{ value }}" {% if role_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="start_date" class="form-label">من تاريخ</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+            </div>
+            <div class="col-md-3">
+                <label for="end_date" class="form-label">إلى تاريخ</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label">&nbsp;</label>
@@ -199,19 +216,20 @@
                     </a>
                 </div>
             </div>
+            <input type="hidden" name="per_page" id="per_page_hidden" value="{{ per_page }}">
         </form>
     </div>
 
     <!-- Active Filters -->
-    {% if search_query or success_filter %}
+    {% if search_query or success_filter or role_filter or start_date or end_date %}
     <div class="row mb-3">
         <div class="col-12">
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center flex-wrap">
                 <span class="me-2">الفلاتر النشطة:</span>
                 {% if search_query %}
                     <span class="filter-badge active">
                         البحث: "{{ search_query }}"
-                        <a href="?{% if success_filter %}success={{ success_filter }}{% endif %}" class="text-white ms-1">
+                        <a href="?{% if success_filter %}success={{ success_filter }}{% endif %}{% if role_filter %}{% if success_filter %}&{% endif %}role={{ role_filter }}{% endif %}{% if start_date %}{% if success_filter or role_filter %}&{% endif %}start_date={{ start_date }}{% endif %}{% if end_date %}{% if success_filter or role_filter or start_date %}&{% endif %}end_date={{ end_date }}{% endif %}{% if per_page %}{% if success_filter or role_filter or start_date or end_date %}&{% endif %}per_page={{ per_page }}{% endif %}" class="text-white ms-1">
                             <i class="bi bi-x"></i>
                         </a>
                     </span>
@@ -219,7 +237,31 @@
                 {% if success_filter %}
                     <span class="filter-badge active">
                         النتيجة: {% if success_filter == 'true' %}نجح{% else %}فشل{% endif %}
-                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}" class="text-white ms-1">
+                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}{% if role_filter %}{% if search_query %}&{% endif %}role={{ role_filter }}{% endif %}{% if start_date %}{% if search_query or role_filter %}&{% endif %}start_date={{ start_date }}{% endif %}{% if end_date %}{% if search_query or role_filter or start_date %}&{% endif %}end_date={{ end_date }}{% endif %}{% if per_page %}{% if search_query or role_filter or start_date or end_date %}&{% endif %}per_page={{ per_page }}{% endif %}" class="text-white ms-1">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    </span>
+                {% endif %}
+                {% if role_filter %}
+                    <span class="filter-badge active">
+                        الدور: {{ role_filter }}
+                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}{% if success_filter %}{% if search_query %}&{% endif %}success={{ success_filter }}{% endif %}{% if start_date %}{% if search_query or success_filter %}&{% endif %}start_date={{ start_date }}{% endif %}{% if end_date %}{% if search_query or success_filter or start_date %}&{% endif %}end_date={{ end_date }}{% endif %}{% if per_page %}{% if search_query or success_filter or start_date or end_date %}&{% endif %}per_page={{ per_page }}{% endif %}" class="text-white ms-1">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    </span>
+                {% endif %}
+                {% if start_date %}
+                    <span class="filter-badge active">
+                        من: {{ start_date }}
+                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}{% if success_filter %}{% if search_query %}&{% endif %}success={{ success_filter }}{% endif %}{% if role_filter %}{% if search_query or success_filter %}&{% endif %}role={{ role_filter }}{% endif %}{% if end_date %}{% if search_query or success_filter or role_filter %}&{% endif %}end_date={{ end_date }}{% endif %}{% if per_page %}{% if search_query or success_filter or role_filter or end_date %}&{% endif %}per_page={{ per_page }}{% endif %}" class="text-white ms-1">
+                            <i class="bi bi-x"></i>
+                        </a>
+                    </span>
+                {% endif %}
+                {% if end_date %}
+                    <span class="filter-badge active">
+                        إلى: {{ end_date }}
+                        <a href="?{% if search_query %}search={{ search_query }}{% endif %}{% if success_filter %}{% if search_query %}&{% endif %}success={{ success_filter }}{% endif %}{% if role_filter %}{% if search_query or success_filter %}&{% endif %}role={{ role_filter }}{% endif %}{% if start_date %}{% if search_query or success_filter or role_filter %}&{% endif %}start_date={{ start_date }}{% endif %}{% if per_page %}{% if search_query or success_filter or role_filter or start_date %}&{% endif %}per_page={{ per_page }}{% endif %}" class="text-white ms-1">
                             <i class="bi bi-x"></i>
                         </a>
                     </span>
@@ -229,7 +271,7 @@
     </div>
     {% endif %}
 
-    <!-- Logs List -->
+    <!-- Logs Table -->
     <div class="card logs-card">
         <div class="logs-header">
             <h5 class="mb-0">
@@ -238,69 +280,112 @@
             </h5>
         </div>
         <div class="logs-body">
-            {% for log in logs_page %}
-            <div class="log-item">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="log-user">
-                            <i class="bi bi-person me-2"></i>
-                            {{ log.user.get_full_name|default:log.user.username }}
-                        </div>
-                        <div class="log-details">
-                            <i class="bi bi-geo-alt me-2"></i>
-                            {{ log.ip_address }}
-                        </div>
-                        <div class="log-details">
-                            <i class="bi bi-globe me-2"></i>
-                            {{ log.user_agent|truncatechars:50 }}
-                        </div>
-                        <div class="log-time">
-                            <i class="bi bi-clock me-2"></i>
-                            {{ log.login_time|date:"Y/m/d H:i:s" }}
-                            {% if log.logout_time %}
-                                - {{ log.logout_time|date:"H:i:s" }}
+            {% if logs_page %}
+            <table class="logs-table">
+                <thead>
+                    <tr>
+                        <th>المستخدم</th>
+                        <th>عنوان IP</th>
+                        <th>المتصفح</th>
+                        <th>وقت الدخول</th>
+                        <th>وقت الخروج</th>
+                        <th>النتيجة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs_page %}
+                    <tr>
+                        <td>
+                            <div class="user-name">
+                                <i class="bi bi-person me-2"></i>
+                                {{ log.user.get_full_name|default:log.user.username }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="log-detail">
+                                <i class="bi bi-geo-alt me-2"></i>
+                                {{ log.ip_address }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="log-detail" title="{{ log.user_agent }}">
+                                <i class="bi bi-globe me-2"></i>
+                                {{ log.user_agent|truncatechars:40 }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="log-detail">
+                                <i class="bi bi-clock me-2"></i>
+                                {{ log.login_time|date:"Y/m/d H:i:s" }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="log-detail">
+                                {% if log.logout_time %}
+                                    {{ log.logout_time|date:"H:i:s" }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if log.success %}
+                                <span class="status-badge status-success">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    نجح
+                                </span>
+                            {% else %}
+                                <span class="status-badge status-danger">
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    فشل
+                                </span>
                             {% endif %}
-                        </div>
-                    </div>
-                    <div>
-                        {% if log.success %}
-                            <span class="status-badge status-success">
-                                <i class="bi bi-check-circle me-1"></i>
-                                نجح
-                            </span>
-                        {% else %}
-                            <span class="status-badge status-danger">
-                                <i class="bi bi-x-circle me-1"></i>
-                                فشل
-                            </span>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% empty %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-inbox fs-1 text-muted"></i>
+                            <h5 class="text-muted mt-3">لا توجد سجلات</h5>
+                            <p class="text-muted">لم يتم العثور على سجلات تسجيل دخول تطابق معايير البحث.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
             <div class="text-center py-5">
                 <i class="bi bi-inbox fs-1 text-muted"></i>
                 <h5 class="text-muted mt-3">لا توجد سجلات</h5>
                 <p class="text-muted">لم يتم العثور على سجلات تسجيل دخول تطابق معايير البحث.</p>
             </div>
-            {% endfor %}
+            {% endif %}
         </div>
-    </div>
-
-    <!-- Pagination -->
-    {% if logs_page.has_other_pages %}
-    <div class="row mt-4">
-        <div class="col-12">
+        
+        <!-- Pagination Controls -->
+        {% if logs_page.has_other_pages or per_page %}
+        <div class="pagination-controls">
+            <div class="page-size-selector">
+                <label for="per_page_select">عدد السجلات في الصفحة:</label>
+                <select id="per_page_select" onchange="changePageSize(this.value)">
+                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                    <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                </select>
+            </div>
+            
+            {% if logs_page.has_other_pages %}
             <nav aria-label="صفحات السجلات">
-                <ul class="pagination justify-content-center">
+                <ul class="pagination mb-0">
                     {% if logs_page.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}">
+                            <a class="page-link" href="{% url 'login_logs' %}?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
                                 <i class="bi bi-chevron-double-right"></i>
                             </a>
                         </li>
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ logs_page.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}">
+                            <a class="page-link" href="{% url 'login_logs' %}?page={{ logs_page.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
                                 <i class="bi bi-chevron-right"></i>
                             </a>
                         </li>
@@ -313,7 +398,7 @@
                             </li>
                         {% elif num > logs_page.number|add:'-3' and num < logs_page.number|add:'3' %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}">
+                                <a class="page-link" href="{% url 'login_logs' %}?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
                                     {{ num }}
                                 </a>
                             </li>
@@ -322,21 +407,22 @@
                     
                     {% if logs_page.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ logs_page.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}">
+                            <a class="page-link" href="{% url 'login_logs' %}?page={{ logs_page.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
                                 <i class="bi bi-chevron-left"></i>
                             </a>
                         </li>
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ logs_page.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}">
+                            <a class="page-link" href="{% url 'login_logs' %}?page={{ logs_page.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if success_filter %}&success={{ success_filter }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">
                                 <i class="bi bi-chevron-double-left"></i>
                             </a>
                         </li>
                     {% endif %}
                 </ul>
             </nav>
+            {% endif %}
         </div>
+        {% endif %}
     </div>
-    {% endif %}
 
     <!-- Export Options -->
     <div class="row mt-4">
@@ -350,17 +436,11 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <button class="btn btn-outline-success w-100" onclick="exportToCSV()">
+                        <div class="col-md-12">
+                            <a class="btn btn-outline-success w-100" href="{% url 'login_logs_export' %}?search={{ search_query }}&success={{ success_filter }}&role={{ role_filter }}&start_date={{ start_date }}&end_date={{ end_date }}">
                                 <i class="bi bi-file-earmark-spreadsheet me-2"></i>
-                                تصدير إلى CSV
-                            </button>
-                        </div>
-                        <div class="col-md-6">
-                            <button class="btn btn-outline-primary w-100" onclick="exportToPDF()">
-                                <i class="bi bi-file-earmark-pdf me-2"></i>
-                                تصدير إلى PDF
-                            </button>
+                                تصدير CSV (يحترم الفلاتر)
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -375,8 +455,14 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Auto-submit form on filter change
     const successSelect = document.getElementById('success');
+    const roleSelect = document.getElementById('role');
     if (successSelect) {
         successSelect.addEventListener('change', function() {
+            this.form.submit();
+        });
+    }
+    if (roleSelect) {
+        roleSelect.addEventListener('change', function() {
             this.form.submit();
         });
     }
@@ -384,20 +470,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-refresh every 30 seconds
     setInterval(function() {
         // Only refresh if no filters are applied
-        if (!document.getElementById('search').value && !document.getElementById('success').value) {
+        if (!document.getElementById('search').value && !document.getElementById('success').value && !document.getElementById('role').value && !document.getElementById('start_date').value && !document.getElementById('end_date').value) {
             window.location.reload();
         }
     }, 30000);
 });
 
-function exportToCSV() {
-    // Implement CSV export functionality
-    alert('سيتم تنفيذ تصدير CSV قريباً');
-}
-
-function exportToPDF() {
-    // Implement PDF export functionality
-    alert('سيتم تنفيذ تصدير PDF قريباً');
+function changePageSize(size) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('per_page', size);
+    url.searchParams.set('page', '1'); // Reset to first page when changing page size
+    window.location.href = url.toString();
 }
 </script>
 {% endblock %}

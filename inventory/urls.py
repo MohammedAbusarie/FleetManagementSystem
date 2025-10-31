@@ -47,6 +47,8 @@ urlpatterns = [
     path("admin/permissions/<int:user_id>/", admin_views.user_permissions_view, name="user_permissions"),
     path("admin/logs/login/", admin_views.login_logs_view, name="login_logs"),
     path("admin/logs/actions/", admin_views.action_logs_view, name="action_logs"),
+    path("admin/logs/login/export/", admin_views.login_logs_export, name="login_logs_export"),
+    path("admin/logs/actions/export/", admin_views.action_logs_export, name="action_logs_export"),
     path("admin/storage/", admin_views.database_storage_view, name="database_storage"),
     path("admin/api/storage/", admin_views.storage_data_api, name="storage_data_api"),
 ]
