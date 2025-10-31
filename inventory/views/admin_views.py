@@ -86,7 +86,14 @@ def user_management_view(request):
         page_number = request.GET.get('page', 1)
         
         # Get users with profiles
-        users = User.objects.select_related('profile').all()
+        # Admins can only see normal users; super admins can see all users
+        if is_super_admin(request.user):
+            users = User.objects.select_related('profile').all()
+        else:
+            # Admin users can only see normal users
+            users = User.objects.select_related('profile').filter(
+                profile__user_type='normal'
+            )
         
         # Apply search filter
         if search_query:
@@ -97,9 +104,17 @@ def user_management_view(request):
                 Q(email__icontains=search_query)
             )
         
-        # Apply user type filter
+        # Apply user type filter (only if super admin, admins shouldn't see other types)
         if user_type_filter:
-            users = users.filter(profile__user_type=user_type_filter)
+            if is_super_admin(request.user):
+                users = users.filter(profile__user_type=user_type_filter)
+            else:
+                # Admins can only filter by normal users
+                if user_type_filter == 'normal':
+                    users = users.filter(profile__user_type=user_type_filter)
+                else:
+                    # Invalid filter for admin - show empty result
+                    users = users.none()
         
         # Order by creation date
         users = users.order_by('-date_joined')
@@ -187,6 +202,33 @@ def user_update_view(request, user_id):
         )
         return redirect('user_management')
     
+    # Prevent admins from modifying other admins or super admins
+    # Only super admins can modify admin/super_admin users
+    if not is_super_admin(request.user):
+        try:
+            target_profile = user.profile
+            target_user_type = target_profile.user_type
+            if target_user_type in ['admin', 'super_admin']:
+                messages.error(
+                    request,
+                    f'لا يمكنك تعديل مستخدم من نوع "{target_profile.get_user_type_display()}". يمكنك فقط تعديل المستخدمين العاديين.'
+                )
+                log_user_action(
+                    request.user,
+                    'admin_modification_attempt_blocked',
+                    object_id=str(user.id),
+                    description=f"محاولة تعديل {target_user_type} محظورة للمدير: {user.username}"
+                )
+                return redirect('user_management')
+        except UserProfile.DoesNotExist:
+            # If user has no profile but is superuser, treat as super admin
+            if user.is_superuser:
+                messages.error(
+                    request,
+                    'لا يمكنك تعديل المدير العام. يمكنك فقط تعديل المستخدمين العاديين.'
+                )
+                return redirect('user_management')
+    
     if request.method == 'POST':
         form = UserUpdateForm(request.POST, instance=user, current_user=request.user)
         if form.is_valid():
@@ -229,6 +271,33 @@ def user_update_view(request, user_id):
 def user_delete_view(request, user_id):
     """Delete user (soft delete)"""
     user = get_object_or_404(User, id=user_id)
+    
+    # Prevent admins from deleting other admins or super admins
+    # Only super admins can delete admin/super_admin users
+    if not is_super_admin(request.user):
+        try:
+            target_profile = user.profile
+            target_user_type = target_profile.user_type
+            if target_user_type in ['admin', 'super_admin']:
+                messages.error(
+                    request,
+                    f'لا يمكنك حذف مستخدم من نوع "{target_profile.get_user_type_display()}". يمكنك فقط حذف المستخدمين العاديين.'
+                )
+                log_user_action(
+                    request.user,
+                    'admin_deletion_attempt_blocked',
+                    object_id=str(user.id),
+                    description=f"محاولة حذف {target_user_type} محظورة للمدير: {user.username}"
+                )
+                return redirect('user_management')
+        except UserProfile.DoesNotExist:
+            # If user has no profile but is superuser, treat as super admin
+            if user.is_superuser:
+                messages.error(
+                    request,
+                    'لا يمكنك حذف المدير العام. يمكنك فقط حذف المستخدمين العاديين.'
+                )
+                return redirect('user_management')
     
     # Prevent self-deletion (users cannot delete themselves)
     if user.id == request.user.id:
@@ -318,13 +387,22 @@ def permission_management_view(request):
     try:
         permission_service = PermissionService()
         
-        # Get all users with profiles, excluding super admins
-        # Super admins have all permissions automatically and shouldn't be modified
-        users = User.objects.select_related('profile').filter(
-            profile__is_active=True
-        ).exclude(
-            Q(profile__user_type='super_admin') | Q(is_superuser=True)
-        ).order_by('username')
+        # Get users with profiles based on current user's role
+        # Super admins can see all users except super admins
+        # Admins can only see normal users
+        if is_super_admin(request.user):
+            # Super admins can see all users except super admins
+            users = User.objects.select_related('profile').filter(
+                profile__is_active=True
+            ).exclude(
+                Q(profile__user_type='super_admin') | Q(is_superuser=True)
+            ).order_by('username')
+        else:
+            # Admins can only see normal users
+            users = User.objects.select_related('profile').filter(
+                profile__is_active=True,
+                profile__user_type='normal'
+            ).order_by('username')
         
         # Get search parameter
         search_query = request.GET.get('search', '')
@@ -358,6 +436,33 @@ def permission_management_view(request):
 def user_permissions_view(request, user_id):
     """View and edit user permissions"""
     user = get_object_or_404(User, id=user_id)
+    
+    # Prevent admins from modifying permissions of other admins or super admins
+    # Only super admins can modify admin/super_admin permissions
+    if not is_super_admin(request.user):
+        try:
+            target_profile = user.profile
+            target_user_type = target_profile.user_type
+            if target_user_type in ['admin', 'super_admin']:
+                messages.error(
+                    request,
+                    f'لا يمكنك تعديل صلاحيات مستخدم من نوع "{target_profile.get_user_type_display()}". يمكنك فقط تعديل صلاحيات المستخدمين العاديين.'
+                )
+                log_user_action(
+                    request.user,
+                    'admin_permission_modification_attempt_blocked',
+                    object_id=str(user.id),
+                    description=f"محاولة تعديل صلاحيات {target_user_type} محظورة للمدير: {user.username}"
+                )
+                return redirect('permission_management')
+        except UserProfile.DoesNotExist:
+            # If user has no profile but is superuser, treat as super admin
+            if user.is_superuser:
+                messages.error(
+                    request,
+                    'لا يمكنك تعديل صلاحيات المدير العام. يمكنك فقط تعديل صلاحيات المستخدمين العاديين.'
+                )
+                return redirect('permission_management')
     
     # Prevent self-modification (users cannot modify their own permissions)
     if user.id == request.user.id:
@@ -395,7 +500,7 @@ def user_permissions_view(request, user_id):
         form = PermissionAssignmentForm(user, request.POST)
         if form.is_valid():
             try:
-                form.save()
+                form.save(current_user=request.user)
                 messages.success(request, f'تم تحديث صلاحيات المستخدم "{user.username}" بنجاح.')
                 
                 # Log permission update

@@ -284,10 +284,10 @@ class PermissionAssignmentForm(forms.Form):
         }
         return permission_names.get(permission, permission)
 
-    def save(self):
+    def save(self, current_user=None):
         """Save permission assignments"""
         from django.core.exceptions import ValidationError
-        from ..utils.helpers import is_super_admin
+        from ..utils.helpers import is_super_admin, is_admin_user
         
         # Prevent saving permissions for super admins
         # Super admins have all permissions automatically and shouldn't have UserPermission records
@@ -297,6 +297,37 @@ class PermissionAssignmentForm(forms.Form):
             raise ValidationError(
                 'لا يمكن حفظ صلاحيات للمدير العام. المديرون العامون لديهم جميع الصلاحيات تلقائياً.'
             )
+        
+        # Permission assignment validation
+        # Check if current_user (person assigning permissions) has permission to do so
+        if current_user:
+            current_user_type = None
+            try:
+                changer_profile = current_user.profile
+                current_user_type = changer_profile.user_type
+            except (UserProfile.DoesNotExist, AttributeError):
+                current_user_type = 'admin' if current_user.is_superuser else 'normal'
+            
+            # Only super admins can assign permissions to admin users
+            target_user_type = None
+            try:
+                target_profile = self.user.profile
+                target_user_type = target_profile.user_type
+            except UserProfile.DoesNotExist:
+                target_user_type = 'admin' if self.user.is_superuser else 'normal'
+            
+            # Super admins can assign permissions to anyone (except super admins, handled above)
+            if current_user_type == 'super_admin':
+                pass  # Allow
+            # Admins can only assign permissions to normal users
+            elif current_user_type == 'admin':
+                if target_user_type in ['admin', 'super_admin']:
+                    raise ValidationError(
+                        'لا يمكنك تعيين صلاحيات للمديرين أو المديرين العامين. يمكنك فقط تعيين صلاحيات للمستخدمين العاديين.'
+                    )
+            else:
+                # Normal users cannot assign permissions
+                raise ValidationError('ليس لديك صلاحية لتعيين الصلاحيات.')
         
         modules = ['cars', 'equipment', 'generic_tables']
         permissions = ['create', 'read', 'update', 'delete']
