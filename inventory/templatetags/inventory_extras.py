@@ -44,3 +44,13 @@ def is_admin_user(user):
     """Check if user is admin (including super admin)"""
     from ..utils.helpers import is_admin_user as check_admin_user
     return check_admin_user(user)
+
+
+@register.filter
+def get_item(dictionary, key):
+    """Get item from dictionary by key"""
+    if dictionary is None:
+        return None
+    if isinstance(dictionary, dict):
+        return dictionary.get(key)
+    return None

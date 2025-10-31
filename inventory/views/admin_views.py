@@ -19,7 +19,7 @@ from ..services.rbac_service import (
     UserProfileService, PermissionService, LoggingService
 )
 from ..forms.rbac_forms import UserCreateForm, UserUpdateForm, PermissionAssignmentForm
-from ..models import UserProfile, LoginLog, ActionLog
+from ..models import UserProfile, LoginLog, ActionLog, UserPermission
 
 
 @admin_required_with_message()
@@ -441,13 +441,67 @@ def permission_management_view(request):
         page_number = request.GET.get('page', 1)
         users_page = paginate_queryset(users, page_number, per_page=20)
         
+        # Get permissions for each user
+        modules = ['cars', 'equipment', 'generic_tables']
+        permissions = ['create', 'read', 'update', 'delete']
+        user_permissions_map = {}
+        
+        # Fetch all user permissions at once for efficiency
+        user_ids = [user.id for user in users_page]
+        user_permissions = UserPermission.objects.filter(
+            user_id__in=user_ids,
+            granted=True
+        ).select_related('module_permission', 'user').values_list(
+            'user_id',
+            'module_permission__module_name',
+            'module_permission__permission_type'
+        )
+        
+        # Build permission map: {user_id: {(module, permission): True}}
+        for user_id, module, perm_type in user_permissions:
+            if user_id not in user_permissions_map:
+                user_permissions_map[user_id] = {}
+            user_permissions_map[user_id][(module, perm_type)] = True
+        
+        # Create a helper dictionary for template access
+        # Format: {user_id: {module: {permission: True/False}}}
+        user_perms_dict = {}
+        for user in users_page:
+            user_id = user.id
+            user_perms_dict[user_id] = {}
+            
+            # Check if user is admin/super_admin (has all permissions)
+            is_admin_user = False
+            try:
+                profile = user.profile
+                if profile.user_type in ['super_admin', 'admin']:
+                    is_admin_user = True
+            except (UserProfile.DoesNotExist, AttributeError):
+                if user.is_superuser:
+                    is_admin_user = True
+            
+            if is_admin_user:
+                # Admin users have all permissions
+                for module in modules:
+                    user_perms_dict[user_id][module] = {}
+                    for permission in permissions:
+                        user_perms_dict[user_id][module][permission] = True
+            else:
+                # Normal users - check actual permissions
+                user_perms = user_permissions_map.get(user_id, {})
+                for module in modules:
+                    user_perms_dict[user_id][module] = {}
+                    for permission in permissions:
+                        user_perms_dict[user_id][module][permission] = user_perms.get((module, permission), False)
+        
         context = {
             'title': 'إدارة الصلاحيات',
             'users_page': users_page,
             'search_query': search_query,
-            'modules': ['cars', 'equipment', 'generic_tables'],
-            'permissions': ['create', 'read', 'update', 'delete'],
+            'modules': modules,
+            'permissions': permissions,
             'is_super_admin': is_super_admin(request.user),
+            'user_permissions': user_perms_dict,
         }
         
         return render(request, 'inventory/admin/permission_management.html', context)

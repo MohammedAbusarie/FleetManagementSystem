@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load inventory_extras %}
 
 {% block title %}{{ title }} - نظام إدارة الأسطول{% endblock %}
 
@@ -317,6 +318,60 @@
                         
                         <!-- Quick Permission Overview -->
                         <div class="permission-grid mt-3 permissions-hidden" id="permissions_{{ user.id }}">
+                            {% with user_perms=user_permissions|get_item:user.id %}
+                            {% if user_perms %}
+                            {% for module in modules %}
+                            <div class="permission-module">
+                                <h6>
+                                    {% if module == 'cars' %}السيارات
+                                    {% elif module == 'equipment' %}المعدات
+                                    {% elif module == 'generic_tables' %}الجداول العامة
+                                    {% else %}{{ module }}{% endif %}
+                                </h6>
+                                {% with module_perms=user_perms|get_item:module %}
+                                {% if module_perms %}
+                                {% for permission in permissions %}
+                                <div class="permission-item">
+                                    <span class="permission-name">
+                                        {% if permission == 'create' %}إنشاء
+                                        {% elif permission == 'read' %}قراءة
+                                        {% elif permission == 'update' %}تحديث
+                                        {% elif permission == 'delete' %}حذف
+                                        {% else %}{{ permission }}{% endif %}
+                                    </span>
+                                    {% if module_perms|get_item:permission %}
+                                    <span class="permission-status permission-granted">
+                                        <i class="bi bi-check"></i>
+                                    </span>
+                                    {% else %}
+                                    <span class="permission-status permission-denied">
+                                        <i class="bi bi-x"></i>
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                <!-- No permissions for this module -->
+                                {% for permission in permissions %}
+                                <div class="permission-item">
+                                    <span class="permission-name">
+                                        {% if permission == 'create' %}إنشاء
+                                        {% elif permission == 'read' %}قراءة
+                                        {% elif permission == 'update' %}تحديث
+                                        {% elif permission == 'delete' %}حذف
+                                        {% else %}{{ permission }}{% endif %}
+                                    </span>
+                                    <span class="permission-status permission-denied">
+                                        <i class="bi bi-x"></i>
+                                    </span>
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <!-- User has no permissions data - show all denied -->
                             {% for module in modules %}
                             <div class="permission-module">
                                 <h6>
@@ -334,13 +389,15 @@
                                         {% elif permission == 'delete' %}حذف
                                         {% else %}{{ permission }}{% endif %}
                                     </span>
-                                    <span class="permission-status permission-granted">
-                                        <i class="bi bi-check"></i>
+                                    <span class="permission-status permission-denied">
+                                        <i class="bi bi-x"></i>
                                     </span>
                                 </div>
                                 {% endfor %}
                             </div>
                             {% endfor %}
+                            {% endif %}
+                            {% endwith %}
                         </div>
                     </div>
                 </div>
