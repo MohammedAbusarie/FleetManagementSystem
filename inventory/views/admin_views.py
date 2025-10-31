@@ -105,12 +105,27 @@ def user_management_view(request):
         # Paginate results
         users_page = paginate_queryset(users, page_number, per_page=20)
         
+        # Calculate statistics for all users (not filtered)
+        total_users = User.objects.count()
+        active_users = user_service.get_active_users().count()
+        admin_users = user_service.get_users_by_type('admin').count()
+        normal_users = user_service.get_users_by_type('normal').count()
+        # Count super admins (include Django superusers even without profiles)
+        super_admin_users = User.objects.filter(
+            Q(profile__user_type='super_admin', profile__is_active=True) | Q(is_superuser=True)
+        ).distinct().count()
+        
         context = {
             'title': 'إدارة المستخدمين',
             'users_page': users_page,
             'search_query': search_query,
             'user_type_filter': user_type_filter,
             'user_type_choices': UserProfile.USER_TYPE_CHOICES,
+            'total_users': total_users,
+            'active_users': active_users,
+            'super_admin_users': super_admin_users,
+            'admin_users': admin_users,
+            'normal_users': normal_users,
         }
         
         return render(request, 'inventory/admin/user_management.html', context)
