@@ -132,25 +132,58 @@ class PermissionAssignmentForm(forms.Form):
         modules = ['cars', 'equipment', 'generic_tables']
         permissions = ['create', 'read', 'update', 'delete']
 
+        # Check if user is admin or super_admin (they have all permissions automatically)
+        is_admin = False
+        try:
+            profile = user.profile
+            user_type = profile.get_user_type()
+            is_admin = user_type in ['super_admin', 'admin']
+        except (UserProfile.DoesNotExist, AttributeError):
+            # Fallback: check if user is superuser or in Admin group
+            is_admin = user.is_superuser or user.groups.filter(name='Admin').exists()
+
+        # Fetch all user permissions at once for efficiency
+        # This avoids N+1 query problem and ensures we get all existing permissions
+        # Note: Admin/super_admin users may not have UserPermission records since they have all permissions automatically
+        user_permissions = UserPermission.objects.filter(
+            user=user
+        ).select_related('module_permission').values_list(
+            'module_permission__module_name',
+            'module_permission__permission_type',
+            'granted'
+        )
+        
+        # Create a dictionary mapping (module, permission) -> granted status
+        permission_map = {
+            (mp_module, mp_permission): granted
+            for mp_module, mp_permission, granted in user_permissions
+        }
+
+        # Create form fields and set initial values
+        # Django forms use self.initial to populate unbound form fields
+        # When form is unbound (GET request), Django uses self.initial to set field values
+        # When form is bound (POST request), Django uses POST data instead
         for module in modules:
             for permission in permissions:
                 field_name = f"{module}_{permission}"
+                
+                # If user is admin/super_admin, they have all permissions (show as checked)
+                # Otherwise, check UserPermission records
+                if is_admin:
+                    granted = True  # Admins have all permissions automatically
+                else:
+                    granted = permission_map.get((module, permission), False)
+                
+                # Set initial value for unbound forms (when no POST data)
+                # This ensures checkboxes show the correct checked state on initial page load
+                if not self.is_bound:
+                    self.initial[field_name] = granted
+                
                 self.fields[field_name] = forms.BooleanField(
                     required=False,
                     label=f"{self.get_module_display(module)} - {self.get_permission_display(permission)}",
                     widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
                 )
-
-                # Set initial value
-                try:
-                    user_permission = UserPermission.objects.get(
-                        user=user,
-                        module_permission__module_name=module,
-                        module_permission__permission_type=permission
-                    )
-                    self.fields[field_name].initial = user_permission.granted
-                except UserPermission.DoesNotExist:
-                    self.fields[field_name].initial = False
 
     def get_module_display(self, module):
         """Get Arabic display name for module"""
@@ -173,6 +206,18 @@ class PermissionAssignmentForm(forms.Form):
 
     def save(self):
         """Save permission assignments"""
+        from django.core.exceptions import ValidationError
+        from ..utils.helpers import is_super_admin
+        
+        # Prevent saving permissions for super admins
+        # Super admins have all permissions automatically and shouldn't have UserPermission records
+        if is_super_admin(self.user):
+            # Clean up any existing UserPermission records for super admins
+            UserPermission.objects.filter(user=self.user).delete()
+            raise ValidationError(
+                'لا يمكن حفظ صلاحيات للمدير العام. المديرون العامون لديهم جميع الصلاحيات تلقائياً.'
+            )
+        
         modules = ['cars', 'equipment', 'generic_tables']
         permissions = ['create', 'read', 'update', 'delete']
 

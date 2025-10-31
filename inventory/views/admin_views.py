@@ -3,13 +3,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q
+from django import forms
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import JsonResponse
 from django.db import connection
 from django.conf import settings
 import os
 
 from ..utils.decorators import super_admin_required, admin_required, super_admin_required_with_message, admin_required_with_message
-from ..utils.helpers import paginate_queryset, log_user_action
+from ..utils.helpers import paginate_queryset, log_user_action, is_super_admin
 from django.http import HttpResponse
 from datetime import datetime, timedelta
 import csv
@@ -240,9 +242,12 @@ def permission_management_view(request):
     try:
         permission_service = PermissionService()
         
-        # Get all users with profiles
+        # Get all users with profiles, excluding super admins
+        # Super admins have all permissions automatically and shouldn't be modified
         users = User.objects.select_related('profile').filter(
             profile__is_active=True
+        ).exclude(
+            Q(profile__user_type='super_admin') | Q(is_superuser=True)
         ).order_by('username')
         
         # Get search parameter
@@ -278,6 +283,24 @@ def user_permissions_view(request, user_id):
     """View and edit user permissions"""
     user = get_object_or_404(User, id=user_id)
     
+    # Prevent modifying super admin permissions
+    # Super admins have all permissions automatically and shouldn't be modified
+    if is_super_admin(user):
+        messages.error(
+            request, 
+            f'لا يمكن تعديل صلاحيات المدير العام "{user.username}". المديرون العامون لديهم جميع الصلاحيات تلقائياً.'
+        )
+        
+        # Log the attempt for security auditing
+        log_user_action(
+            request.user,
+            'permission_update_attempt_blocked',
+            object_id=str(user.id),
+            description=f"محاولة تعديل صلاحيات مدير عام محظورة: {user.username}"
+        )
+        
+        return redirect('permission_management')
+    
     if request.method == 'POST':
         form = PermissionAssignmentForm(user, request.POST)
         if form.is_valid():
@@ -294,6 +317,15 @@ def user_permissions_view(request, user_id):
                 )
                 
                 return redirect('permission_management')
+            except (forms.ValidationError, DjangoValidationError) as e:
+                # Handle form validation errors
+                if hasattr(e, 'message'):
+                    messages.error(request, e.message)
+                elif hasattr(e, 'messages'):
+                    for message in e.messages:
+                        messages.error(request, message)
+                else:
+                    messages.error(request, str(e))
             except Exception as e:
                 messages.error(request, f'خطأ في تحديث الصلاحيات: {str(e)}')
     else:
