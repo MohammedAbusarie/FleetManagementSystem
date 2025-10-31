@@ -59,6 +59,12 @@
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 15px;
         margin-top: 20px;
+        transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+    }
+    
+    /* Collapsed state */
+    .permission-grid.permissions-hidden {
+        display: none;
     }
     
     .permission-module {
@@ -127,6 +133,37 @@
     .filter-badge.active {
         background-color: #667eea;
         color: white;
+    }
+    
+    .toggle-permissions-btn {
+        background: none;
+        border: none;
+        color: #667eea;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        font-size: 1.2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .toggle-permissions-btn:hover {
+        background-color: #f8f9fa;
+        color: #764ba2;
+    }
+    
+    .toggle-permissions-btn i {
+        transition: transform 0.3s ease;
+    }
+    
+    .toggle-permissions-btn[aria-expanded="false"] i {
+        transform: rotate(-90deg);
+    }
+    
+    .toggle-permissions-btn[aria-expanded="true"] i {
+        transform: rotate(0deg);
     }
 </style>
 {% endblock %}
@@ -251,8 +288,22 @@
                             </div>
                         </div>
                         
+                        <!-- Toggle Permissions Button -->
+                        <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+                            <span class="text-muted small">
+                                <i class="bi bi-shield-check me-1"></i>
+                                الصلاحيات
+                            </span>
+                            <button type="button" 
+                                    class="toggle-permissions-btn collapsed" 
+                                    data-target="#permissions_{{ user.id }}"
+                                    aria-expanded="false">
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                        
                         <!-- Quick Permission Overview -->
-                        <div class="permission-grid mt-3">
+                        <div class="permission-grid mt-3 permissions-hidden" id="permissions_{{ user.id }}">
                             {% for module in modules %}
                             <div class="permission-module">
                                 <h6>
@@ -400,6 +451,31 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function(e) {
             // You can add any pre-navigation logic here
             console.log('Navigating to user permissions');
+        });
+    });
+    
+    // Handle toggle button click for permissions
+    const toggleButtons = document.querySelectorAll('.toggle-permissions-btn');
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetSelector = button.getAttribute('data-target');
+            const targetElement = document.querySelector(targetSelector);
+            const isExpanded = button.getAttribute('aria-expanded') === 'true';
+            
+            if (targetElement) {
+                if (isExpanded) {
+                    // Collapse
+                    targetElement.classList.add('permissions-hidden');
+                    button.setAttribute('aria-expanded', 'false');
+                    button.classList.add('collapsed');
+                } else {
+                    // Expand
+                    targetElement.classList.remove('permissions-hidden');
+                    button.setAttribute('aria-expanded', 'true');
+                    button.classList.remove('collapsed');
+                }
+            }
         });
     });
 });
