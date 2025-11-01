@@ -62,14 +62,12 @@ class SectorForm(forms.ModelForm):
     
     class Meta:
         model = Sector
-        fields = ['name', 'is_dummy']
+        fields = ['name']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'is_dummy': forms.CheckboxInput(attrs={'class': 'form-check-input'})
         }
         labels = {
             'name': 'الاسم',
-            'is_dummy': 'قيمة افتراضية'
         }
     
     def __init__(self, *args, **kwargs):
@@ -81,12 +79,9 @@ class SectorForm(forms.ModelForm):
         if self.instance and self.instance.pk and self.instance.is_protected_default:
             self.fields['name'].widget.attrs['readonly'] = True
             self.fields['name'].widget.attrs['disabled'] = True
-            self.fields['is_dummy'].widget.attrs['disabled'] = True
-            self.fields['is_dummy'].widget.attrs['readonly'] = True
         
         self.helper.layout = Layout(
             Field('name'),
-            Field('is_dummy'),
             HTML('<div class="mt-4">'),
             Submit('submit', 'حفظ', css_class='btn btn-primary'),
             HTML('<a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>'),
@@ -98,7 +93,19 @@ class SectorForm(forms.ModelForm):
         # Prevent saving changes to protected default record
         if self.instance and self.instance.pk and self.instance.is_protected_default:
             raise forms.ValidationError('لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+        # Always set is_dummy to False for new records (users can't create default records)
+        if not self.instance.pk:
+            cleaned_data['is_dummy'] = False
         return cleaned_data
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        # Ensure is_dummy is False for new records
+        if not instance.pk:
+            instance.is_dummy = False
+        if commit:
+            instance.save()
+        return instance
 
 
 class DepartmentForm(forms.ModelForm):
@@ -106,16 +113,14 @@ class DepartmentForm(forms.ModelForm):
     
     class Meta:
         model = Department
-        fields = ['name', 'sector', 'is_dummy']
+        fields = ['name', 'sector']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'sector': forms.Select(attrs={'class': 'form-control'}),
-            'is_dummy': forms.CheckboxInput(attrs={'class': 'form-check-input'})
         }
         labels = {
             'name': 'الاسم',
             'sector': 'القطاع',
-            'is_dummy': 'قيمة افتراضية'
         }
     
     def __init__(self, *args, **kwargs):
@@ -128,15 +133,12 @@ class DepartmentForm(forms.ModelForm):
             self.fields['name'].widget.attrs['readonly'] = True
             self.fields['name'].widget.attrs['disabled'] = True
             self.fields['sector'].widget.attrs['disabled'] = True
-            self.fields['is_dummy'].widget.attrs['disabled'] = True
-            self.fields['is_dummy'].widget.attrs['readonly'] = True
         
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.layout = Layout(
             Field('name'),
             Field('sector'),
-            Field('is_dummy'),
             HTML('<div class="mt-4">'),
             Submit('submit', 'حفظ', css_class='btn btn-primary'),
             HTML('<a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>'),
@@ -148,7 +150,19 @@ class DepartmentForm(forms.ModelForm):
         # Prevent saving changes to protected default record
         if self.instance and self.instance.pk and self.instance.is_protected_default:
             raise forms.ValidationError('لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+        # Always set is_dummy to False for new records (users can't create default records)
+        if not self.instance.pk:
+            cleaned_data['is_dummy'] = False
         return cleaned_data
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        # Ensure is_dummy is False for new records
+        if not instance.pk:
+            instance.is_dummy = False
+        if commit:
+            instance.save()
+        return instance
 
 
 class DivisionForm(forms.ModelForm):
@@ -156,16 +170,14 @@ class DivisionForm(forms.ModelForm):
     
     class Meta:
         model = Division
-        fields = ['name', 'department', 'is_dummy']
+        fields = ['name', 'department']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'department': forms.Select(attrs={'class': 'form-control'}),
-            'is_dummy': forms.CheckboxInput(attrs={'class': 'form-check-input'})
         }
         labels = {
             'name': 'الاسم',
             'department': 'الإدارة',
-            'is_dummy': 'قيمة افتراضية'
         }
     
     def __init__(self, *args, **kwargs):
@@ -178,15 +190,12 @@ class DivisionForm(forms.ModelForm):
             self.fields['name'].widget.attrs['readonly'] = True
             self.fields['name'].widget.attrs['disabled'] = True
             self.fields['department'].widget.attrs['disabled'] = True
-            self.fields['is_dummy'].widget.attrs['disabled'] = True
-            self.fields['is_dummy'].widget.attrs['readonly'] = True
         
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.layout = Layout(
             Field('name'),
             Field('department'),
-            Field('is_dummy'),
             HTML('<div class="mt-4">'),
             Submit('submit', 'حفظ', css_class='btn btn-primary'),
             HTML('<a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>'),
@@ -198,7 +207,19 @@ class DivisionForm(forms.ModelForm):
         # Prevent saving changes to protected default record
         if self.instance and self.instance.pk and self.instance.is_protected_default:
             raise forms.ValidationError('لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+        # Always set is_dummy to False for new records (users can't create default records)
+        if not self.instance.pk:
+            cleaned_data['is_dummy'] = False
         return cleaned_data
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        # Ensure is_dummy is False for new records
+        if not instance.pk:
+            instance.is_dummy = False
+        if commit:
+            instance.save()
+        return instance
 
 
 # Search Form

@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.apps import apps
+from django.db.models.deletion import ProtectedError
 from ..translation_utils import get_verbose_model_translations, get_model_arabic_name, get_message_template
 from ..forms import EquipmentModelForm, SectorForm, DepartmentForm, DivisionForm
 from .auth_views import is_admin
@@ -28,7 +29,13 @@ def generic_tables_view(request):
     # Convert the model names to a structure that includes both English and Arabic names
     ddl_models = [{'name': name, 'arabic': trans} for name, trans in filtered_translations.items()]
     
-    context = {'ddl_models': ddl_models}
+    # Get selected model from session (if coming from create/update/delete redirect)
+    selected_model = request.session.pop('selected_generic_table', None)
+    
+    context = {
+        'ddl_models': ddl_models,
+        'selected_model': selected_model,
+    }
     return render(request, 'inventory/generic_tables.html', context)
 
 
@@ -104,7 +111,9 @@ def generic_table_create_view(request, model_name):
                     ip_address=get_client_ip(request)
                 )
                 messages.success(request, get_message_template('create_success', model_name, 'create'))
-                return redirect('generic_table_detail', model_name=model_name)
+                # Store selected model in session to reload after redirect
+                request.session['selected_generic_table'] = model_name
+                return redirect('generic_tables')
             else:
                 messages.error(request, get_message_template('validation_error'))
         else:
@@ -125,7 +134,9 @@ def generic_table_create_view(request, model_name):
                     ip_address=get_client_ip(request)
                 )
                 messages.success(request, get_message_template('create_success', model_name, 'create'))
-                return redirect('generic_table_detail', model_name=model_name)
+                # Store selected model in session to reload after redirect
+                request.session['selected_generic_table'] = model_name
+                return redirect('generic_tables')
             except Exception as e:
                 messages.error(request, get_message_template('create_error', model_name, 'create'))
         else:
@@ -158,7 +169,9 @@ def generic_table_update_view(request, model_name, pk):
                 request,
                 'لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.'
             )
-            return redirect('generic_table_detail', model_name=model_name)
+            # Store selected model in session to reload after redirect
+            request.session['selected_generic_table'] = model_name
+            return redirect('generic_tables')
     
     # Use specific forms for models with special fields
     form_class = None
@@ -186,7 +199,9 @@ def generic_table_update_view(request, model_name, pk):
                     ip_address=get_client_ip(request)
                 )
                 messages.success(request, get_message_template('update_success', model_name, 'update'))
-                return redirect('generic_table_detail', model_name=model_name)
+                # Store selected model in session to reload after redirect
+                request.session['selected_generic_table'] = model_name
+                return redirect('generic_tables')
             else:
                 messages.error(request, get_message_template('validation_error'))
         else:
@@ -209,7 +224,9 @@ def generic_table_update_view(request, model_name, pk):
                     ip_address=get_client_ip(request)
                 )
                 messages.success(request, get_message_template('update_success', model_name, 'update'))
-                return redirect('generic_table_detail', model_name=model_name)
+                # Store selected model in session to reload after redirect
+                request.session['selected_generic_table'] = model_name
+                return redirect('generic_tables')
             except Exception as e:
                 messages.error(request, get_message_template('update_error', model_name, 'update'))
         else:
@@ -243,25 +260,38 @@ def generic_table_delete_view(request, model_name, pk):
                 request,
                 'لا يمكن حذف السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.'
             )
-            return redirect('generic_table_detail', model_name=model_name)
+            # Store selected model in session to reload after redirect
+            request.session['selected_generic_table'] = model_name
+            return redirect('generic_tables')
     
     if request.method == 'POST':
         obj_name = obj.name if hasattr(obj, 'name') else str(obj)  # Store before deletion
         obj_pk = str(obj.pk)
-        obj.delete()
         
-        # Log the action
-        log_user_action(
-            request.user,
-            'delete',
-            module_name='generic_tables',
-            object_id=obj_pk,
-            description=f"تم حذف {get_model_arabic_name(model_name)}: {obj_name}",
-            ip_address=get_client_ip(request)
-        )
-        
-        messages.success(request, get_message_template('delete_success', model_name, 'delete'))
-        return redirect('generic_table_detail', model_name=model_name)
+        try:
+            obj.delete()
+            
+            # Log the action
+            log_user_action(
+                request.user,
+                'delete',
+                module_name='generic_tables',
+                object_id=obj_pk,
+                description=f"تم حذف {get_model_arabic_name(model_name)}: {obj_name}",
+                ip_address=get_client_ip(request)
+            )
+            
+            messages.success(request, get_message_template('delete_success', model_name, 'delete'))
+            # Store selected model in session to reload after redirect
+            request.session['selected_generic_table'] = model_name
+            return redirect('generic_tables')
+        except ProtectedError as e:
+            # Handle protected foreign key errors - redirect back to generic_tables with error message
+            error_message = 'لا يمكن حذف هذا العنصر لأنه مرتبط بعناصر أخرى في النظام.'
+            messages.error(request, error_message)
+            # Store selected model in session to reload after redirect
+            request.session['selected_generic_table'] = model_name
+            return redirect('generic_tables')
     
     context = {
         'model_name': model_name, 

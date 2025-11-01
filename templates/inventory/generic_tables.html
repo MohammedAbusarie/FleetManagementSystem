@@ -52,6 +52,12 @@
 </div>
 
 <style>
+/* Ensure sidebar is always visible */
+.col-md-4.col-lg-3 {
+    position: relative;
+    z-index: 1;
+}
+
 .scrollable-list {
     max-height: 500px;
     overflow-y: auto;
@@ -145,19 +151,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableSelectors = document.querySelectorAll('.table-selector');
     const contentArea = document.getElementById('table-content');
     
-    tableSelectors.forEach(selector => {
-        selector.addEventListener('click', function(e) {
-            e.preventDefault();
-            
+    // Function to select and load a table
+    function selectAndLoadTable(modelName) {
+        const selectedSelector = document.querySelector(`.table-selector[data-model="${modelName}"]`);
+        if (selectedSelector) {
             // Remove active class from all selectors
             tableSelectors.forEach(s => s.classList.remove('active'));
             
-            // Add active class to clicked selector
-            this.classList.add('active');
+            // Add active class to selected selector
+            selectedSelector.classList.add('active');
             
             // Get model information
-            const modelName = this.dataset.model;
-            const arabicName = this.dataset.arabic;
+            const arabicName = selectedSelector.dataset.arabic;
             
             // Show loading state
             contentArea.innerHTML = `
@@ -171,8 +176,37 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Load table data via AJAX
             loadTableData(modelName);
+        }
+    }
+    
+    // Set up click handlers for all table selectors
+    tableSelectors.forEach(selector => {
+        selector.addEventListener('click', function(e) {
+            e.preventDefault();
+            const modelName = this.dataset.model;
+            selectAndLoadTable(modelName);
         });
     });
+    
+    // Check if there's a selected model from session (after redirect from create/update/delete)
+    {% if selected_model %}
+    const selectedModel = '{{ selected_model }}';
+    console.log('Auto-loading table after redirect:', selectedModel);
+    // Use setTimeout to ensure DOM is fully ready and event listeners are attached
+    setTimeout(function() {
+        console.log('Attempting to load table:', selectedModel);
+        selectAndLoadTable(selectedModel);
+    }, 100);
+    {% endif %}
+    
+    // Ensure sidebar is always visible (defensive check)
+    const sidebar = document.querySelector('.col-md-4.col-lg-3');
+    if (sidebar) {
+        sidebar.style.display = 'block';
+        console.log('Sidebar is visible');
+    } else {
+        console.error('Sidebar not found!');
+    }
 });
 
 // Function to load table data
@@ -223,6 +257,7 @@ function loadTableData(modelName) {
                     <i class="bi bi-exclamation-triangle me-2"></i>
                     حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.
                     <br><small>تفاصيل الخطأ: ${error.message}</small>
+                    <br><a href="javascript:location.reload()" class="btn btn-sm btn-primary mt-2">إعادة تحميل الصفحة</a>
                 </div>
             `;
         });
