@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Department, Driver, CarClass, Manufacturer, CarModel, EquipmentModel,
-    FunctionalLocation, Room, Location, Sector, NotificationRecipient,
+    FunctionalLocation, Room, Location, Sector, Division, NotificationRecipient,
     ContractType, Activity, Region, Car, Equipment, CalibrationCertificateImage,
     Maintenance, CarImage, EquipmentImage, CarLicenseRecord, CarInspectionRecord,
     EquipmentLicenseRecord, EquipmentInspectionRecord, FireExtinguisherInspectionRecord,
@@ -13,8 +13,9 @@ from .models import (
 # Register DDL models
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
-    list_display = ['name', 'created_at']
+    list_display = ['name', 'sector', 'is_dummy', 'created_at']
     search_fields = ['name']
+    list_filter = ['sector', 'is_dummy', 'created_at']
 
 
 @admin.register(Driver)
@@ -69,8 +70,9 @@ class LocationAdmin(admin.ModelAdmin):
 
 @admin.register(Sector)
 class SectorAdmin(admin.ModelAdmin):
-    list_display = ['name', 'created_at']
+    list_display = ['name', 'is_dummy', 'created_at']
     search_fields = ['name']
+    list_filter = ['is_dummy', 'created_at']
 
 
 @admin.register(NotificationRecipient)
@@ -97,16 +99,26 @@ class RegionAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
+@admin.register(Division)
+class DivisionAdmin(admin.ModelAdmin):
+    list_display = ['name', 'department', 'is_dummy', 'created_at']
+    search_fields = ['name']
+    list_filter = ['department', 'is_dummy', 'created_at']
+
+
 # Register main models
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
-    list_display = ['fleet_no', 'plate_no_en', 'plate_no_ar', 'manufacturer', 'model', 'ownership_type', 'created_at']
+    list_display = ['fleet_no', 'plate_no_en', 'plate_no_ar', 'manufacturer', 'model', 'ownership_type', 'sector', 'department', 'division', 'created_at']
     search_fields = ['fleet_no', 'plate_no_en', 'plate_no_ar']
-    list_filter = ['manufacturer', 'ownership_type', 'department_code', 'car_class']
+    list_filter = ['manufacturer', 'ownership_type', 'department_code', 'car_class', 'sector', 'department', 'division']
     filter_horizontal = ['visited_regions']
     fieldsets = (
         ('Basic Information', {
             'fields': ('fleet_no', 'plate_no_en', 'plate_no_ar')
+        }),
+        ('Organizational Hierarchy', {
+            'fields': ('sector', 'department', 'division')
         }),
         ('Vehicle Details', {
             'fields': ('department_code', 'driver_name', 'car_class', 'manufacturer', 'model',
@@ -126,15 +138,18 @@ class CarAdmin(admin.ModelAdmin):
 
 @admin.register(Equipment)
 class EquipmentAdmin(admin.ModelAdmin):
-    list_display = ['door_no', 'plate_no', 'manufacturer', 'model', 'status', 'location', 'sector', 'created_at']
+    list_display = ['door_no', 'plate_no', 'manufacturer', 'model', 'status', 'location', 'sector', 'department', 'division', 'created_at']
     search_fields = ['door_no', 'plate_no']
-    list_filter = ['manufacturer', 'status', 'location', 'sector', 'manufacture_year']
+    list_filter = ['manufacturer', 'status', 'location', 'sector', 'department', 'division', 'manufacture_year']
     fieldsets = (
         ('Basic Information', {
             'fields': ('door_no', 'plate_no', 'manufacture_year')
         }),
+        ('Organizational Hierarchy', {
+            'fields': ('sector', 'department', 'division')
+        }),
         ('Equipment Details', {
-            'fields': ('manufacturer', 'model', 'location', 'sector', 'status')
+            'fields': ('manufacturer', 'model', 'location', 'status')
         }),
         # Dates are now handled by historical records
     )

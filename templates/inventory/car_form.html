@@ -19,193 +19,45 @@
         <div class="card-body">
             <form method="post" enctype="multipart/form-data" id="carForm">
                 {% csrf_token %}
-                {{ form|crispy }}
                 
-                <!-- Dynamic Visited Regions -->
-                <div class="mb-3">
-                    <label class="form-label">المناطق المزارة</label>
-                    <div id="visited-regions-container">
-                        {% if car %}
-                            {% for region in car.visited_regions.all %}
-                                <div class="input-group mb-2">
-                                    <input type="text" class="form-control" name="visited_regions_dynamic" value="{{ region.name }}">
-                                    <button type="button" class="btn btn-outline-danger" onclick="removeRegionField(this)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                        <div class="input-group mb-2">
-                            <input type="text" class="form-control" name="visited_regions_dynamic" placeholder="{% trans 'Enter region name' %}">
-                            <button type="button" class="btn btn-outline-danger" onclick="removeRegionField(this)">
-                                <i class="bi bi-trash"></i>
-                            </button>
+                <!-- Section 1: Basic Information - Expanded by default -->
+                <div class="card mb-3 border-info">
+                    <div class="card-header bg-info text-white" data-bs-toggle="collapse" data-bs-target="#basicInfoCollapse" aria-expanded="true" aria-controls="basicInfoCollapse" style="cursor: pointer;">
+                        <h5 class="mb-0">
+                            <i class="bi bi-info-circle me-2"></i>المعلومات الأساسية
+                            <i class="bi bi-chevron-up float-end collapse-icon"></i>
+                        </h5>
+                    </div>
+                    <div id="basicInfoCollapse" class="collapse show">
+                        <div class="card-body">
+                            <div class="row">
+                                {% for field in form %}
+                                    {% if field.name == 'fleet_no' or field.name == 'plate_no_en' or field.name == 'plate_no_ar' or field.name == 'car_class' or field.name == 'manufacturer' or field.name == 'model' or field.name == 'status' %}
+                                        <div class="col-md-6 mb-3">
+                                            {{ field|as_crispy_field }}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addRegionField()">
-                        <i class="bi bi-plus"></i> {% trans "Add Region" %}
-                    </button>
                 </div>
                 
-                <!-- Maintenance Records -->
-                <div class="mb-4">
-                    <hr>
-                    <h5>سجلات الصيانة</h5>
-                    {% if maintenance_records %}
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>تاريخ الصيانة</th>
-                                    <th>تاريخ الإصلاح</th>
-                                    <th>التكلفة</th>
-                                    <th>الوصف</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for record in maintenance_records %}
-                                <tr>
-                                    <td>{{ record.maintenance_date|date:"Y-m-d" }}</td>
-                                    <td>{{ record.restoration_date|date:"Y-m-d"|default:"-" }}</td>
-                                    <td>{{ record.cost|default:"-" }}</td>
-                                    <td>{{ record.description|default:"-" }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <p class="text-muted">لا توجد سجلات صيانة.</p>
-                    {% endif %}
-                </div>
-
-                <!-- License Records -->
-                <div class="mb-4">
-                    <hr>
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="mb-0"><i class="bi bi-card-text text-primary"></i> سجلات رخصة السيارة</h5>
-                        <button type="button" class="btn btn-success btn-sm" onclick="addLicenseForm()">
-                            <i class="bi bi-plus-circle"></i> إضافة سجل رخصة
-                        </button>
-                    </div>
-                    {{ license_formset.management_form }}
-                    <div id="license-forms-container">
-                        {% for form in license_formset %}
-                            <div class="license-form card mb-3" data-form-index="{{ forloop.counter0 }}">
-                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0"><i class="bi bi-card-text"></i> سجل رخصة {{ forloop.counter }}</h6>
-                                    {% if form.instance.pk %}
-                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeLicenseForm(this)">
-                                            <i class="bi bi-trash"></i> حذف السجل
-                                        </button>
-                                    {% else %}
-                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeLicenseForm(this)">
-                                            <i class="bi bi-x-circle"></i> إزالة
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-3">
-                                                <label class="form-label fw-bold">تاريخ بداية الرخصة *</label>
-                                                {{ form.start_date }}
-                                                {% if form.start_date.errors %}
-                                                    <div class="text-danger small">{{ form.start_date.errors.0 }}</div>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-3">
-                                                <label class="form-label fw-bold">تاريخ انتهاء الرخصة *</label>
-                                                {{ form.end_date }}
-                                                {% if form.end_date.errors %}
-                                                    <div class="text-danger small">{{ form.end_date.errors.0 }}</div>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% if form.instance.pk %}
-                                        {{ form.DELETE }}
-                                    {% endif %}
-                                    {% for hidden_field in form.hidden_fields %}
-                                        {{ hidden_field }}
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <!-- Inspection Records -->
-                <div class="mb-4">
-                    <hr>
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="mb-0"><i class="bi bi-clipboard-check text-success"></i> سجلات الفحص السنوي</h5>
-                        <button type="button" class="btn btn-success btn-sm" onclick="addInspectionForm()">
-                            <i class="bi bi-plus-circle"></i> إضافة سجل فحص
-                        </button>
-                    </div>
-                    {{ inspection_formset.management_form }}
-                    <div id="inspection-forms-container">
-                        {% for form in inspection_formset %}
-                            <div class="inspection-form card mb-3" data-form-index="{{ forloop.counter0 }}">
-                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0"><i class="bi bi-clipboard-check"></i> سجل فحص {{ forloop.counter }}</h6>
-                                    {% if form.instance.pk %}
-                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeInspectionForm(this)">
-                                            <i class="bi bi-trash"></i> حذف السجل
-                                        </button>
-                                    {% else %}
-                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeInspectionForm(this)">
-                                            <i class="bi bi-x-circle"></i> إزالة
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-3">
-                                                <label class="form-label fw-bold">تاريخ بداية الفحص *</label>
-                                                {{ form.start_date }}
-                                                {% if form.start_date.errors %}
-                                                    <div class="text-danger small">{{ form.start_date.errors.0 }}</div>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-3">
-                                                <label class="form-label fw-bold">تاريخ انتهاء الفحص *</label>
-                                                {{ form.end_date }}
-                                                {% if form.end_date.errors %}
-                                                    <div class="text-danger small">{{ form.end_date.errors.0 }}</div>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% if form.instance.pk %}
-                                        {{ form.DELETE }}
-                                    {% endif %}
-                                    {% for hidden_field in form.hidden_fields %}
-                                        {{ hidden_field }}
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <!-- Maintenance Formset -->
-                <div id="maintenance-records" style="display: none;">
-                    <hr>
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="mb-0"><i class="bi bi-tools text-warning"></i> سجلات الصيانة</h5>
-                        <button type="button" class="btn btn-success btn-sm" onclick="addMaintenanceForm()">
+                <!-- Section 6: Maintenance Records - Collapsible (Shown when status is under_maintenance) -->
+                <div class="card mb-3 border-warning" id="maintenance-records-card" style="display: none;">
+                    <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#maintenanceRecordsCollapse" aria-expanded="false" aria-controls="maintenanceRecordsCollapse" style="cursor: pointer;">
+                        <h5 class="mb-0">
+                            <i class="bi bi-tools me-2"></i>سجلات الصيانة
+                            <i class="bi bi-chevron-down collapse-icon"></i>
+                        </h5>
+                        <button type="button" class="btn btn-light btn-sm" onclick="event.stopPropagation(); addMaintenanceForm();">
                             <i class="bi bi-plus-circle"></i> إضافة سجل صيانة
                         </button>
                     </div>
-                    {{ maintenance_formset.management_form }}
-                    <div id="maintenance-forms-container">
+                    <div id="maintenanceRecordsCollapse" class="collapse">
+                        <div class="card-body">
+                            {{ maintenance_formset.management_form }}
+                            <div id="maintenance-forms-container">
                         {% for form in maintenance_formset %}
                             <div class="maintenance-form card mb-3" data-form-index="{{ forloop.counter0 }}">
                                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -270,10 +122,355 @@
                                 </div>
                             </div>
                         {% endfor %}
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <!-- Empty form template for dynamic form addition -->
+                <!-- Section 2: Organizational Hierarchy - Collapsible -->
+                <div class="card mb-3 border-primary">
+                    <div class="card-header bg-primary text-white" data-bs-toggle="collapse" data-bs-target="#orgHierarchyCollapse" aria-expanded="true" aria-controls="orgHierarchyCollapse" style="cursor: pointer;">
+                        <h5 class="mb-0">
+                            <i class="bi bi-diagram-3 me-2"></i>التسلسل الهرمي التنظيمي
+                            <i class="bi bi-chevron-up float-end collapse-icon"></i>
+                        </h5>
+                    </div>
+                    <div id="orgHierarchyCollapse" class="collapse show">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="{{ form.sector.id_for_label }}" class="form-label fw-bold">{{ form.sector.label }} <span class="text-danger">*</span></label>
+                                        {{ form.sector }}
+                                        {% if form.sector.errors %}
+                                            <div class="text-danger small mt-1">{{ form.sector.errors.0 }}</div>
+                                        {% endif %}
+                                        <div class="form-text">اختر القطاع أولاً</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="{{ form.department.id_for_label }}" class="form-label fw-bold">{{ form.department.label }}</label>
+                                        {{ form.department }}
+                                        {% if form.department.errors %}
+                                            <div class="text-danger small mt-1">{{ form.department.errors.0 }}</div>
+                                        {% endif %}
+                                        <div class="form-text">اختر الإدارة بعد القطاع</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="{{ form.division.id_for_label }}" class="form-label fw-bold">{{ form.division.label }} <span class="text-danger">*</span></label>
+                                        {{ form.division }}
+                                        {% if form.division.errors %}
+                                            <div class="text-danger small mt-1">{{ form.division.errors.0 }}</div>
+                                        {% endif %}
+                                        <div class="form-text">اختر الدائرة بعد الإدارة</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Section 3: Location & Contact Information - Collapsible -->
+                <div class="card mb-3 border-success">
+                    <div class="card-header bg-success text-white" data-bs-toggle="collapse" data-bs-target="#locationInfoCollapse" aria-expanded="true" aria-controls="locationInfoCollapse" style="cursor: pointer;">
+                        <h5 class="mb-0">
+                            <i class="bi bi-geo-alt me-2"></i>معلومات الموقع والاتصال
+                            <i class="bi bi-chevron-up float-end collapse-icon"></i>
+                        </h5>
+                    </div>
+                    <div id="locationInfoCollapse" class="collapse show">
+                        <div class="card-body">
+                            <div class="row">
+                                {% for field in form %}
+                                    {% if field.name == 'administrative_unit' or field.name == 'department_code' or field.name == 'driver_name' or field.name == 'functional_location' or field.name == 'ownership_type' or field.name == 'room' or field.name == 'location_description' or field.name == 'address_details_1' or field.name == 'notification_recipient' or field.name == 'contract_type' or field.name == 'activity' %}
+                                        <div class="col-md-6 mb-3">
+                                            {{ field|as_crispy_field }}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Dynamic Visited Regions -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">المناطق المزارة</label>
+                                <div id="visited-regions-container">
+                                    {% if car %}
+                                        {% for region in car.visited_regions.all %}
+                                            <div class="input-group mb-2">
+                                                <input type="text" class="form-control" name="visited_regions_dynamic" value="{{ region.name }}">
+                                                <button type="button" class="btn btn-outline-danger" onclick="removeRegionField(this)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                    <div class="input-group mb-2">
+                                        <input type="text" class="form-control" name="visited_regions_dynamic" placeholder="{% trans 'Enter region name' %}">
+                                        <button type="button" class="btn btn-outline-danger" onclick="removeRegionField(this)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addRegionField()">
+                                    <i class="bi bi-plus"></i> {% trans "Add Region" %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Section 4: License Records - Collapsible -->
+                <div class="card mb-3 border-primary">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#licenseRecordsCollapse" aria-expanded="true" aria-controls="licenseRecordsCollapse" style="cursor: pointer;">
+                        <h5 class="mb-0">
+                            <i class="bi bi-card-text me-2"></i>سجلات رخصة السيارة
+                            <i class="bi bi-chevron-up collapse-icon"></i>
+                        </h5>
+                        <button type="button" class="btn btn-light btn-sm" onclick="event.stopPropagation(); addLicenseForm();">
+                            <i class="bi bi-plus-circle"></i> إضافة سجل رخصة
+                        </button>
+                    </div>
+                    <div id="licenseRecordsCollapse" class="collapse show">
+                        <div class="card-body">
+                            {{ license_formset.management_form }}
+                            <div id="license-forms-container">
+                        {% for form in license_formset %}
+                            <div class="license-form card mb-3" data-form-index="{{ forloop.counter0 }}">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0"><i class="bi bi-card-text"></i> سجل رخصة {{ forloop.counter }}</h6>
+                                    {% if form.instance.pk %}
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeLicenseForm(this)">
+                                            <i class="bi bi-trash"></i> حذف السجل
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeLicenseForm(this)">
+                                            <i class="bi bi-x-circle"></i> إزالة
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label class="form-label fw-bold">تاريخ بداية الرخصة *</label>
+                                                {{ form.start_date }}
+                                                {% if form.start_date.errors %}
+                                                    <div class="text-danger small">{{ form.start_date.errors.0 }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label class="form-label fw-bold">تاريخ انتهاء الرخصة *</label>
+                                                {{ form.end_date }}
+                                                {% if form.end_date.errors %}
+                                                    <div class="text-danger small">{{ form.end_date.errors.0 }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if form.instance.pk %}
+                                        {{ form.DELETE }}
+                                    {% endif %}
+                                    {% for hidden_field in form.hidden_fields %}
+                                        {{ hidden_field }}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 5: Inspection Records - Collapsible -->
+                <div class="card mb-3 border-success">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#inspectionRecordsCollapse" aria-expanded="true" aria-controls="inspectionRecordsCollapse" style="cursor: pointer;">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clipboard-check me-2"></i>سجلات الفحص السنوي
+                            <i class="bi bi-chevron-up collapse-icon"></i>
+                        </h5>
+                        <button type="button" class="btn btn-light btn-sm" onclick="event.stopPropagation(); addInspectionForm();">
+                            <i class="bi bi-plus-circle"></i> إضافة سجل فحص
+                        </button>
+                    </div>
+                    <div id="inspectionRecordsCollapse" class="collapse show">
+                        <div class="card-body">
+                            {{ inspection_formset.management_form }}
+                            <div id="inspection-forms-container">
+                        {% for form in inspection_formset %}
+                            <div class="inspection-form card mb-3" data-form-index="{{ forloop.counter0 }}">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0"><i class="bi bi-clipboard-check"></i> سجل فحص {{ forloop.counter }}</h6>
+                                    {% if form.instance.pk %}
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeInspectionForm(this)">
+                                            <i class="bi bi-trash"></i> حذف السجل
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeInspectionForm(this)">
+                                            <i class="bi bi-x-circle"></i> إزالة
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label class="form-label fw-bold">تاريخ بداية الفحص *</label>
+                                                {{ form.start_date }}
+                                                {% if form.start_date.errors %}
+                                                    <div class="text-danger small">{{ form.start_date.errors.0 }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label class="form-label fw-bold">تاريخ انتهاء الفحص *</label>
+                                                {{ form.end_date }}
+                                                {% if form.end_date.errors %}
+                                                    <div class="text-danger small">{{ form.end_date.errors.0 }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if form.instance.pk %}
+                                        {{ form.DELETE }}
+                                    {% endif %}
+                                    {% for hidden_field in form.hidden_fields %}
+                                        {{ hidden_field }}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Section 7: Images & Media - Always Visible -->
+                <div class="card mb-3 border-secondary" id="images-media-card">
+                    <div class="card-header bg-secondary text-white" data-bs-toggle="collapse" data-bs-target="#imagesMediaCollapse" aria-expanded="true" aria-controls="imagesMediaCollapse" style="cursor: pointer;">
+                        <h5 class="mb-0">
+                            <i class="bi bi-images me-2"></i>الصور والوسائط
+                            <i class="bi bi-chevron-up float-end collapse-icon"></i>
+                        </h5>
+                    </div>
+                    <div id="imagesMediaCollapse" class="collapse show">
+                        <div class="card-body">
+                            <!-- Car Images -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">صور السيارة</label>
+                                <input type="file" class="form-control" id="car_images" name="car_images" multiple accept="image/*">
+                                <div class="form-text">يمكنك اختيار صور متعددة للسيارة.</div>
+                            </div>
+                            
+                            {% if car and car.car_images.all %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">الصور الموجودة</label>
+                                <div class="row">
+                                    {% for img in car.car_images.all %}
+                                    <div class="col-md-3 mb-2">
+                                        <div class="image-container position-relative">
+                                            <img src="{{ img.image|secure_media_url }}" class="img-thumbnail" alt="Car Image" id="img-{{ img.id }}">
+                                            <div class="mt-2 text-center">
+                                                <button type="button" class="btn btn-sm btn-danger delete-image" data-img-id="{{ img.id }}" data-img-name="{{ img.image.name|basename }}">
+                                                    <i class="bi bi-trash"></i> حذف الصورة
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Hidden input to track images to delete -->
+                            <input type="hidden" name="images_to_delete" id="images-to-delete" value="">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Form Submit Button - Placed right after Images section -->
+                <div class="card mb-3 border-success" id="form-submit-buttons" style="margin-top: 2rem;">
+                    <div class="card-body" style="padding: 1.5rem; background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%); border-radius: 0.5rem;">
+                        <div class="d-flex align-items-center gap-3" style="margin-right: 0; margin-left: auto;">
+                            <button type="submit" class="btn btn-primary btn-lg" style="min-width: 200px; font-size: 1.1rem; padding: 0.75rem 2rem;">
+                                <i class="bi bi-save"></i> {% if action == 'Create' %}إضافة سيارة{% else %}تحديث السيارة{% endif %}
+                            </button>
+                            <a href="{% url 'car_list' %}" class="btn btn-secondary btn-lg" style="min-width: 150px; padding: 0.75rem 2rem;">
+                                <i class="bi bi-x-circle"></i> إلغاء
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Empty form templates for dynamic form addition -->
+                <!-- Empty License Form Template -->
+                <div id="empty-license-form" style="display: none;">
+                    <div class="license-form card mb-3" data-form-index="__prefix__">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bi bi-card-text"></i> سجل رخصة جديد</h6>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeLicenseForm(this)">
+                                <i class="bi bi-x-circle"></i> إزالة
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label fw-bold">تاريخ بداية الرخصة *</label>
+                                        {{ license_formset.empty_form.start_date }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label fw-bold">تاريخ انتهاء الرخصة *</label>
+                                        {{ license_formset.empty_form.end_date }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% for hidden_field in license_formset.empty_form.hidden_fields %}
+                                {{ hidden_field }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Empty Inspection Form Template -->
+                <div id="empty-inspection-form" style="display: none;">
+                    <div class="inspection-form card mb-3" data-form-index="__prefix__">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bi bi-clipboard-check"></i> سجل فحص جديد</h6>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeInspectionForm(this)">
+                                <i class="bi bi-x-circle"></i> إزالة
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label fw-bold">تاريخ بداية الفحص *</label>
+                                        {{ inspection_formset.empty_form.start_date }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label fw-bold">تاريخ انتهاء الفحص *</label>
+                                        {{ inspection_formset.empty_form.end_date }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% for hidden_field in inspection_formset.empty_form.hidden_fields %}
+                                {{ hidden_field }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Empty Maintenance Form Template -->
                 <div id="empty-form" style="display: none;">
                     <div class="maintenance-form card mb-3" data-form-index="__prefix__">
                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -317,45 +514,6 @@
                             {% endfor %}
                         </div>
                     </div>
-                </div>
-                
-                <!-- Car Images -->
-                <div class="mb-3">
-                    <label class="form-label">صور السيارة</label>
-                    <input type="file" class="form-control" id="car_images" name="car_images" multiple accept="image/*">
-                    <div class="form-text">يمكنك اختيار صور متعددة للسيارة.</div>
-                </div>
-                
-                {% if car.car_images.all %}
-                <div class="mb-3">
-                    <label class="form-label">الصور الموجودة</label>
-                    <div class="row">
-                        {% for img in car.car_images.all %}
-                        <div class="col-md-3 mb-2">
-                            <div class="image-container position-relative">
-                                <img src="{{ img.image|secure_media_url }}" class="img-thumbnail" alt="Car Image" id="img-{{ img.id }}">
-                                <div class="mt-2 text-center">
-                                    <button type="button" class="btn btn-sm btn-danger delete-image" data-img-id="{{ img.id }}" data-img-name="{{ img.image.name|basename }}">
-                                        <i class="bi bi-trash"></i> حذف الصورة
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-                
-                <!-- Hidden input to track images to delete -->
-                <input type="hidden" name="images_to_delete" id="images-to-delete" value="">
-                
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> {% if action == 'Create' %}إضافة سيارة{% else %}تحديث السيارة{% endif %}
-                    </button>
-                    <a href="{% url 'car_list' %}" class="btn btn-secondary">
-                        <i class="bi bi-x-circle"></i> إلغاء
-                    </a>
                 </div>
             </form>
         </div>
@@ -428,6 +586,29 @@
     .select2-dropdown {
         z-index: 1051;
     }
+    
+    /* Collapsible card header styles */
+    .card-header[data-bs-toggle="collapse"] {
+        transition: background-color 0.2s ease;
+    }
+    
+    .card-header[data-bs-toggle="collapse"]:hover {
+        opacity: 0.9;
+    }
+    
+    .collapse-icon {
+        transition: transform 0.3s ease;
+    }
+    
+    /* Ensure collapse cards have proper spacing */
+    .card.mb-3 {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .card-header {
+        font-weight: 600;
+    }
+    
     
     /* Enhanced Maintenance Form Styling */
     .maintenance-form {
@@ -519,8 +700,8 @@
     $(document).ready(function() {
         // Wait for jQuery to be fully loaded
         if (typeof $ !== 'undefined' && $.fn.select2) {
-            // Initialize Select2 for all searchable dropdowns with enhanced search
-            $('.select2-search').each(function() {
+            // Initialize Select2 for all select fields (including cascading dropdowns)
+            $('select:not([multiple])').each(function() {
                 const $this = $(this);
                 
                 // Skip if already initialized
@@ -530,7 +711,7 @@
                 
                 $this.select2({
                     language: 'ar',
-                    placeholder: $this.data('placeholder') || 'اختر...',
+                    placeholder: $this.data('placeholder') || $this.attr('data-placeholder') || 'اختر...',
                     allowClear: true,
                     width: '100%',
                     dir: 'rtl',
@@ -631,11 +812,131 @@
                     }
                 });
             });
+            
+            // Ensure cascading dropdowns (sector, department, division) are initialized with Select2
+            $('#id_sector, #id_department, #id_division').each(function() {
+                if (!$(this).hasClass('select2-hidden-accessible')) {
+                    $(this).select2({
+                        language: 'ar',
+                        placeholder: $(this).data('placeholder') || $(this).attr('data-placeholder') || 'اختر...',
+                        allowClear: true,
+                        width: '100%',
+                        dir: 'rtl',
+                        dropdownAutoWidth: true
+                    });
+                }
+            });
         } else {
             console.error('Select2 or jQuery not loaded properly');
         }
+        
         const statusField = document.getElementById('id_status');
-        const maintenanceRecords = document.getElementById('maintenance-records');
+        const maintenanceRecordsCard = document.getElementById('maintenance-records-card');
+        
+        // Setup status field change handler for maintenance records
+        function setupStatusFieldHandler() {
+            if (!statusField || !maintenanceRecordsCard) return;
+            
+            function toggleMaintenanceRecords() {
+                const selectedStatus = statusField.value;
+                if (selectedStatus === 'under_maintenance') {
+                    maintenanceRecordsCard.style.display = 'block';
+                    // Expand the maintenance section automatically
+                    const collapseElement = document.getElementById('maintenanceRecordsCollapse');
+                    if (collapseElement && !collapseElement.classList.contains('show')) {
+                        const bsCollapse = new bootstrap.Collapse(collapseElement, {toggle: true});
+                    }
+                    // Only add a form if there are no existing forms
+                    const existingForms = document.querySelectorAll('#maintenance-forms-container .maintenance-form');
+                    if (existingForms.length === 0) {
+                        addMaintenanceForm();
+                    }
+                } else {
+                    maintenanceRecordsCard.style.display = 'none';
+                }
+            }
+            
+            // Handle both regular change and Select2 change events
+            if ($(statusField).hasClass('select2-hidden-accessible')) {
+                // Select2 is initialized, use Select2 event
+                $(statusField).on('select2:select select2:clear', function() {
+                    toggleMaintenanceRecords();
+                });
+            } else {
+                // Regular select, use standard change event
+                statusField.addEventListener('change', toggleMaintenanceRecords);
+            }
+            
+            // Initial check
+            toggleMaintenanceRecords();
+        }
+        
+        // Setup handler after Select2 initialization
+        if (typeof $ !== 'undefined' && $.fn.select2) {
+            // Wait a bit for Select2 to initialize on status field
+            setTimeout(function() {
+                setupStatusFieldHandler();
+            }, 500);
+        } else {
+            // If Select2 not available, setup immediately
+            setupStatusFieldHandler();
+        }
+        
+        // Ensure Images & Media card and buttons are visible
+        const imagesMediaCard = document.getElementById('images-media-card');
+        const formSubmitButtons = document.getElementById('form-submit-buttons');
+        const imagesMediaCollapse = document.getElementById('imagesMediaCollapse');
+        
+        if (imagesMediaCard) {
+            imagesMediaCard.style.display = 'block';
+            imagesMediaCard.style.visibility = 'visible';
+        }
+        
+        if (formSubmitButtons) {
+            formSubmitButtons.style.display = 'block';
+            formSubmitButtons.style.visibility = 'visible';
+        }
+        
+        if (imagesMediaCollapse) {
+            // Ensure the collapse is shown
+            imagesMediaCollapse.classList.add('show');
+            imagesMediaCollapse.style.display = 'block';
+        }
+        
+        // Initialize collapse icons based on initial state
+        document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function(element) {
+            const icon = element.querySelector('.collapse-icon');
+            const target = document.querySelector(element.getAttribute('data-bs-target'));
+            if (icon && target) {
+                // Set initial icon state
+                if (target.classList.contains('show')) {
+                    icon.classList.remove('bi-chevron-down');
+                    icon.classList.add('bi-chevron-up');
+                } else {
+                    icon.classList.remove('bi-chevron-up');
+                    icon.classList.add('bi-chevron-down');
+                }
+            }
+        });
+        
+        // Collapse icon rotation on collapse/expand
+        document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function(element) {
+            element.addEventListener('click', function() {
+                const icon = this.querySelector('.collapse-icon');
+                const target = document.querySelector(this.getAttribute('data-bs-target'));
+                if (icon && target) {
+                    setTimeout(function() {
+                        if (target.classList.contains('show')) {
+                            icon.classList.remove('bi-chevron-down');
+                            icon.classList.add('bi-chevron-up');
+                        } else {
+                            icon.classList.remove('bi-chevron-up');
+                            icon.classList.add('bi-chevron-down');
+                        }
+                    }, 10);
+                }
+            });
+        });
         
         // Add a new license form
         window.addLicenseForm = function() {
@@ -679,8 +980,6 @@
 
         // Add a new maintenance form
         window.addMaintenanceForm = function() {
-            if (!maintenanceRecords) return;
-            
             const totalForms = document.getElementById('id_maintenance_set-TOTAL_FORMS');
             const formNum = parseInt(totalForms.value);
             const formRegex = RegExp(`maintenance_set-(\\d+)-`,'g');
@@ -870,27 +1169,6 @@
             }
         }
         
-        function toggleMaintenanceRecords() {
-            if (!maintenanceRecords) return;
-            
-            const selectedStatus = statusField.value;
-            if (selectedStatus === 'under_maintenance') {
-                maintenanceRecords.style.display = 'block';
-                // Only add a form if there are no existing forms
-                const existingForms = document.querySelectorAll('#maintenance-forms-container .maintenance-form');
-                if (existingForms.length === 0) {
-                    addMaintenanceForm();
-                }
-            } else {
-                maintenanceRecords.style.display = 'none';
-            }
-        }
-        
-        if (statusField) {
-            statusField.addEventListener('change', toggleMaintenanceRecords);
-            toggleMaintenanceRecords(); // Initial check
-        }
-        
         // Image deletion functionality
         const imagesToDelete = new Set();
         const imagesToDeleteInput = document.getElementById('images-to-delete');
@@ -957,5 +1235,142 @@
             button.parentElement.remove();
         }
     }
+    
+    // Nested Selector Functionality for Sector -> Department -> Division
+    (function() {
+        const sectorField = document.getElementById('id_sector');
+        const departmentField = document.getElementById('id_department');
+        const divisionField = document.getElementById('id_division');
+        
+        if (!sectorField || !departmentField || !divisionField) {
+            return; // Fields not present, skip initialization
+        }
+        
+        // Wait for Select2 to be initialized
+        function initializeNestedSelectors() {
+            // Ensure Select2 is initialized on all fields
+            if ($(sectorField).hasClass('select2-hidden-accessible')) {
+                setupNestedSelectors();
+            } else {
+                setTimeout(initializeNestedSelectors, 100);
+            }
+        }
+        
+        function setupNestedSelectors() {
+            // Handle Sector change
+            $(sectorField).on('select2:select select2:clear', function(e) {
+                const sectorId = $(this).val();
+                
+                // Clear and disable department and division
+                $(departmentField).val(null).trigger('change');
+                $(divisionField).val(null).trigger('change');
+                
+                if (sectorId) {
+                    // Fetch departments for this sector
+                    fetchDepartments(sectorId);
+                } else {
+                    // Clear department options
+                    $(departmentField).empty().trigger('change');
+                    $(divisionField).empty().trigger('change');
+                }
+            });
+            
+            // Handle Department change
+            $(departmentField).on('select2:select select2:clear', function(e) {
+                const departmentId = $(this).val();
+                
+                // Clear division
+                $(divisionField).val(null).trigger('change');
+                
+                if (departmentId) {
+                    // Fetch divisions for this department
+                    fetchDivisions(departmentId);
+                } else {
+                    // Clear division options
+                    $(divisionField).empty().trigger('change');
+                }
+            });
+            
+            // Initialize with existing values if editing
+            {% if car and car.sector %}
+                const existingSectorId = {{ car.sector.id|default:"null" }};
+                if (existingSectorId) {
+                    fetchDepartments(existingSectorId, {{ car.department.id|default:"null" }}, {{ car.division.id|default:"null" }});
+                }
+            {% endif %}
+        }
+        
+        function fetchDepartments(sectorId, selectedDeptId = null, selectedDivId = null) {
+            $.ajax({
+                url: '{% url "api_departments" %}',
+                data: { sector_id: sectorId },
+                dataType: 'json',
+                success: function(response) {
+                    // Clear existing options
+                    $(departmentField).empty();
+                    
+                    // Add placeholder option
+                    $(departmentField).append('<option value="">اختر الإدارة...</option>');
+                    
+                    // Add departments
+                    response.departments.forEach(function(dept) {
+                        const option = new Option(dept.name, dept.id, false, false);
+                        option.dataset.isDummy = dept.is_dummy;
+                        $(departmentField).append(option);
+                    });
+                    
+                    // Select the previously selected department if provided
+                    if (selectedDeptId) {
+                        $(departmentField).val(selectedDeptId).trigger('change');
+                        if (selectedDivId) {
+                            fetchDivisions(selectedDeptId, selectedDivId);
+                        }
+                    } else {
+                        $(departmentField).trigger('change');
+                    }
+                },
+                error: function() {
+                    console.error('Error fetching departments');
+                }
+            });
+        }
+        
+        function fetchDivisions(departmentId, selectedDivId = null) {
+            $.ajax({
+                url: '{% url "api_divisions" %}',
+                data: { department_id: departmentId },
+                dataType: 'json',
+                success: function(response) {
+                    // Clear existing options
+                    $(divisionField).empty();
+                    
+                    // Add placeholder option
+                    $(divisionField).append('<option value="">اختر الدائرة...</option>');
+                    
+                    // Add divisions
+                    response.divisions.forEach(function(div) {
+                        const option = new Option(div.name, div.id, false, false);
+                        option.dataset.isDummy = div.is_dummy;
+                        $(divisionField).append(option);
+                    });
+                    
+                    // Select the previously selected division if provided
+                    if (selectedDivId) {
+                        $(divisionField).val(selectedDivId).trigger('change');
+                    } else {
+                        $(divisionField).trigger('change');
+                    }
+                },
+                error: function() {
+                    console.error('Error fetching divisions');
+                }
+            });
+        }
+        
+        // Initialize after page load
+        $(document).ready(function() {
+            setTimeout(initializeNestedSelectors, 500);
+        });
+    })();
 </script>
 {% endblock %}

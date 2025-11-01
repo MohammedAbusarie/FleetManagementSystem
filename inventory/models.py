@@ -36,6 +36,12 @@ class AdministrativeUnit(BaseDDLModel):
 
 class Department(BaseDDLModel):
     """Department lookup table"""
+    sector = models.ForeignKey(
+        'Sector', on_delete=models.PROTECT, related_name='departments',
+        verbose_name="القطاع", null=True, blank=True
+    )
+    is_dummy = models.BooleanField(default=False, verbose_name="قيمة افتراضية")
+    
     class Meta:
         verbose_name = "قسم"
         verbose_name_plural = "الأقسام"
@@ -116,6 +122,8 @@ class Location(BaseDDLModel):
 
 class Sector(BaseDDLModel):
     """Sector lookup table"""
+    is_dummy = models.BooleanField(default=False, verbose_name="قيمة افتراضية")
+    
     class Meta:
         verbose_name = "قطاع"
         verbose_name_plural = "القطاعات"
@@ -150,6 +158,19 @@ class Region(BaseDDLModel):
     class Meta:
         verbose_name = "منطقة"
         verbose_name_plural = "المناطق"
+
+
+class Division(BaseDDLModel):
+    """Division lookup table - دائرة"""
+    department = models.ForeignKey(
+        'Department', on_delete=models.PROTECT, related_name='divisions',
+        verbose_name="الإدارة", null=True, blank=True
+    )
+    is_dummy = models.BooleanField(default=False, verbose_name="قيمة افتراضية")
+    
+    class Meta:
+        verbose_name = "دائرة"
+        verbose_name_plural = "الدوائر"
 
 
 # Main Models
@@ -208,6 +229,20 @@ class Car(models.Model):
     activity = models.ForeignKey(
         Activity, on_delete=models.PROTECT, null=True, blank=True,
         related_name='cars', verbose_name="النشاط"
+    )
+    
+    # Organizational Hierarchy
+    sector = models.ForeignKey(
+        Sector, on_delete=models.PROTECT, related_name='cars_by_sector',
+        verbose_name="القطاع", null=True, blank=True
+    )
+    department = models.ForeignKey(
+        Department, on_delete=models.PROTECT, related_name='cars_by_department',
+        verbose_name="الإدارة", null=True, blank=True
+    )
+    division = models.ForeignKey(
+        'Division', on_delete=models.PROTECT, related_name='cars',
+        verbose_name="الدائرة", null=True, blank=True
     )
 
     # Ownership
@@ -305,6 +340,16 @@ class Equipment(models.Model):
     sector = models.ForeignKey(
         Sector, on_delete=models.PROTECT, related_name='equipment',
         verbose_name="القطاع", null=True, blank=True
+    )
+    
+    # Organizational Hierarchy
+    department = models.ForeignKey(
+        Department, on_delete=models.PROTECT, related_name='equipment',
+        verbose_name="الإدارة", null=True, blank=True
+    )
+    division = models.ForeignKey(
+        'Division', on_delete=models.PROTECT, related_name='equipment',
+        verbose_name="الدائرة", null=True, blank=True
     )
 
     # Status

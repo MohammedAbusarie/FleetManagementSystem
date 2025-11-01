@@ -172,7 +172,7 @@ def equipment_create_view(request):
 @admin_or_permission_required_with_message('equipment', 'update')
 def equipment_update_view(request, pk):
     """Equipment update view"""
-    equipment = get_object_or_404(Equipment, pk=pk)
+    equipment = get_object_or_404(Equipment.objects.select_related('sector', 'department', 'division'), pk=pk)
     if request.method == 'POST':
         form = EquipmentForm(request.POST, request.FILES, instance=equipment)
         maintenance_formset = EquipmentMaintenanceFormSet(
@@ -275,9 +275,10 @@ def equipment_update_view(request, pk):
         maintenance_formset = EquipmentMaintenanceFormSet(
             instance=equipment,
         )
-        license_formset = EquipmentLicenseRecordFormSet(instance=equipment)
-        inspection_formset = EquipmentInspectionRecordFormSet(instance=equipment)
-        fire_extinguisher_formset = FireExtinguisherInspectionRecordFormSet(instance=equipment)
+        # Ensure formsets load existing records
+        license_formset = EquipmentLicenseRecordFormSet(instance=equipment, queryset=equipment.license_records.all())
+        inspection_formset = EquipmentInspectionRecordFormSet(instance=equipment, queryset=equipment.inspection_records.all())
+        fire_extinguisher_formset = FireExtinguisherInspectionRecordFormSet(instance=equipment, queryset=equipment.fire_extinguisher_records.all())
     
     context = {
         'form': form,

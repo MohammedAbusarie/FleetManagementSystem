@@ -12,7 +12,7 @@ class CarManager(models.Manager):
             'manufacturer', 'model', 'administrative_unit',
             'department_code', 'car_class', 'driver_name',
             'functional_location', 'room', 'notification_recipient',
-            'contract_type', 'activity'
+            'contract_type', 'activity', 'sector', 'department', 'division'
         ).prefetch_related('visited_regions')
 
     def by_status(self, status):
@@ -46,7 +46,7 @@ class EquipmentManager(models.Manager):
     def with_related(self):
         """Prefetch all related objects"""
         return self.select_related(
-            'manufacturer', 'model', 'location', 'sector'
+            'manufacturer', 'model', 'location', 'sector', 'department', 'division'
         ).prefetch_related('calibration_certificates')
 
     def by_status(self, status):

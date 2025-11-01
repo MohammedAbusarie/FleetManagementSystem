@@ -255,6 +255,10 @@
                                 <td>
                                     {% if car.car_image %}
                                         <img src="{{ car.car_image|secure_media_url }}" alt="{{ car.fleet_no }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                                    {% elif car.car_images.all %}
+                                        {% with car.car_images.all|first as first_image %}
+                                            <img src="{{ first_image.image|secure_media_url }}" alt="{{ car.fleet_no }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                                        {% endwith %}
                                     {% else %}
                                         <span class="text-muted">لا توجد صورة</span>
                                     {% endif %}

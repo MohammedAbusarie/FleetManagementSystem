@@ -17,7 +17,7 @@ class CarService(BaseService):
             'department_code', 'car_class', 'driver_name',
             'functional_location', 'room', 'notification_recipient',
             'contract_type', 'activity'
-        ).prefetch_related('visited_regions')
+        ).prefetch_related('visited_regions', 'car_images')
     
     def get_cars_with_maintenance(self):
         """Get cars annotated with latest maintenance info"""

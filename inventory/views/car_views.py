@@ -137,7 +137,7 @@ def car_create_view(request):
 @admin_or_permission_required_with_message('cars', 'update')
 def car_update_view(request, pk):
     """Car update view"""
-    car = get_object_or_404(Car, pk=pk)
+    car = get_object_or_404(Car.objects.select_related('sector', 'department', 'division'), pk=pk)
     from django.contrib.contenttypes.models import ContentType
     
     if request.method == 'POST':
@@ -209,8 +209,9 @@ def car_update_view(request, pk):
     else:
         form = CarForm(instance=car)
         maintenance_formset = CarMaintenanceFormSet(instance=car)
-        license_formset = CarLicenseRecordFormSet(instance=car)
-        inspection_formset = CarInspectionRecordFormSet(instance=car)
+        # Ensure formsets load existing records
+        license_formset = CarLicenseRecordFormSet(instance=car, queryset=car.license_records.all())
+        inspection_formset = CarInspectionRecordFormSet(instance=car, queryset=car.inspection_records.all())
     
     context = {
         'form': form,

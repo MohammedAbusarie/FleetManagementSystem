@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.apps import apps
 from ..translation_utils import get_verbose_model_translations, get_model_arabic_name, get_message_template
-from ..forms import EquipmentModelForm
+from ..forms import EquipmentModelForm, SectorForm, DepartmentForm, DivisionForm
 from .auth_views import is_admin
 from ..utils.decorators import admin_or_permission_required, admin_or_permission_required_with_message
 from ..utils.helpers import has_permission, log_user_action, get_client_ip
@@ -45,7 +45,15 @@ def generic_table_detail_view(request, model_name):
         messages.error(request, get_message_template('not_found', model_name))
         return redirect('generic_tables')
     
-    objects = model.objects.all().order_by('name') # Default sort for generic tables
+    # Custom ordering for hierarchy models
+    if model_name == 'Sector':
+        objects = model.objects.all().order_by('-is_dummy', 'name')
+    elif model_name == 'Department':
+        objects = model.objects.all().order_by('-is_dummy', 'sector__name', 'name')
+    elif model_name == 'Division':
+        objects = model.objects.all().order_by('-is_dummy', 'department__name', 'name')
+    else:
+        objects = model.objects.all().order_by('name') # Default sort for generic tables
     
     context = {
         'model_name': model_name,
@@ -70,10 +78,20 @@ def generic_table_create_view(request, model_name):
         messages.error(request, get_message_template('not_found', model_name))
         return redirect('generic_tables')
     
-    # Use specific form for EquipmentModel
+    # Use specific forms for models with special fields
+    form_class = None
     if model_name == 'EquipmentModel':
+        form_class = EquipmentModelForm
+    elif model_name == 'Sector':
+        form_class = SectorForm
+    elif model_name == 'Department':
+        form_class = DepartmentForm
+    elif model_name == 'Division':
+        form_class = DivisionForm
+    
+    if form_class:
         if request.method == 'POST':
-            form = EquipmentModelForm(request.POST)
+            form = form_class(request.POST)
             if form.is_valid():
                 form.save()
                 messages.success(request, get_message_template('create_success', model_name, 'create'))
@@ -81,7 +99,7 @@ def generic_table_create_view(request, model_name):
             else:
                 messages.error(request, get_message_template('validation_error'))
         else:
-            form = EquipmentModelForm()
+            form = form_class()
     else:
         # Handle other models with simple name field
         if request.method == 'POST':
@@ -98,7 +116,7 @@ def generic_table_create_view(request, model_name):
     context = {
         'model_name': model_name,
         'model_name_arabic': get_model_arabic_name(model_name),
-        'form': form if model_name == 'EquipmentModel' else None
+        'form': form
     }
     return render(request, 'inventory/generic_table_form.html', context)
 
@@ -115,10 +133,20 @@ def generic_table_update_view(request, model_name, pk):
     
     obj = get_object_or_404(model, pk=pk)
     
-    # Use specific form for EquipmentModel
+    # Use specific forms for models with special fields
+    form_class = None
     if model_name == 'EquipmentModel':
+        form_class = EquipmentModelForm
+    elif model_name == 'Sector':
+        form_class = SectorForm
+    elif model_name == 'Department':
+        form_class = DepartmentForm
+    elif model_name == 'Division':
+        form_class = DivisionForm
+    
+    if form_class:
         if request.method == 'POST':
-            form = EquipmentModelForm(request.POST, instance=obj)
+            form = form_class(request.POST, instance=obj)
             if form.is_valid():
                 form.save()
                 messages.success(request, get_message_template('update_success', model_name, 'update'))
@@ -126,7 +154,7 @@ def generic_table_update_view(request, model_name, pk):
             else:
                 messages.error(request, get_message_template('validation_error'))
         else:
-            form = EquipmentModelForm(instance=obj)
+            form = form_class(instance=obj)
     else:
         # Handle other models with simple name field
         if request.method == 'POST':
@@ -146,7 +174,7 @@ def generic_table_update_view(request, model_name, pk):
         'model_name': model_name, 
         'model_name_arabic': get_model_arabic_name(model_name),
         'object': obj,
-        'form': form if model_name == 'EquipmentModel' else None
+        'form': form
     }
     return render(request, 'inventory/generic_table_form.html', context)
 
@@ -162,6 +190,15 @@ def generic_table_delete_view(request, model_name, pk):
         return redirect('generic_tables')
     
     obj = get_object_or_404(model, pk=pk)
+    
+    # Prevent deletion of "غير محدد" (dummy) records for hierarchy models
+    if model_name in ['Sector', 'Department', 'Division']:
+        if hasattr(obj, 'is_dummy') and obj.is_dummy and obj.name == 'غير محدد':
+            messages.error(
+                request,
+                'لا يمكن حذف السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.'
+            )
+            return redirect('generic_table_detail', model_name=model_name)
     
     if request.method == 'POST':
         obj.delete()

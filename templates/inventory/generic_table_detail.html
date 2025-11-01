@@ -47,31 +47,80 @@
             {% if objects %}
                 <div class="table-responsive">
                     <table class="table table-hover" id="generic-table-{{ model_name }}">
-                        <thead>
-                            <tr>
-                                <th>الرقم التعريفي</th>
-                                <th>الاسم</th>
-                                <th>تاريخ الإنشاء</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body-{{ model_name }}">
-                            {% for obj in objects %}
-                            <tr class="table-row" data-name="{{ obj.name|lower }}">
-                                <td>{{ obj.id }}</td>
-                                <td class="searchable-text">{{ obj.name }}</td>
-                                <td>{{ obj.created_at|date:"Y-m-d H:i" }}</td>
-                                <td>
-                                    <a href="{% url 'generic_table_update' model_name obj.pk %}" class="btn btn-sm btn-warning" title="تعديل">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
+                    <thead>
+                        <tr>
+                            <th>الرقم التعريفي</th>
+                            <th>الاسم</th>
+                            {% if model_name == 'Sector' %}
+                            <th>قيمة افتراضية</th>
+                            {% elif model_name == 'Department' %}
+                            <th>القطاع</th>
+                            <th>قيمة افتراضية</th>
+                            {% elif model_name == 'Division' %}
+                            <th>الإدارة</th>
+                            <th>قيمة افتراضية</th>
+                            {% endif %}
+                            <th>تاريخ الإنشاء</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body-{{ model_name }}">
+                        {% for obj in objects %}
+                        <tr class="table-row" data-name="{{ obj.name|lower }}">
+                            <td>{{ obj.id }}</td>
+                            <td class="searchable-text">{{ obj.name }}</td>
+                            {% if model_name == 'Sector' %}
+                            <td>
+                                {% if obj.is_dummy %}
+                                    <span class="badge bg-secondary">نعم</span>
+                                {% else %}
+                                    <span class="badge bg-success">لا</span>
+                                {% endif %}
+                            </td>
+                            {% elif model_name == 'Department' %}
+                            <td>{{ obj.sector.name|default:"-" }}</td>
+                            <td>
+                                {% if obj.is_dummy %}
+                                    <span class="badge bg-secondary">نعم</span>
+                                {% else %}
+                                    <span class="badge bg-success">لا</span>
+                                {% endif %}
+                            </td>
+                            {% elif model_name == 'Division' %}
+                            <td>{{ obj.department.name|default:"-" }}</td>
+                            <td>
+                                {% if obj.is_dummy %}
+                                    <span class="badge bg-secondary">نعم</span>
+                                {% else %}
+                                    <span class="badge bg-success">لا</span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                            <td>{{ obj.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <a href="{% url 'generic_table_update' model_name obj.pk %}" class="btn btn-sm btn-warning" title="تعديل">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if model_name == 'Sector' or model_name == 'Department' or model_name == 'Division' %}
+                                    {% if obj.is_dummy and obj.name == 'غير محدد' %}
+                                        {# Hide delete button for "غير محدد" dummy records #}
+                                        <span class="btn btn-sm btn-secondary disabled" title="لا يمكن حذف القيمة الافتراضية">
+                                            <i class="bi bi-lock"></i>
+                                        </span>
+                                    {% else %}
+                                        <a href="{% url 'generic_table_delete' model_name obj.pk %}" class="btn btn-sm btn-danger" title="حذف">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    {% endif %}
+                                {% else %}
                                     <a href="{% url 'generic_table_delete' model_name obj.pk %}" class="btn btn-sm btn-danger" title="حذف">
                                         <i class="bi bi-trash"></i>
                                     </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
                     </table>
                 </div>
             {% else %}

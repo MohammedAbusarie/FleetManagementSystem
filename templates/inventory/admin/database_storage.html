@@ -217,7 +217,7 @@
                             </span>
                             <span class="storage-value">
                                 <span class="status-indicator status-good" id="storageStatus"></span>
-                                جيد
+                                <span id="storageStatusText">جيد</span>
                             </span>
                         </div>
                         <div class="storage-item">
@@ -265,24 +265,50 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize storage gauge
-    initializeStorageGauge();
-    
     // Update last update time
     updateLastUpdateTime();
     setInterval(updateLastUpdateTime, 30000); // Update every 30 seconds
+    
+    // Load initial storage data
+    loadInitialStorageData();
     
     // Auto-refresh storage data every 5 minutes
     setInterval(refreshStorageData, 300000);
 });
 
-function initializeStorageGauge() {
+function loadInitialStorageData() {
+    // Fetch initial storage data from API
+    fetch('{% url "storage_data_api" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update storage information
+                document.getElementById('databaseSize').textContent = data.database_size_pretty;
+                document.getElementById('mediaSize').textContent = data.media_size_pretty;
+                
+                // Initialize gauge with real data
+                initializeStorageGauge(data.percentage);
+                
+                // Update status indicator
+                updateStorageStatus(data.percentage);
+            } else {
+                // Fallback to default if API fails
+                initializeStorageGauge(0);
+                console.error('Failed to load storage data:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading storage data:', error);
+            // Fallback to default if fetch fails
+            initializeStorageGauge(0);
+        });
+}
+
+function initializeStorageGauge(storagePercentage) {
     const ctx = document.getElementById('storageGauge').getContext('2d');
     
-    // Calculate storage percentage (simplified calculation)
-    const storagePercentage = 45; // This would come from your storage calculation
-    
-    new Chart(ctx, {
+    // Store chart instance globally for later updates
+    window.storageChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
             datasets: [{
@@ -314,7 +340,7 @@ function initializeStorageGauge() {
     });
     
     // Update percentage text
-    document.getElementById('gaugePercentage').textContent = storagePercentage + '%';
+    document.getElementById('gaugePercentage').textContent = storagePercentage.toFixed(1) + '%';
     
     // Update status indicator
     updateStorageStatus(storagePercentage);
@@ -322,7 +348,7 @@ function initializeStorageGauge() {
 
 function updateStorageStatus(percentage) {
     const statusIndicator = document.getElementById('storageStatus');
-    const statusText = statusIndicator.nextSibling;
+    const statusText = document.getElementById('storageStatusText');
     
     if (percentage < 50) {
         statusIndicator.className = 'status-indicator status-good';
@@ -359,8 +385,8 @@ function refreshStorageData() {
         .then(data => {
             if (data.success) {
                 // Update storage information
-                document.getElementById('databaseSize').textContent = data.database_size;
-                document.getElementById('mediaSize').textContent = data.total_size;
+                document.getElementById('databaseSize').textContent = data.database_size_pretty;
+                document.getElementById('mediaSize').textContent = data.media_size_pretty;
                 
                 // Update gauge
                 updateGauge(data.percentage);
@@ -427,7 +453,7 @@ function updateGauge(percentage) {
     });
     
     // Update percentage text
-    document.getElementById('gaugePercentage').textContent = percentage + '%';
+    document.getElementById('gaugePercentage').textContent = percentage.toFixed(1) + '%';
 }
 
 function showNotification(message, type) {

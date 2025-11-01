@@ -9,7 +9,7 @@ from .equipment_forms import (
     EquipmentInspectionRecordFormSet,
     FireExtinguisherInspectionRecordFormSet,
 )
-from .generic_forms import GenericDDLForm, EquipmentModelForm, SearchForm, MaintenanceForm
+from .generic_forms import GenericDDLForm, EquipmentModelForm, SearchForm, MaintenanceForm, SectorForm, DepartmentForm, DivisionForm
 
 __all__ = [
     'Select2Widget',
@@ -27,4 +27,7 @@ __all__ = [
     'EquipmentModelForm',
     'SearchForm',
     'MaintenanceForm',
+    'SectorForm',
+    'DepartmentForm',
+    'DivisionForm',
 ]

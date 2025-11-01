@@ -215,16 +215,24 @@
                         <div class="detail-label">الموديل:</div>
                         <div class="detail-value">{{ equipment.model.name }}</div>
                     </div>
-                </div>
-                <div class="col-md-6">
                     <div class="detail-row">
                         <div class="detail-label">الموقع:</div>
                         <div class="detail-value">{{ equipment.location.name }}</div>
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">القطاع:</div>
-                        <div class="detail-value">{{ equipment.sector.name }}</div>
+                        <div class="detail-value">{{ equipment.sector.name|default:"-" }}</div>
                     </div>
+                    <div class="detail-row">
+                        <div class="detail-label">الإدارة:</div>
+                        <div class="detail-value">{{ equipment.department.name|default:"-" }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">الدائرة:</div>
+                        <div class="detail-value">{{ equipment.division.name|default:"-" }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
                     <div class="detail-row">
                         <div class="detail-label">الحالة:</div>
                         <div class="detail-value">
@@ -345,6 +353,42 @@
     </div>
     {% endif %}
 
+    <!-- Maintenance Records -->
+    {% if maintenance_records %}
+    <div class="detail-card">
+        <div class="detail-card-header">
+            <i class="bi bi-tools"></i> سجلات الصيانة
+        </div>
+        <div class="detail-card-body">
+            <div class="table-responsive">
+                <table class="table table-hover maintenance-table">
+                    <thead>
+                        <tr>
+                            <th>تاريخ الصيانة</th>
+                            <th>تاريخ الإصلاح</th>
+                            <th>التكلفة</th>
+                            <th>الوصف</th>
+                            <th>تاريخ الإنشاء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for maintenance in maintenance_records %}
+                        <tr>
+                            <td>{{ maintenance.maintenance_date|date:"Y-m-d"|default:"-" }}</td>
+                            <td>{{ maintenance.restoration_date|date:"Y-m-d"|default:"-" }}</td>
+                            <td>{{ maintenance.cost|default:"-" }}</td>
+                            <td>{{ maintenance.description|default:"-" }}</td>
+                            <td>{{ maintenance.created_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    
     <!-- Fire Extinguisher Images -->
     {% if equipment.fire_extinguisher_images.all %}
     <div class="detail-card">
@@ -406,41 +450,6 @@
                     <small class="text-muted">{{ certificate.uploaded_at|date:"Y-m-d H:i" }}</small>
                 </div>
                 {% endfor %}
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Maintenance Records -->
-    {% if maintenance_records %}
-    <div class="detail-card">
-        <div class="detail-card-header">
-            <i class="bi bi-tools"></i> سجلات الصيانة
-        </div>
-        <div class="detail-card-body">
-            <div class="table-responsive">
-                <table class="table table-hover maintenance-table">
-                    <thead>
-                        <tr>
-                            <th>تاريخ الصيانة</th>
-                            <th>تاريخ الإصلاح</th>
-                            <th>التكلفة</th>
-                            <th>الوصف</th>
-                            <th>تاريخ الإنشاء</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for maintenance in maintenance_records %}
-                        <tr>
-                            <td>{{ maintenance.maintenance_date|date:"Y-m-d"|default:"-" }}</td>
-                            <td>{{ maintenance.restoration_date|date:"Y-m-d"|default:"-" }}</td>
-                            <td>{{ maintenance.cost|default:"-" }}</td>
-                            <td>{{ maintenance.description|default:"-" }}</td>
-                            <td>{{ maintenance.created_at|date:"Y-m-d H:i" }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>

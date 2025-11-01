@@ -186,6 +186,18 @@
                         <div class="detail-label">اسم السائق:</div>
                         <div class="detail-value">{{ car.driver_name.name|default:"-" }}</div>
                     </div>
+                    <div class="detail-row">
+                        <div class="detail-label">القطاع:</div>
+                        <div class="detail-value">{{ car.sector.name|default:"-" }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">الإدارة:</div>
+                        <div class="detail-value">{{ car.department.name|default:"-" }}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">الدائرة:</div>
+                        <div class="detail-value">{{ car.division.name|default:"-" }}</div>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <div class="detail-row">

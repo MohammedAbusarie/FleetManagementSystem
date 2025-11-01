@@ -2,7 +2,8 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from crispy_forms.helper import FormHelper
-from ..models import EquipmentModel, Maintenance
+from crispy_forms.layout import Layout, Field, Submit, HTML
+from ..models import EquipmentModel, Maintenance, Sector, Department, Division
 
 
 class MaintenanceForm(forms.ModelForm):
@@ -54,6 +55,103 @@ class EquipmentModelForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_method = 'post'
+
+
+class SectorForm(forms.ModelForm):
+    """Form for Sector model"""
+    
+    class Meta:
+        model = Sector
+        fields = ['name', 'is_dummy']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'is_dummy': forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        }
+        labels = {
+            'name': 'الاسم',
+            'is_dummy': 'قيمة افتراضية'
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.layout = Layout(
+            Field('name'),
+            Field('is_dummy'),
+            HTML('<div class="mt-4">'),
+            Submit('submit', 'حفظ', css_class='btn btn-primary'),
+            HTML('<a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>'),
+            HTML('</div>')
+        )
+
+
+class DepartmentForm(forms.ModelForm):
+    """Form for Department model"""
+    
+    class Meta:
+        model = Department
+        fields = ['name', 'sector', 'is_dummy']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'sector': forms.Select(attrs={'class': 'form-control'}),
+            'is_dummy': forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        }
+        labels = {
+            'name': 'الاسم',
+            'sector': 'القطاع',
+            'is_dummy': 'قيمة افتراضية'
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['sector'].queryset = Sector.objects.all().order_by('name')
+        self.fields['sector'].required = False
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.layout = Layout(
+            Field('name'),
+            Field('sector'),
+            Field('is_dummy'),
+            HTML('<div class="mt-4">'),
+            Submit('submit', 'حفظ', css_class='btn btn-primary'),
+            HTML('<a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>'),
+            HTML('</div>')
+        )
+
+
+class DivisionForm(forms.ModelForm):
+    """Form for Division model"""
+    
+    class Meta:
+        model = Division
+        fields = ['name', 'department', 'is_dummy']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'department': forms.Select(attrs={'class': 'form-control'}),
+            'is_dummy': forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        }
+        labels = {
+            'name': 'الاسم',
+            'department': 'الإدارة',
+            'is_dummy': 'قيمة افتراضية'
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['department'].queryset = Department.objects.all().order_by('name')
+        self.fields['department'].required = False
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.layout = Layout(
+            Field('name'),
+            Field('department'),
+            Field('is_dummy'),
+            HTML('<div class="mt-4">'),
+            Submit('submit', 'حفظ', css_class='btn btn-primary'),
+            HTML('<a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>'),
+            HTML('</div>')
+        )
 
 
 # Search Form
