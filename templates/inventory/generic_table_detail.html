@@ -98,21 +98,24 @@
                             {% endif %}
                             <td>{{ obj.created_at|date:"Y-m-d H:i" }}</td>
                             <td>
-                                <a href="{% url 'generic_table_update' model_name obj.pk %}" class="btn btn-sm btn-warning" title="تعديل">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
                                 {% if model_name == 'Sector' or model_name == 'Department' or model_name == 'Division' %}
                                     {% if obj.is_dummy and obj.name == 'غير محدد' %}
-                                        {# Hide delete button for "غير محدد" dummy records #}
-                                        <span class="btn btn-sm btn-secondary disabled" title="لا يمكن حذف القيمة الافتراضية">
+                                        {# Hide edit and delete buttons for protected default records #}
+                                        <span class="btn btn-sm btn-secondary disabled" title="قيمة افتراضية محمية - لا يمكن التعديل أو الحذف">
                                             <i class="bi bi-lock"></i>
                                         </span>
                                     {% else %}
+                                        <a href="{% url 'generic_table_update' model_name obj.pk %}" class="btn btn-sm btn-warning" title="تعديل">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
                                         <a href="{% url 'generic_table_delete' model_name obj.pk %}" class="btn btn-sm btn-danger" title="حذف">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                     {% endif %}
                                 {% else %}
+                                    <a href="{% url 'generic_table_update' model_name obj.pk %}" class="btn btn-sm btn-warning" title="تعديل">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
                                     <a href="{% url 'generic_table_delete' model_name obj.pk %}" class="btn btn-sm btn-danger" title="حذف">
                                         <i class="bi bi-trash"></i>
                                     </a>

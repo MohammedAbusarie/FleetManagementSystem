@@ -119,39 +119,11 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(self.style.SUCCESS(f'  Created Department: {department.id}'))
         
-        # Create dummy departments for valid sectors (to support: Valid Sector → Dummy Department)
-        # Since name must be unique, we'll use "غير محدد" for each sector
-        # But handle existing ones that might have longer names
+        # NOTE: We do NOT create dummy departments for each valid sector anymore
+        # Users can always select the main dummy department "غير محدد" regardless of sector
+        # This prevents duplicate "غير محدد" entries in the admin filters
         dummy_depts_for_valid_sectors = []
-        for sector in created_sectors:  # Create dummy depts for all valid sectors
-            # Check if a dummy department already exists for this sector
-            existing_dummy = Department.objects.filter(
-                sector=sector,
-                is_dummy=True
-            ).first()
-            
-            if existing_dummy:
-                # Use existing dummy department
-                dummy_dept = existing_dummy
-                # Update name to just "غير محدد" if it has a longer name
-                if existing_dummy.name != 'غير محدد' and 'غير محدد' in existing_dummy.name:
-                    # Try to update, but if unique constraint fails, keep existing name
-                    try:
-                        existing_dummy.name = 'غير محدد'
-                        existing_dummy.save()
-                    except:
-                        pass  # Keep existing name if update fails due to uniqueness
-            else:
-                # Create new dummy department with unique name
-                # Use sector ID to make it unique
-                dummy_dept, created = Department.objects.get_or_create(
-                    name=f'غير محدد ({sector.id})',
-                    defaults={'sector': sector, 'is_dummy': True}
-                )
-                if created:
-                    self.stdout.write(self.style.SUCCESS(f'  Created Dummy Department for Sector: {dummy_dept.id}'))
-            
-            dummy_depts_for_valid_sectors.append(dummy_dept)
+        # The main dummy_department (linked to dummy_sector) is sufficient for all use cases
         
         # Create test Divisions for each department
         divisions_data = [
@@ -219,34 +191,16 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(self.style.SUCCESS(f'  Created Valid Division for Dummy Dept: {division.id}'))
         
-        # Create dummy divisions for dummy departments (both dummy sector and valid sector dummy depts)
-        # This allows: Valid Sector → Dummy Department → Dummy Division
+        # Create dummy division for the main dummy department only
         # This allows: Dummy Sector → Dummy Department → Dummy Division
-        dummy_divisions = []
-        for dummy_dept in [dummy_department] + dummy_depts_for_valid_sectors:
-            dummy_div_name = f'غير محدد - {dummy_dept.sector.name if dummy_dept.sector else "عام"}'
-            dummy_div, created = Division.objects.get_or_create(
-                name=dummy_div_name,
-                defaults={'department': dummy_dept, 'is_dummy': True}
-            )
-            dummy_divisions.append(dummy_div)
-            if created:
-                self.stdout.write(self.style.SUCCESS(f'  Created Dummy Division: {dummy_div.id}'))
-        
-        # Create valid divisions for dummy departments under valid sectors
-        # This allows: Valid Sector → Dummy Department → Valid Division
-        for dummy_dept in dummy_depts_for_valid_sectors:
-            valid_divs_for_dummy_dept = [
-                {'name': f'دائرة عامة - {dummy_dept.sector.name}', 'department': dummy_dept, 'is_dummy': False},
-                {'name': f'دائرة مؤقتة - {dummy_dept.sector.name}', 'department': dummy_dept, 'is_dummy': False},
-            ]
-            for div_data in valid_divs_for_dummy_dept:
-                division, created = Division.objects.get_or_create(
-                    name=div_data['name'],
-                    defaults={'department': div_data['department'], 'is_dummy': div_data['is_dummy']}
-                )
-                if created:
-                    self.stdout.write(self.style.SUCCESS(f'  Created Valid Division for Valid Sector Dummy Dept: {division.id}'))
+        # Note: We only create one dummy division linked to the main dummy department
+        # Users can always select the main dummy department and dummy division regardless of sector
+        dummy_div, created = Division.objects.get_or_create(
+            name='غير محدد',
+            defaults={'department': dummy_department, 'is_dummy': True}
+        )
+        if created:
+            self.stdout.write(self.style.SUCCESS(f'  Created Dummy Division: {dummy_div.id}'))
         
         # Create divisions for regular departments
         for div_data in divisions_data:
@@ -269,10 +223,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'Total Departments: {total_departments}'))
         self.stdout.write(self.style.SUCCESS(f'Total Divisions: {total_divisions}'))
         self.stdout.write(self.style.SUCCESS('='*50))
-        self.stdout.write(self.style.WARNING('\nNote: All combinations are now supported:'))
-        self.stdout.write(self.style.WARNING('  - Valid Sector -> Dummy Department -> Dummy Division'))
-        self.stdout.write(self.style.WARNING('  - Valid Sector -> Dummy Department -> Valid Division'))
-        self.stdout.write(self.style.WARNING('  - Dummy Sector -> Dummy Department -> Dummy Division'))
-        self.stdout.write(self.style.WARNING('  - Dummy Sector -> Dummy Department -> Valid Division'))
+        self.stdout.write(self.style.WARNING('\nNote: Organizational hierarchy structure:'))
+        self.stdout.write(self.style.WARNING('  - Only ONE main dummy department "غير محدد" exists'))
+        self.stdout.write(self.style.WARNING('  - Only ONE main dummy division "غير محدد" exists'))
+        self.stdout.write(self.style.WARNING('  - Users can select dummy department/division regardless of sector'))
         self.stdout.write(self.style.WARNING('  - Valid Sector -> Valid Department -> Valid Division'))
+        self.stdout.write(self.style.WARNING('  - Dummy Sector -> Dummy Department -> Dummy Division'))
 

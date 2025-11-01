@@ -76,6 +76,14 @@ class SectorForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_method = 'post'
+        
+        # Make fields readonly if this is a protected default record
+        if self.instance and self.instance.pk and self.instance.is_protected_default:
+            self.fields['name'].widget.attrs['readonly'] = True
+            self.fields['name'].widget.attrs['disabled'] = True
+            self.fields['is_dummy'].widget.attrs['disabled'] = True
+            self.fields['is_dummy'].widget.attrs['readonly'] = True
+        
         self.helper.layout = Layout(
             Field('name'),
             Field('is_dummy'),
@@ -84,6 +92,13 @@ class SectorForm(forms.ModelForm):
             HTML('<a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>'),
             HTML('</div>')
         )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        # Prevent saving changes to protected default record
+        if self.instance and self.instance.pk and self.instance.is_protected_default:
+            raise forms.ValidationError('لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+        return cleaned_data
 
 
 class DepartmentForm(forms.ModelForm):
@@ -107,6 +122,15 @@ class DepartmentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['sector'].queryset = Sector.objects.all().order_by('name')
         self.fields['sector'].required = False
+        
+        # Make fields readonly if this is a protected default record
+        if self.instance and self.instance.pk and self.instance.is_protected_default:
+            self.fields['name'].widget.attrs['readonly'] = True
+            self.fields['name'].widget.attrs['disabled'] = True
+            self.fields['sector'].widget.attrs['disabled'] = True
+            self.fields['is_dummy'].widget.attrs['disabled'] = True
+            self.fields['is_dummy'].widget.attrs['readonly'] = True
+        
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.layout = Layout(
@@ -118,6 +142,13 @@ class DepartmentForm(forms.ModelForm):
             HTML('<a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>'),
             HTML('</div>')
         )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        # Prevent saving changes to protected default record
+        if self.instance and self.instance.pk and self.instance.is_protected_default:
+            raise forms.ValidationError('لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+        return cleaned_data
 
 
 class DivisionForm(forms.ModelForm):
@@ -141,6 +172,15 @@ class DivisionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['department'].queryset = Department.objects.all().order_by('name')
         self.fields['department'].required = False
+        
+        # Make fields readonly if this is a protected default record
+        if self.instance and self.instance.pk and self.instance.is_protected_default:
+            self.fields['name'].widget.attrs['readonly'] = True
+            self.fields['name'].widget.attrs['disabled'] = True
+            self.fields['department'].widget.attrs['disabled'] = True
+            self.fields['is_dummy'].widget.attrs['disabled'] = True
+            self.fields['is_dummy'].widget.attrs['readonly'] = True
+        
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.layout = Layout(
@@ -152,6 +192,13 @@ class DivisionForm(forms.ModelForm):
             HTML('<a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>'),
             HTML('</div>')
         )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        # Prevent saving changes to protected default record
+        if self.instance and self.instance.pk and self.instance.is_protected_default:
+            raise forms.ValidationError('لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+        return cleaned_data
 
 
 # Search Form

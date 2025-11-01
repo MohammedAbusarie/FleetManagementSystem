@@ -29,6 +29,8 @@ class BaseDDLModel(models.Model):
 # DDL Tables
 class AdministrativeUnit(BaseDDLModel):
     """Administrative Unit lookup table - الإدارة"""
+    is_dummy = models.BooleanField(default=False, verbose_name="قيمة افتراضية")
+    
     class Meta:
         verbose_name = "إدارة"
         verbose_name_plural = "الإدارات"
@@ -45,6 +47,32 @@ class Department(BaseDDLModel):
     class Meta:
         verbose_name = "قسم"
         verbose_name_plural = "الأقسام"
+    
+    @property
+    def is_protected_default(self):
+        """Check if this is the protected default 'غير محدد' record"""
+        return self.is_dummy and self.name == 'غير محدد'
+    
+    def save(self, *args, **kwargs):
+        """Prevent editing the protected default record"""
+        if self.pk:  # Only check on update, not creation
+            try:
+                old_instance = Department.objects.get(pk=self.pk)
+                if old_instance.is_protected_default:
+                    # Prevent name, is_dummy, and sector changes
+                    if (self.name != old_instance.name or 
+                        self.is_dummy != old_instance.is_dummy or
+                        self.sector_id != old_instance.sector_id):
+                        raise ValueError('لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+            except Department.DoesNotExist:
+                pass
+        super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        """Prevent deletion of the protected default record"""
+        if self.is_protected_default:
+            raise ValueError('لا يمكن حذف السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+        super().delete(*args, **kwargs)
 
 
 class Driver(BaseDDLModel):
@@ -127,6 +155,30 @@ class Sector(BaseDDLModel):
     class Meta:
         verbose_name = "قطاع"
         verbose_name_plural = "القطاعات"
+    
+    @property
+    def is_protected_default(self):
+        """Check if this is the protected default 'غير محدد' record"""
+        return self.is_dummy and self.name == 'غير محدد'
+    
+    def save(self, *args, **kwargs):
+        """Prevent editing the protected default record"""
+        if self.pk:  # Only check on update, not creation
+            try:
+                old_instance = Sector.objects.get(pk=self.pk)
+                if old_instance.is_protected_default:
+                    # Prevent name, is_dummy changes
+                    if self.name != old_instance.name or self.is_dummy != old_instance.is_dummy:
+                        raise ValueError('لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+            except Sector.DoesNotExist:
+                pass
+        super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        """Prevent deletion of the protected default record"""
+        if self.is_protected_default:
+            raise ValueError('لا يمكن حذف السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+        super().delete(*args, **kwargs)
 
 
 class NotificationRecipient(BaseDDLModel):
@@ -171,6 +223,32 @@ class Division(BaseDDLModel):
     class Meta:
         verbose_name = "دائرة"
         verbose_name_plural = "الدوائر"
+    
+    @property
+    def is_protected_default(self):
+        """Check if this is the protected default 'غير محدد' record"""
+        return self.is_dummy and self.name == 'غير محدد'
+    
+    def save(self, *args, **kwargs):
+        """Prevent editing the protected default record"""
+        if self.pk:  # Only check on update, not creation
+            try:
+                old_instance = Division.objects.get(pk=self.pk)
+                if old_instance.is_protected_default:
+                    # Prevent name, is_dummy, and department changes
+                    if (self.name != old_instance.name or 
+                        self.is_dummy != old_instance.is_dummy or
+                        self.department_id != old_instance.department_id):
+                        raise ValueError('لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+            except Division.DoesNotExist:
+                pass
+        super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        """Prevent deletion of the protected default record"""
+        if self.is_protected_default:
+            raise ValueError('لا يمكن حذف السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+        super().delete(*args, **kwargs)
 
 
 # Main Models

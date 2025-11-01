@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    Department, Driver, CarClass, Manufacturer, CarModel, EquipmentModel,
+    AdministrativeUnit, Department, Driver, CarClass, Manufacturer, CarModel, EquipmentModel,
     FunctionalLocation, Room, Location, Sector, Division, NotificationRecipient,
     ContractType, Activity, Region, Car, Equipment, CalibrationCertificateImage,
     Maintenance, CarImage, EquipmentImage, CarLicenseRecord, CarInspectionRecord,
@@ -11,11 +11,30 @@ from .models import (
 
 
 # Register DDL models
+@admin.register(AdministrativeUnit)
+class AdministrativeUnitAdmin(admin.ModelAdmin):
+    list_display = ['name', 'is_dummy', 'created_at']
+    search_fields = ['name']
+    list_filter = ['is_dummy', 'created_at']
+
+
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
     list_display = ['name', 'sector', 'is_dummy', 'created_at']
     search_fields = ['name']
     list_filter = ['sector', 'is_dummy', 'created_at']
+    
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion of protected default record"""
+        if obj and obj.is_protected_default:
+            return False
+        return super().has_delete_permission(request, obj)
+    
+    def get_readonly_fields(self, request, obj=None):
+        """Make fields readonly for protected default record"""
+        if obj and obj.is_protected_default:
+            return ['name', 'sector', 'is_dummy', 'created_at', 'updated_at']
+        return ['created_at', 'updated_at']
 
 
 @admin.register(Driver)
@@ -73,6 +92,18 @@ class SectorAdmin(admin.ModelAdmin):
     list_display = ['name', 'is_dummy', 'created_at']
     search_fields = ['name']
     list_filter = ['is_dummy', 'created_at']
+    
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion of protected default record"""
+        if obj and obj.is_protected_default:
+            return False
+        return super().has_delete_permission(request, obj)
+    
+    def get_readonly_fields(self, request, obj=None):
+        """Make fields readonly for protected default record"""
+        if obj and obj.is_protected_default:
+            return ['name', 'is_dummy', 'created_at', 'updated_at']
+        return ['created_at', 'updated_at']
 
 
 @admin.register(NotificationRecipient)
@@ -104,6 +135,18 @@ class DivisionAdmin(admin.ModelAdmin):
     list_display = ['name', 'department', 'is_dummy', 'created_at']
     search_fields = ['name']
     list_filter = ['department', 'is_dummy', 'created_at']
+    
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion of protected default record"""
+        if obj and obj.is_protected_default:
+            return False
+        return super().has_delete_permission(request, obj)
+    
+    def get_readonly_fields(self, request, obj=None):
+        """Make fields readonly for protected default record"""
+        if obj and obj.is_protected_default:
+            return ['name', 'department', 'is_dummy', 'created_at', 'updated_at']
+        return ['created_at', 'updated_at']
 
 
 # Register main models

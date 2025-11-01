@@ -151,6 +151,15 @@ def generic_table_update_view(request, model_name, pk):
     
     obj = get_object_or_404(model, pk=pk)
     
+    # Prevent editing protected default records
+    if model_name in ['Sector', 'Department', 'Division']:
+        if hasattr(obj, 'is_protected_default') and obj.is_protected_default:
+            messages.error(
+                request,
+                'لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.'
+            )
+            return redirect('generic_table_detail', model_name=model_name)
+    
     # Use specific forms for models with special fields
     form_class = None
     if model_name == 'EquipmentModel':
@@ -229,7 +238,7 @@ def generic_table_delete_view(request, model_name, pk):
     
     # Prevent deletion of "غير محدد" (dummy) records for hierarchy models
     if model_name in ['Sector', 'Department', 'Division']:
-        if hasattr(obj, 'is_dummy') and obj.is_dummy and obj.name == 'غير محدد':
+        if hasattr(obj, 'is_protected_default') and obj.is_protected_default:
             messages.error(
                 request,
                 'لا يمكن حذف السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.'
