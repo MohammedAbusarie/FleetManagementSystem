@@ -93,7 +93,16 @@ def generic_table_create_view(request, model_name):
         if request.method == 'POST':
             form = form_class(request.POST)
             if form.is_valid():
-                form.save()
+                obj = form.save()
+                # Log the action
+                log_user_action(
+                    request.user,
+                    'create',
+                    module_name='generic_tables',
+                    object_id=str(obj.pk),
+                    description=f"تم إنشاء {get_model_arabic_name(model_name)}: {obj.name if hasattr(obj, 'name') else str(obj)}",
+                    ip_address=get_client_ip(request)
+                )
                 messages.success(request, get_message_template('create_success', model_name, 'create'))
                 return redirect('generic_table_detail', model_name=model_name)
             else:
@@ -105,7 +114,16 @@ def generic_table_create_view(request, model_name):
         if request.method == 'POST':
             name = request.POST.get('name')
             try:
-                model.objects.create(name=name)
+                obj = model.objects.create(name=name)
+                # Log the action
+                log_user_action(
+                    request.user,
+                    'create',
+                    module_name='generic_tables',
+                    object_id=str(obj.pk),
+                    description=f"تم إنشاء {get_model_arabic_name(model_name)}: {name}",
+                    ip_address=get_client_ip(request)
+                )
                 messages.success(request, get_message_template('create_success', model_name, 'create'))
                 return redirect('generic_table_detail', model_name=model_name)
             except Exception as e:
@@ -148,7 +166,16 @@ def generic_table_update_view(request, model_name, pk):
         if request.method == 'POST':
             form = form_class(request.POST, instance=obj)
             if form.is_valid():
-                form.save()
+                obj = form.save()
+                # Log the action
+                log_user_action(
+                    request.user,
+                    'update',
+                    module_name='generic_tables',
+                    object_id=str(obj.pk),
+                    description=f"تم تحديث {get_model_arabic_name(model_name)}: {obj.name if hasattr(obj, 'name') else str(obj)}",
+                    ip_address=get_client_ip(request)
+                )
                 messages.success(request, get_message_template('update_success', model_name, 'update'))
                 return redirect('generic_table_detail', model_name=model_name)
             else:
@@ -163,6 +190,15 @@ def generic_table_update_view(request, model_name, pk):
             try:
                 obj.name = name
                 obj.save()
+                # Log the action
+                log_user_action(
+                    request.user,
+                    'update',
+                    module_name='generic_tables',
+                    object_id=str(obj.pk),
+                    description=f"تم تحديث {get_model_arabic_name(model_name)}: {name}",
+                    ip_address=get_client_ip(request)
+                )
                 messages.success(request, get_message_template('update_success', model_name, 'update'))
                 return redirect('generic_table_detail', model_name=model_name)
             except Exception as e:
@@ -201,7 +237,20 @@ def generic_table_delete_view(request, model_name, pk):
             return redirect('generic_table_detail', model_name=model_name)
     
     if request.method == 'POST':
+        obj_name = obj.name if hasattr(obj, 'name') else str(obj)  # Store before deletion
+        obj_pk = str(obj.pk)
         obj.delete()
+        
+        # Log the action
+        log_user_action(
+            request.user,
+            'delete',
+            module_name='generic_tables',
+            object_id=obj_pk,
+            description=f"تم حذف {get_model_arabic_name(model_name)}: {obj_name}",
+            ip_address=get_client_ip(request)
+        )
+        
         messages.success(request, get_message_template('delete_success', model_name, 'delete'))
         return redirect('generic_table_detail', model_name=model_name)
     

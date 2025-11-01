@@ -112,6 +112,16 @@ def car_create_view(request):
                     obj.content_object = car
                     obj.save()
 
+            # Log the action
+            log_user_action(
+                request.user,
+                'create',
+                module_name='cars',
+                object_id=str(car.pk),
+                description=f"تم إنشاء سيارة جديدة - رقم الأسطول: {car.fleet_no}",
+                ip_address=get_client_ip(request)
+            )
+            
             messages.success(request, get_message_template('create_success', 'Car', 'create'))
             return redirect('car_list')
         else:
@@ -202,6 +212,16 @@ def car_update_view(request, pk):
             for obj in maintenance_formset.deleted_objects:
                 obj.delete()
 
+            # Log the action
+            log_user_action(
+                request.user,
+                'update',
+                module_name='cars',
+                object_id=str(car.pk),
+                description=f"تم تحديث سيارة - رقم الأسطول: {car.fleet_no}",
+                ip_address=get_client_ip(request)
+            )
+            
             messages.success(request, get_message_template('update_success', 'Car', 'update'))
             return redirect('car_list')
         else:
@@ -258,7 +278,20 @@ def car_delete_view(request, pk):
     """Car delete view"""
     car = get_object_or_404(Car, pk=pk)
     if request.method == 'POST':
+        fleet_no = car.fleet_no  # Store before deletion
+        car_pk = str(car.pk)
         car.delete()
+        
+        # Log the action
+        log_user_action(
+            request.user,
+            'delete',
+            module_name='cars',
+            object_id=car_pk,
+            description=f"تم حذف سيارة - رقم الأسطول: {fleet_no}",
+            ip_address=get_client_ip(request)
+        )
+        
         messages.success(request, get_message_template('delete_success', 'Car', 'delete'))
         return redirect('car_list')
     

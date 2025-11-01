@@ -145,6 +145,16 @@ def equipment_create_view(request):
                     obj.content_object = equipment
                     obj.save()
             
+            # Log the action
+            log_user_action(
+                request.user,
+                'create',
+                module_name='equipment',
+                object_id=str(equipment.pk),
+                description=f"تم إنشاء معدات جديدة - رقم الباب: {equipment.door_no}",
+                ip_address=get_client_ip(request)
+            )
+            
             messages.success(request, get_message_template('create_success', 'Equipment', 'create'))
             return redirect('equipment_list')
         else:
@@ -266,6 +276,16 @@ def equipment_update_view(request, pk):
             for obj in maintenance_formset.deleted_objects:
                 obj.delete()
             
+            # Log the action
+            log_user_action(
+                request.user,
+                'update',
+                module_name='equipment',
+                object_id=str(equipment.pk),
+                description=f"تم تحديث معدات - رقم الباب: {equipment.door_no}",
+                ip_address=get_client_ip(request)
+            )
+            
             messages.success(request, get_message_template('update_success', 'Equipment', 'update'))
             return redirect('equipment_list')
         else:
@@ -332,7 +352,20 @@ def equipment_delete_view(request, pk):
     """Equipment delete view"""
     equipment = get_object_or_404(Equipment, pk=pk)
     if request.method == 'POST':
+        door_no = equipment.door_no  # Store before deletion
+        equipment_pk = str(equipment.pk)
         equipment.delete()
+        
+        # Log the action
+        log_user_action(
+            request.user,
+            'delete',
+            module_name='equipment',
+            object_id=equipment_pk,
+            description=f"تم حذف معدات - رقم الباب: {door_no}",
+            ip_address=get_client_ip(request)
+        )
+        
         messages.success(request, get_message_template('delete_success', 'Equipment', 'delete'))
         return redirect('equipment_list')
     
