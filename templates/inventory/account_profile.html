@@ -1,0 +1,401 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}معلومات الحساب - نظام إدارة الأسطول{% endblock %}
+
+{% block extra_css %}
+<style>
+    .account-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: none;
+        margin-bottom: 30px;
+    }
+    
+    .account-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 25px;
+    }
+    
+    .account-body {
+        padding: 30px;
+    }
+    
+    .info-row {
+        display: flex;
+        padding: 15px 0;
+        border-bottom: 1px solid #e9ecef;
+        align-items: center;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #495057;
+        min-width: 180px;
+        flex-shrink: 0;
+    }
+    
+    .info-value {
+        color: #6c757d;
+        flex-grow: 1;
+    }
+    
+    .info-value.readonly {
+        color: #495057;
+        font-weight: 500;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .status-active {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-inactive {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .password-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 25px;
+        margin-top: 30px;
+    }
+    
+    .password-section-header {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .password-section-header h5 {
+        color: #495057;
+        margin: 0;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 8px;
+    }
+    
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .password-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    
+    .password-input-wrapper .form-control {
+        padding-right: 45px;
+    }
+    
+    .password-toggle-icon {
+        position: absolute;
+        right: 15px;
+        cursor: pointer;
+        color: #6c757d;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        transition: color 0.3s ease;
+        z-index: 10;
+    }
+    
+    .password-toggle-icon:hover {
+        color: #667eea;
+    }
+    
+    .password-help {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 30px;
+        font-weight: 500;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+    
+    .account-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Back Button -->
+            <div class="mb-4">
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-right"></i> العودة إلى لوحة القيادة
+                </a>
+            </div>
+            
+            <!-- Account Information Card -->
+            <div class="card account-card">
+                <div class="account-header">
+                    <div class="text-center">
+                        <i class="bi bi-person-circle account-icon"></i>
+                        <h4 class="mb-2">معلومات الحساب</h4>
+                        <p class="mb-0 opacity-75">عرض معلومات حسابك وتغيير كلمة المرور</p>
+                    </div>
+                </div>
+                
+                <div class="account-body">
+                    <!-- Account Information (Read-only) -->
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="bi bi-person me-2"></i>اسم المستخدم
+                        </div>
+                        <div class="info-value readonly">{{ user.username }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="bi bi-person-badge me-2"></i>الاسم الكامل
+                        </div>
+                        <div class="info-value readonly">
+                            {{ user.get_full_name|default:"غير محدد" }}
+                        </div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="bi bi-envelope me-2"></i>البريد الإلكتروني
+                        </div>
+                        <div class="info-value readonly">
+                            {{ user.email|default:"غير محدد" }}
+                        </div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="bi bi-shield-check me-2"></i>نوع المستخدم
+                        </div>
+                        <div class="info-value readonly">{{ user_type }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="bi bi-toggle-on me-2"></i>حالة الحساب
+                        </div>
+                        <div class="info-value">
+                            {% if is_active %}
+                                <span class="status-badge status-active">
+                                    <i class="bi bi-check-circle me-1"></i>نشط
+                                </span>
+                            {% else %}
+                                <span class="status-badge status-inactive">
+                                    <i class="bi bi-x-circle me-1"></i>غير نشط
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Password Change Section -->
+                    <div class="password-section">
+                        <div class="password-section-header">
+                            <h5>
+                                <i class="bi bi-key me-2"></i>تغيير كلمة المرور
+                            </h5>
+                            <p class="text-muted mb-0" style="font-size: 0.9rem;">
+                                يمكنك تغيير كلمة المرور الخاصة بك من خلال النموذج أدناه
+                            </p>
+                        </div>
+                        
+                        <form method="post" novalidate>
+                            {% csrf_token %}
+                            
+                            <div class="form-group">
+                                <label for="{{ password_form.old_password.id_for_label }}" class="form-label">
+                                    {{ password_form.old_password.label }}
+                                </label>
+                                <div class="password-input-wrapper">
+                                    {{ password_form.old_password }}
+                                    <span class="password-toggle-icon" data-target="{{ password_form.old_password.id_for_label }}">
+                                        <i class="bi bi-eye" id="toggle-icon-{{ password_form.old_password.id_for_label }}"></i>
+                                    </span>
+                                </div>
+                                {% if password_form.old_password.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in password_form.old_password.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="{{ password_form.new_password1.id_for_label }}" class="form-label">
+                                    {{ password_form.new_password1.label }}
+                                </label>
+                                <div class="password-input-wrapper">
+                                    {{ password_form.new_password1 }}
+                                    <span class="password-toggle-icon" data-target="{{ password_form.new_password1.id_for_label }}">
+                                        <i class="bi bi-eye" id="toggle-icon-{{ password_form.new_password1.id_for_label }}"></i>
+                                    </span>
+                                </div>
+                                {% if password_form.new_password1.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in password_form.new_password1.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="password-help">
+                                    يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="{{ password_form.new_password2.id_for_label }}" class="form-label">
+                                    {{ password_form.new_password2.label }}
+                                </label>
+                                <div class="password-input-wrapper">
+                                    {{ password_form.new_password2 }}
+                                    <span class="password-toggle-icon" data-target="{{ password_form.new_password2.id_for_label }}">
+                                        <i class="bi bi-eye" id="toggle-icon-{{ password_form.new_password2.id_for_label }}"></i>
+                                    </span>
+                                </div>
+                                {% if password_form.new_password2.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in password_form.new_password2.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex justify-content-end mt-4">
+                                <button type="submit" class="btn btn-submit">
+                                    <i class="bi bi-check-lg me-2"></i>
+                                    حفظ كلمة المرور
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password toggle show/hide functionality
+    const passwordToggleIcons = document.querySelectorAll('.password-toggle-icon');
+    passwordToggleIcons.forEach(function(toggleIcon) {
+        toggleIcon.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const passwordInput = document.getElementById(targetId);
+            const iconElement = this.querySelector('i');
+            
+            if (passwordInput && iconElement) {
+                if (passwordInput.type === 'password') {
+                    // Show password
+                    passwordInput.type = 'text';
+                    iconElement.classList.remove('bi-eye');
+                    iconElement.classList.add('bi-eye-slash');
+                } else {
+                    // Hide password
+                    passwordInput.type = 'password';
+                    iconElement.classList.remove('bi-eye-slash');
+                    iconElement.classList.add('bi-eye');
+                }
+            }
+        });
+    });
+    
+    // Form validation
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const oldPassword = form.querySelector('input[name="old_password"]');
+            const newPassword1 = form.querySelector('input[name="new_password1"]');
+            const newPassword2 = form.querySelector('input[name="new_password2"]');
+            
+            // Basic validation
+            if (oldPassword && oldPassword.value.trim() === '') {
+                e.preventDefault();
+                alert('يرجى إدخال كلمة المرور الحالية');
+                oldPassword.focus();
+                return false;
+            }
+            
+            if (newPassword1 && newPassword1.value.trim() === '') {
+                e.preventDefault();
+                alert('يرجى إدخال كلمة المرور الجديدة');
+                newPassword1.focus();
+                return false;
+            }
+            
+            if (newPassword1 && newPassword1.value.length < 8) {
+                e.preventDefault();
+                alert('يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل');
+                newPassword1.focus();
+                return false;
+            }
+            
+            if (newPassword1 && newPassword2 && newPassword1.value !== newPassword2.value) {
+                e.preventDefault();
+                alert('كلمات المرور غير متطابقة');
+                newPassword2.focus();
+                return false;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+

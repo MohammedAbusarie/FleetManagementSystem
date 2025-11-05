@@ -1,6 +1,6 @@
 """Views package - maintains backward compatibility with views.py"""
 # Import all views from submodules
-from .auth_views import is_admin, login_view, logout_view
+from .auth_views import is_admin, login_view, logout_view, account_profile_view
 from .dashboard_views import dashboard_view
 from .car_views import (
     car_list_view,
@@ -31,6 +31,7 @@ __all__ = [
     'is_admin',
     'login_view',
     'logout_view',
+    'account_profile_view',
     'dashboard_view',
     'car_list_view',
     'car_create_view',

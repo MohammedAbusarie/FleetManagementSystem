@@ -88,3 +88,47 @@ def logout_view(request):
     
     logout(request)
     return redirect('login')
+
+
+@login_required
+def account_profile_view(request):
+    """View for users to see their account information and change password"""
+    from ..forms.rbac_forms import UserPasswordChangeForm
+    
+    user = request.user
+    password_form = None
+    password_changed = False
+    
+    # Get user profile information
+    try:
+        profile = user.profile
+        user_type = profile.get_user_type_display()
+        is_active = profile.is_active
+    except Exception:
+        # Fallback for users without profile
+        user_type = 'مدير' if user.is_superuser else 'مستخدم عادي'
+        is_active = user.is_active
+    
+    # Handle password change
+    if request.method == 'POST':
+        password_form = UserPasswordChangeForm(user, request.POST)
+        if password_form.is_valid():
+            password_form.save()
+            messages.success(request, 'تم تغيير كلمة المرور بنجاح.')
+            password_changed = True
+            # Clear the form after successful password change
+            password_form = UserPasswordChangeForm(user)
+        else:
+            messages.error(request, 'يرجى تصحيح الأخطاء في النموذج.')
+    else:
+        password_form = UserPasswordChangeForm(user)
+    
+    context = {
+        'user': user,
+        'user_type': user_type,
+        'is_active': is_active,
+        'password_form': password_form,
+        'password_changed': password_changed,
+    }
+    
+    return render(request, 'inventory/account_profile.html', context)

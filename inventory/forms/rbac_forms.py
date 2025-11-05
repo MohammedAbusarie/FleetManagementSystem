@@ -511,3 +511,104 @@ class UserProfileForm(forms.ModelForm):
                 field.widget.attrs.update({'class': 'form-check-input'})
             elif isinstance(field.widget, forms.Textarea):
                 field.widget.attrs.update({'class': 'form-control'})
+
+
+class UserPasswordChangeForm(forms.Form):
+    """Form for users to change their own password"""
+    old_password = forms.CharField(
+        label='كلمة المرور الحالية',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        required=True
+    )
+    new_password1 = forms.CharField(
+        label='كلمة المرور الجديدة',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        required=True
+    )
+    new_password2 = forms.CharField(
+        label='تأكيد كلمة المرور الجديدة',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        required=True
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+        # Override password validation error messages with Arabic translations
+        password_error_messages = {
+            'password_mismatch': 'كلمات المرور غير متطابقة.',
+            'password_too_short': 'كلمة المرور قصيرة جداً. يجب أن تحتوي على 8 أحرف على الأقل.',
+            'password_too_common': 'كلمة المرور شائعة جداً. يرجى اختيار كلمة مرور أقوى.',
+            'password_entirely_numeric': 'كلمة المرور لا يمكن أن تكون أرقاماً فقط.',
+            'password_similar': 'كلمة المرور مشابهة جداً لمعلومات المستخدم الأخرى.',
+        }
+
+        # Set Arabic error messages for password fields
+        self.fields['new_password1'].error_messages.update({
+            'required': 'هذا الحقل مطلوب.',
+        })
+
+        self.fields['new_password2'].error_messages.update({
+            'required': 'هذا الحقل مطلوب.',
+        })
+
+        self.fields['old_password'].error_messages.update({
+            'required': 'هذا الحقل مطلوب.',
+        })
+
+    def clean_old_password(self):
+        """Validate that the old password is correct"""
+        from django.core.exceptions import ValidationError
+        
+        old_password = self.cleaned_data.get('old_password')
+        if not self.user.check_password(old_password):
+            raise ValidationError('كلمة المرور الحالية غير صحيحة.')
+        return old_password
+
+    def clean(self):
+        """Validate password fields"""
+        from django.contrib.auth.password_validation import validate_password
+        from django.core.exceptions import ValidationError
+
+        cleaned_data = super().clean()
+        new_password1 = cleaned_data.get('new_password1')
+        new_password2 = cleaned_data.get('new_password2')
+
+        if new_password1 and new_password2:
+            if new_password1 != new_password2:
+                raise ValidationError({
+                    'new_password2': 'كلمات المرور غير متطابقة.'
+                })
+
+            # Validate password strength
+            try:
+                validate_password(new_password1, self.user)
+            except ValidationError as e:
+                # Translate common validation errors to Arabic
+                translated_errors = []
+                for error in e.messages:
+                    error_msg = str(error).lower()
+                    if 'too short' in error_msg:
+                        translated_errors.append('كلمة المرور قصيرة جداً. يجب أن تحتوي على 8 أحرف على الأقل.')
+                    elif 'too common' in error_msg:
+                        translated_errors.append('كلمة المرور شائعة جداً. يرجى اختيار كلمة مرور أقوى.')
+                    elif 'entirely numeric' in error_msg or 'numeric' in error_msg:
+                        translated_errors.append('كلمة المرور لا يمكن أن تكون أرقاماً فقط.')
+                    elif 'too similar' in error_msg or 'similar' in error_msg:
+                        translated_errors.append('كلمة المرور مشابهة جداً لمعلومات المستخدم الأخرى.')
+                    else:
+                        translated_errors.append(str(error))
+                
+                raise ValidationError({
+                    'new_password1': translated_errors
+                })
+
+        return cleaned_data
+
+    def save(self):
+        """Save the new password"""
+        password = self.cleaned_data['new_password1']
+        self.user.set_password(password)
+        self.user.save()
+        return self.user

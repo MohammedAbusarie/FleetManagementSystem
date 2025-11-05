@@ -121,16 +121,33 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
+        .sidebar-user-link {
+            text-decoration: none;
+            display: block;
+            margin: 10px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-user-link:hover {
+            transform: translateX(-3px);
+        }
+        
+        .sidebar-user-link:hover .sidebar-user {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+        }
+
         .sidebar-user {
             display: flex;
             align-items: center;
             gap: 12px;
             color: rgba(255, 255, 255, 0.9);
             padding: 15px 20px;
-            margin: 10px 15px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
         }
 
         .sidebar-user-avatar {
@@ -237,9 +254,17 @@
                 right: 0;
             }
             
-            .sidebar-time,
-            .sidebar-user {
+            .sidebar-time {
                 margin: 5px 10px;
+                padding: 10px 15px;
+            }
+            
+            .sidebar-user-link {
+                margin: 5px 10px;
+            }
+            
+            .sidebar-user {
+                margin: 0;
                 padding: 10px 15px;
             }
             
@@ -287,12 +312,14 @@
         </div>
         
         <!-- User Info -->
-        <div class="sidebar-user">
-            <div class="sidebar-user-avatar">
-                <i class="bi bi-person-circle"></i>
+        <a href="{% url 'account_profile' %}" class="sidebar-user-link" title="انقر لعرض معلومات الحساب وتغيير كلمة المرور" data-bs-toggle="tooltip" data-bs-placement="left">
+            <div class="sidebar-user">
+                <div class="sidebar-user-avatar">
+                    <i class="bi bi-person-circle"></i>
+                </div>
+                <div class="sidebar-user-name">{{ user.get_full_name|default:user.username }}</div>
             </div>
-            <div class="sidebar-user-name">{{ user.get_full_name|default:user.username }}</div>
-        </div>
+        </a>
         
         <nav class="nav flex-column">
             <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
@@ -491,6 +518,12 @@
                 if (sidebar.classList.contains('expanded') && deltaX < -50 && Math.abs(deltaY) < 100) {
                     collapseSidebar();
                 }
+            });
+            
+            // Initialize Bootstrap tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
             });
         });
     </script>
