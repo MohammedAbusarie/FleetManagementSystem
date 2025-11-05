@@ -7,6 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}نظام إدارة الأسطول{% endblock %}</title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/company_logo.svg' %}">
+    
+    <!-- Google Fonts - Roboto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
     
@@ -14,9 +22,68 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
     <style>
+        /* GE SS Two Font Arabic */
+        @font-face {
+            font-family: 'GE SS Two';
+            src: url('{% static "fonts/GE-SS-Two-Regular.otf" %}') format('opentype'),
+                 url('{% static "fonts/GE-SS-Two-Regular.ttf" %}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        
+        @font-face {
+            font-family: 'GE SS Two';
+            src: url('{% static "fonts/GE-SS-Two-Bold.otf" %}') format('opentype'),
+                 url('{% static "fonts/GE-SS-Two-Bold.ttf" %}') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+            font-display: swap;
+        }
+        
+        @font-face {
+            font-family: 'GE SS Two';
+            src: url('{% static "fonts/GE-SS-Two-Light.otf" %}') format('opentype'),
+                 url('{% static "fonts/GE-SS-Two-Light.ttf" %}') format('truetype');
+            font-weight: 300;
+            font-style: normal;
+            font-display: swap;
+        }
+        
+        @font-face {
+            font-family: 'GE SS Two';
+            src: url('{% static "fonts/GE-SS-Two-Medium.otf" %}') format('opentype'),
+                 url('{% static "fonts/GE-SS-Two-Medium.ttf" %}') format('truetype');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+        
+        /* Universal font application - ensure GE SS Two is used everywhere */
+        /* Apply to all elements except Bootstrap Icons */
+        body *:not([class*="bi"]):not([class*="icon"]) {
+            font-family: 'GE SS Two', 'Roboto', 'Segoe UI', 'Tahoma', 'Arial', sans-serif !important;
+        }
+        
+        /* Ensure all text elements use GE SS Two */
+        h1, h2, h3, h4, h5, h6,
+        p, span, div, a, label, button, input, select, textarea,
+        .card, .card-header, .card-body, .card-title, .card-text,
+        .btn, .form-control, .form-label, .form-select,
+        .nav-link, .navbar-brand, .table, .table td, .table th,
+        .alert, .badge, .pagination, .breadcrumb,
+        .login-container, .login-container * {
+            font-family: 'GE SS Two', 'Roboto', 'Segoe UI', 'Tahoma', 'Arial', sans-serif !important;
+        }
+        
+        /* Preserve icon fonts - Bootstrap Icons */
+        [class*="bi"], i[class*="bi"], .bi, i.bi, .bootstrap-icons {
+            font-family: "bootstrap-icons" !important;
+        }
+        
         body {
-            font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'GE SS Two', 'Roboto', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #003366 0%, #FF9933 100%);
             min-height: 100vh;
         }
         
@@ -37,15 +104,16 @@
         }
         
         .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #003366 0%, #FF9933 100%);
             color: white;
             border-radius: 15px 15px 0 0 !important;
-            padding: 20px;
+            padding: 25px 20px;
             text-align: center;
+            width: 100%;
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #003366 0%, #FF9933 100%);
             border: none;
             border-radius: 8px;
             padding: 12px;
@@ -54,7 +122,7 @@
         }
         
         .btn-primary:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            background: linear-gradient(135deg, #FF9933 0%, #003366 100%);
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
@@ -72,8 +140,8 @@
         }
         
         .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            border-color: #003366;
+            box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
         }
         
         .login-brand {
@@ -86,6 +154,42 @@
             font-size: 1.1rem;
             margin-bottom: 0;
             opacity: 0.9;
+        }
+        
+        .login-logo {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            min-height: 120px;
+            margin-bottom: 25px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            object-fit: contain;
+            /* Logo stretches to fill available space */
+        }
+        
+        .login-logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .login-logo {
+                max-width: 400px;
+                min-height: 100px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .login-logo {
+                max-width: 300px;
+                min-height: 80px;
+            }
         }
     </style>
     

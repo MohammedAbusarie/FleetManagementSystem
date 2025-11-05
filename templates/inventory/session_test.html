@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}اختبار الجلسة - نظام إدارة الأسطول{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-clock-history"></i> معلومات الجلسة</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5>معلومات المستخدم</h5>
+                            <p><strong>اسم المستخدم:</strong> {{ user.username }}</p>
+                            <p><strong>البريد الإلكتروني:</strong> {{ user.email|default:"غير محدد" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>معلومات الجلسة</h5>
+                            <p><strong>مفتاح الجلسة:</strong> <code>{{ session_key|slice:":20" }}...</code></p>
+                            <p><strong>الوقت الحالي:</strong> {{ current_time|date:"Y-m-d H:i:s" }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if last_activity %}
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <h5>نشاط الجلسة</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th>آخر نشاط</th>
+                                        <td>{{ last_activity|date:"Y-m-d H:i:s" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>الوقت المنقضي</th>
+                                        <td>
+                                            <span class="badge bg-info">{{ elapsed_minutes }} دقيقة و {{ elapsed_seconds_only }} ثانية</span>
+                                            <small class="text-muted">(إجمالي: {{ elapsed_seconds }} ثانية)</small>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>الوقت المتبقي</th>
+                                        <td>
+                                            <span class="badge {% if remaining_minutes < 2 %}bg-danger{% elif remaining_minutes < 5 %}bg-warning{% else %}bg-success{% endif %}">
+                                                {{ remaining_minutes }} دقيقة و {{ remaining_seconds_only }} ثانية
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>حالة الجلسة</th>
+                                        <td>
+                                            {% if remaining_minutes < 0 %}
+                                                <span class="badge bg-danger">منتهية</span>
+                                            {% elif remaining_minutes < 2 %}
+                                                <span class="badge bg-warning">على وشك الانتهاء</span>
+                                            {% else %}
+                                                <span class="badge bg-success">نشطة</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> لا توجد معلومات عن آخر نشاط. قد تكون هذه بداية الجلسة.
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <h5>أدوات الاختبار</h5>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> 
+                                <strong>ملاحظة:</strong> هذه الصفحة للأغراض الاختبارية فقط. يمكنك محاكاة انتهاء الجلسة لاختبار آلية تسجيل الخروج التلقائي.
+                            </div>
+                            
+                            <form method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" name="simulate_timeout" class="btn btn-danger">
+                                    <i class="bi bi-exclamation-triangle"></i> محاكاة انتهاء الجلسة
+                                </button>
+                            </form>
+                            
+                            <a href="{% url 'dashboard' %}" class="btn btn-primary ms-2">
+                                <i class="bi bi-house"></i> العودة للوحة التحكم
+                            </a>
+                            
+                            <a href="{% url 'session_test' %}" class="btn btn-secondary ms-2">
+                                <i class="bi bi-arrow-clockwise"></i> تحديث المعلومات
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <h5>تعليمات الاختبار</h5>
+                            <ol>
+                                <li><strong>اختبار الوقت الفعلي:</strong> غير إعدادات الجلسة في <code>settings.py</code> إلى 60 ثانية (للمساعدة في الاختبار)</li>
+                                <li><strong>اختبار محاكاة:</strong> اضغط على زر "محاكاة انتهاء الجلسة" ثم انتقل إلى صفحة أخرى</li>
+                                <li><strong>اختبار عدم النشاط:</strong> اترك الصفحة بدون تفاعل لمدة 20 دقيقة</li>
+                                <li><strong>اختبار JavaScript:</strong> افتح Developer Tools (F12) وانتظر رسالة التحذير قبل 2 دقيقة من الانتهاء</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
