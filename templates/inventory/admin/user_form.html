@@ -252,7 +252,7 @@
                             {% endif %}
                         </div>
                         
-                        <!-- Password Fields (only for new users) -->
+                        <!-- Password Fields (for new users and when editing existing users) -->
                         {% if form.password1 %}
                         <div class="row">
                             <div class="col-md-6">
@@ -273,9 +273,15 @@
                                             {% endfor %}
                                         </div>
                                     {% endif %}
-                                    <div class="password-help">
-                                        يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل
-                                    </div>
+                                    {% if form.password1.help_text %}
+                                        <div class="password-help">
+                                            {{ form.password1.help_text }}
+                                        </div>
+                                    {% else %}
+                                        <div class="password-help">
+                                            يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -296,13 +302,18 @@
                                             {% endfor %}
                                         </div>
                                     {% endif %}
+                                    {% if form.password2.help_text %}
+                                        <div class="password-help">
+                                            {{ form.password2.help_text }}
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
                         {% endif %}
                         
                         <!-- Active Status (only for existing users) -->
-                        {% if not form.password1 and form.is_active %}
+                        {% if form.instance.pk and form.is_active %}
                         <div class="form-group">
                             <div class="form-check">
                                 {{ form.is_active }}
@@ -521,26 +532,29 @@ $(document).ready(function() {
                 }
             }
             
-            // Password validation (only for new users)
+            // Password validation (for new users and when password is being changed)
             if (password1 && password2) {
-                if (password1.value.trim() === '') {
+                // Password is optional when editing (can be left empty)
+                // Only validate if password is provided
+                if (password1.value.trim() !== '') {
+                    if (password1.value.length < 8) {
+                        e.preventDefault();
+                        alert('يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل');
+                        password1.focus();
+                        return false;
+                    }
+                    
+                    if (password1.value !== password2.value) {
+                        e.preventDefault();
+                        alert('كلمات المرور غير متطابقة');
+                        password2.focus();
+                        return false;
+                    }
+                } else if (password2.value.trim() !== '') {
+                    // Password2 is provided but password1 is not
                     e.preventDefault();
-                    alert('يرجى إدخال كلمة المرور');
+                    alert('يرجى إدخال كلمة المرور الجديدة');
                     password1.focus();
-                    return false;
-                }
-                
-                if (password1.value.length < 8) {
-                    e.preventDefault();
-                    alert('يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل');
-                    password1.focus();
-                    return false;
-                }
-                
-                if (password1.value !== password2.value) {
-                    e.preventDefault();
-                    alert('كلمات المرور غير متطابقة');
-                    password2.focus();
                     return false;
                 }
             }

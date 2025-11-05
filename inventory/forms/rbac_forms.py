@@ -133,7 +133,7 @@ class UserCreateForm(UserCreationForm):
 
 
 class UserUpdateForm(forms.ModelForm):
-    """Form for updating user information"""
+    """Form for updating user information - Admin and Super Admin can change passwords"""
 
     user_type = forms.ChoiceField(
         choices=UserProfile.USER_TYPE_CHOICES,
@@ -143,6 +143,18 @@ class UserUpdateForm(forms.ModelForm):
     is_active = forms.BooleanField(
         required=False,
         label="نشط"
+    )
+    password1 = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label="كلمة المرور الجديدة",
+        help_text="اتركه فارغاً إذا لم ترد تغيير كلمة المرور"
+    )
+    password2 = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label="تأكيد كلمة المرور الجديدة",
+        help_text="تأكد من تطابق كلمة المرور"
     )
 
     class Meta:
@@ -165,6 +177,10 @@ class UserUpdateForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             if isinstance(field.widget, forms.TextInput) or isinstance(field.widget, forms.EmailInput):
                 field.widget.attrs.update({'class': 'form-control'})
+            elif isinstance(field.widget, forms.PasswordInput):
+                # Password fields already have form-control class, but ensure it's set
+                if 'class' not in field.widget.attrs:
+                    field.widget.attrs.update({'class': 'form-control'})
             elif isinstance(field.widget, forms.CheckboxInput):
                 field.widget.attrs.update({'class': 'form-check-input'})
 
@@ -268,10 +284,43 @@ class UserUpdateForm(forms.ModelForm):
         
         return new_user_type
     
+    def clean_password2(self):
+        """Validate password confirmation"""
+        password1 = self.cleaned_data.get('password1')
+        password2 = self.cleaned_data.get('password2')
+        
+        # If password1 is provided, password2 must match
+        if password1:
+            if password2 != password1:
+                raise forms.ValidationError('كلمات المرور غير متطابقة.')
+            if len(password1) < 8:
+                raise forms.ValidationError('يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل.')
+        # If password1 is empty but password2 is provided, that's an error
+        elif password2:
+            raise forms.ValidationError('يرجى إدخال كلمة المرور الجديدة.')
+        
+        return password2
+    
+    def clean_password1(self):
+        """Validate password1"""
+        password1 = self.cleaned_data.get('password1')
+        
+        # Password is optional, but if provided, must meet requirements
+        if password1:
+            if len(password1) < 8:
+                raise forms.ValidationError('يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل.')
+        
+        return password1
+    
     def save(self, commit=True):
         user = super().save(commit=False)
 
         if commit:
+            # Update password if provided
+            password1 = self.cleaned_data.get('password1')
+            if password1:
+                user.set_password(password1)
+            
             user.save()
             # Update user profile
             try:

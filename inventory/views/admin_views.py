@@ -185,9 +185,9 @@ def user_create_view(request):
     return render(request, 'inventory/admin/user_form.html', context)
 
 
-@super_admin_required_with_message()
+@admin_required_with_message()
 def user_update_view(request, user_id):
-    """Update user information"""
+    """Update user information - Admin can edit normal users, Super Admin can edit admins and normal users"""
     user = get_object_or_404(User, id=user_id)
     
     # Prevent self-modification (users cannot modify themselves)
@@ -204,32 +204,66 @@ def user_update_view(request, user_id):
         )
         return redirect('user_management')
     
-    # Prevent admins from modifying other admins or super admins
-    # Only super admins can modify admin/super_admin users
+    # Determine target user type
+    try:
+        target_profile = user.profile
+        target_user_type = target_profile.user_type
+    except UserProfile.DoesNotExist:
+        # If user has no profile but is superuser, treat as super admin
+        if user.is_superuser:
+            target_user_type = 'super_admin'
+        else:
+            target_user_type = 'normal'
+    
+    # Check if target is super admin (either by profile or Django superuser flag)
+    target_is_super_admin = (target_user_type == 'super_admin' or user.is_superuser)
+    
+    # Prevent Super Admins from editing other Super Admins
+    if is_super_admin(request.user) and target_is_super_admin:
+        if user.id != request.user.id:  # Already handled self-modification above
+            messages.error(
+                request,
+                'لا يمكنك تعديل مدير عام آخر. يمكنك فقط تعديل المديرين والمستخدمين العاديين.'
+            )
+            log_user_action(
+                request.user,
+                'super_admin_modification_attempt_blocked',
+                object_id=str(user.id),
+                description=f"محاولة تعديل مدير عام محظورة: {user.username}"
+            )
+            return redirect('user_management')
+    
+    # Prevent regular Admins from editing Super Admins or other Admins
     if not is_super_admin(request.user):
-        try:
-            target_profile = user.profile
-            target_user_type = target_profile.user_type
-            if target_user_type in ['admin', 'super_admin']:
-                messages.error(
-                    request,
-                    f'لا يمكنك تعديل مستخدم من نوع "{target_profile.get_user_type_display()}". يمكنك فقط تعديل المستخدمين العاديين.'
-                )
-                log_user_action(
-                    request.user,
-                    'admin_modification_attempt_blocked',
-                    object_id=str(user.id),
-                    description=f"محاولة تعديل {target_user_type} محظورة للمدير: {user.username}"
-                )
-                return redirect('user_management')
-        except UserProfile.DoesNotExist:
-            # If user has no profile but is superuser, treat as super admin
-            if user.is_superuser:
-                messages.error(
-                    request,
-                    'لا يمكنك تعديل المدير العام. يمكنك فقط تعديل المستخدمين العاديين.'
-                )
-                return redirect('user_management')
+        if target_is_super_admin:
+            messages.error(
+                request,
+                'لا يمكنك تعديل مدير عام. يمكنك فقط تعديل المستخدمين العاديين.'
+            )
+            log_user_action(
+                request.user,
+                'admin_super_admin_modification_attempt_blocked',
+                object_id=str(user.id),
+                description=f"محاولة تعديل مدير عام من قبل مدير عادي محظورة: {user.username}"
+            )
+            return redirect('user_management')
+        elif target_user_type == 'admin':
+            messages.error(
+                request,
+                'لا يمكنك تعديل مدير آخر. يمكنك فقط تعديل المستخدمين العاديين.'
+            )
+            log_user_action(
+                request.user,
+                'admin_modification_attempt_blocked',
+                object_id=str(user.id),
+                description=f"محاولة تعديل مدير من قبل مدير عادي محظورة: {user.username}"
+            )
+            return redirect('user_management')
+    
+    # Permission summary:
+    # - Admins can edit: normal users only
+    # - Super Admins can edit: admins and normal users (but not other super admins)
+    # Password changes are allowed when editing is permitted
     
     if request.method == 'POST':
         form = UserUpdateForm(request.POST, instance=user, current_user=request.user)
@@ -253,10 +287,15 @@ def user_update_view(request, user_id):
                 
                 messages.success(request, f'تم تحديث المستخدم "{updated_user.username}" بنجاح.')
                 
-                # Enhanced logging - log user type changes
+                # Enhanced logging - log user type changes and password changes
                 description = f"تحديث مستخدم: {updated_user.username}"
                 if old_user_type != new_user_type:
                     description += f" | تغيير النوع: {old_user_type} → {new_user_type}"
+                
+                # Check if password was changed
+                password_changed = form.cleaned_data.get('password1', '').strip()
+                if password_changed:
+                    description += " | تغيير كلمة المرور"
                 
                 # Log user update
                 log_user_action(

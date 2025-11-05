@@ -68,13 +68,19 @@ class AdminService(BaseService):
         
         Args:
             user: User instance to update
-            **kwargs: Fields to update
+            **kwargs: Fields to update (can include 'password' for password updates)
             
         Returns:
             tuple: (user, profile) or (None, None) if failed
         """
         try:
             with transaction.atomic():
+                # Update password if provided
+                if 'password' in kwargs:
+                    password = kwargs.pop('password')
+                    if password:
+                        user.set_password(password)
+                
                 # Update User fields
                 user_fields = ['first_name', 'last_name', 'email', 'is_active']
                 for field in user_fields:
