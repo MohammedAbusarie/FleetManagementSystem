@@ -1,0 +1,4 @@
+---
+description: The UI of the project we are working on should appear to the user in arabic language 100% so any modifications or new components added to the ui should be in arabic language. Yes we are hardcoding arabic
+alwaysApply: false
+---

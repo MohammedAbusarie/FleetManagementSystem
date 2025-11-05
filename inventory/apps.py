@@ -6,7 +6,10 @@ class InventoryConfig(AppConfig):
     name = 'inventory'
     
     def ready(self):
-        """Auto-create default 'غير محدد' records if they don't exist"""
+        """Auto-create default 'غير محدد' records if they don't exist and register signals"""
+        # Import signals to register them
+        import inventory.signals  # noqa: F401
+        
         # Import here to avoid circular imports
         from django.db import connection
         from django.core.management import call_command
