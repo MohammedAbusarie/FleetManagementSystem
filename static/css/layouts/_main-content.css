@@ -1,0 +1,21 @@
+/* Main Content Layout */
+
+.main-content {
+    margin-right: var(--sidebar-width-collapsed);
+    padding: var(--spacing-xl);
+    min-height: 100vh;
+    background: var(--bg-body);
+    transition: margin-right var(--transition-slow);
+    /* Ensure consistent layout with scrollbar */
+    box-sizing: border-box;
+    direction: rtl; /* Keep RTL for Arabic content */
+}
+
+.main-content.sidebar-expanded {
+    margin-right: var(--sidebar-width-expanded);
+}
+
+.main-content.sidebar-collapsed {
+    margin-right: var(--sidebar-width-collapsed);
+}
+

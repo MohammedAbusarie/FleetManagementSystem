@@ -1,0 +1,37 @@
+/* Pagination Styles */
+
+.pagination .page-link {
+    color: var(--color-primary);
+    border-color: var(--border-color);
+    transition: all var(--transition-medium);
+}
+
+.pagination .page-link:hover {
+    color: white;
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.pagination .page-link:focus {
+    color: var(--color-primary);
+    background-color: var(--bg-light);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem var(--color-primary-alpha-25);
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--gradient-primary);
+    border-color: var(--color-primary);
+    color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: var(--color-secondary);
+    background-color: var(--bg-white);
+    border-color: var(--border-color);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+

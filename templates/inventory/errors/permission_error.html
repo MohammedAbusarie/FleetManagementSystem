@@ -80,9 +80,9 @@
                             الصفحة الرئيسية
                         </a>
                         {% if user.is_authenticated %}
-                        <button onclick="history.back()" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>
-                            العودة للصفحة السابقة
+                        <button onclick="history.back()" class="btn-back">
+                            <i class="bi bi-arrow-right"></i> 
+                            <span>العودة للصفحة السابقة</span>
                         </button>
                         {% else %}
                         <a href="{% url 'login' %}" class="btn btn-success">

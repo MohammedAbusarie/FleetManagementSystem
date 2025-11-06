@@ -1,0 +1,194 @@
+/* Button Styles */
+
+/* Primary Buttons */
+.btn-primary {
+    background: var(--gradient-primary);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: var(--gradient-primary-reverse);
+}
+
+/* Secondary Buttons (Back Buttons) - Theme Colors */
+.btn-secondary {
+    background-color: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: white;
+    transition: all var(--transition-medium);
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--color-primary-alpha-3);
+}
+
+.btn-secondary:focus {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+    box-shadow: 0 0 0 0.2rem var(--color-primary-alpha-25);
+}
+
+.btn-secondary:active {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    color: white;
+}
+
+/* Icons in secondary buttons */
+.btn-secondary .bi,
+.btn-secondary i.bi {
+    color: white;
+    transition: color var(--transition-medium);
+}
+
+.btn-secondary:hover .bi,
+.btn-secondary:hover i.bi {
+    color: white;
+}
+
+/* Outline Buttons - Theme Colors */
+.btn-outline-primary {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    background-color: transparent;
+    transition: all var(--transition-medium);
+}
+
+.btn-outline-primary:hover {
+    background: var(--gradient-primary);
+    border-color: var(--color-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--color-primary-alpha-3);
+}
+
+.btn-outline-primary:focus {
+    box-shadow: 0 0 0 0.2rem var(--color-primary-alpha-25);
+    border-color: var(--color-primary);
+}
+
+.btn-outline-primary:active {
+    background: var(--gradient-primary-dark);
+    border-color: var(--color-primary-dark);
+    color: white;
+}
+
+.btn-outline-primary .bi,
+.btn-outline-primary i.bi {
+    color: var(--color-primary);
+    transition: color var(--transition-medium);
+}
+
+.btn-outline-primary:hover .bi,
+.btn-outline-primary:hover i.bi {
+    color: white;
+}
+
+.btn-outline-secondary {
+    color: var(--color-secondary);
+    border-color: var(--color-secondary);
+    background-color: transparent;
+    transition: all var(--transition-medium);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+}
+
+.btn-outline-secondary:focus {
+    box-shadow: 0 0 0 0.2rem var(--color-primary-alpha-25);
+    border-color: var(--color-primary);
+}
+
+.btn-outline-secondary .bi,
+.btn-outline-secondary i.bi {
+    color: var(--color-secondary);
+    transition: color var(--transition-medium);
+}
+
+.btn-outline-secondary:hover .bi,
+.btn-outline-secondary:hover i.bi {
+    color: white;
+}
+
+/* Back Button - Elegant Design */
+.btn-back,
+.btn.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px 10px 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: all var(--transition-normal);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-back .bi,
+.btn-back i {
+    font-size: 1.2em;
+    transition: transform var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-back:hover {
+    color: var(--color-primary-dark);
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(0, 51, 102, 0.15);
+}
+
+.btn-back:hover .bi,
+.btn-back:hover i {
+    transform: translateX(-4px);
+}
+
+.btn-back:active {
+    transform: translateX(-1px);
+    box-shadow: 0 1px 4px rgba(0, 51, 102, 0.2);
+}
+
+.btn-back:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-primary-alpha-25), 0 2px 8px rgba(0, 51, 102, 0.15);
+    border-color: var(--color-primary);
+}
+
+/* Back Button Container */
+.back-button {
+    margin-bottom: 24px;
+    padding: 8px 0;
+}
+
+.back-button .btn-back {
+    margin: 0;
+}
+
+/* Responsive adjustments for back buttons */
+@media (max-width: 768px) {
+    .btn-back,
+    .btn.btn-back {
+        padding: 10px 18px;
+        font-size: 0.9rem;
+        gap: 6px;
+    }
+    
+    .back-button {
+        margin-bottom: 16px;
+    }
+}
+

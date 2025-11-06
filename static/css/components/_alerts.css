@@ -1,0 +1,7 @@
+/* Alert Styles */
+
+.alert {
+    border-radius: var(--radius-lg);
+    border: none;
+}
+

@@ -7,8 +7,9 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="fas fa-trash-alt"></i> حذف {{ model_name_arabic }}</h1>
-        <a href="{% url 'generic_table_detail' model_name %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> رجوع إلى {{ model_name_arabic }}
+        <a href="{% url 'generic_table_detail' model_name %}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> 
+            <span>رجوع إلى {{ model_name_arabic }}</span>
         </a>
     </div>
     

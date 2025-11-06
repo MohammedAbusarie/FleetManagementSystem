@@ -21,1185 +21,113 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    
+    <!-- Critical CSS Fallbacks - Ensure styles work even if @import fails -->
     <style>
-        /* GE SS Two Font Arabic */
+        /* Critical CSS Variables Fallback */
+        :root {
+            --color-primary: #003366;
+            --color-primary-dark: #002244;
+            --color-accent: #FF9933;
+            --color-secondary: #6c757d;
+            --gradient-primary: linear-gradient(135deg, #003366 0%, #FF9933 100%);
+            --radius-xl: 15px;
+            --radius-lg: 10px;
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 4px 15px rgba(0, 51, 102, 0.3);
+            --spacing-lg: 20px;
+            --spacing-md: 12px;
+        }
+        
+        /* Critical Card Styles Fallback */
+        .card {
+            border: none !important;
+            border-radius: 15px !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07) !important;
+            margin-bottom: 20px !important;
+            background-color: #ffffff !important;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #003366 0%, #FF9933 100%) !important;
+            color: white !important;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 15px 20px !important;
+            border-bottom: none !important;
+        }
+        
+        .card-body {
+            padding: 20px !important;
+            background-color: #ffffff !important;
+        }
+        
+        .card-title {
+            margin-bottom: 0.5rem !important;
+            font-weight: 600 !important;
+            color: inherit !important;
+        }
+        
+        /* Page Transition Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        main {
+            animation: fadeInUp 0.4s ease-out forwards;
+        }
+        
+        main.page-loaded {
+            animation: none; /* Remove animation after first load */
+        }
+    </style>
+    
+    <!-- Font Face Declarations (must be in template for Django static tag) -->
+    <style id="font-faces">
+        /* GE SS Two Font Arabic - Using actual font file names from static/fonts/ */
+        /* Regular weight - using Medium as fallback since Regular doesn't exist */
         @font-face {
             font-family: 'GE SS Two';
-            src: url('{% static "fonts/GE-SS-Two-Regular.otf" %}') format('opentype'),
-                 url('{% static "fonts/GE-SS-Two-Regular.ttf" %}') format('truetype');
+            src: url('{% static "fonts/ArbFONTS-GE_SS_Two_Medium.otf" %}') format('opentype');
             font-weight: normal;
             font-style: normal;
             font-display: swap;
         }
         
+        /* Light weight */
         @font-face {
             font-family: 'GE SS Two';
-            src: url('{% static "fonts/GE-SS-Two-Bold.otf" %}') format('opentype'),
-                 url('{% static "fonts/GE-SS-Two-Bold.ttf" %}') format('truetype');
-            font-weight: bold;
-            font-style: normal;
-            font-display: swap;
-        }
-        
-        @font-face {
-            font-family: 'GE SS Two';
-            src: url('{% static "fonts/GE-SS-Two-Light.otf" %}') format('opentype'),
-                 url('{% static "fonts/GE-SS-Two-Light.ttf" %}') format('truetype');
+            src: url('{% static "fonts/ArbFONTS-GE_SS_Two_Light.otf" %}') format('opentype');
             font-weight: 300;
             font-style: normal;
             font-display: swap;
         }
         
+        /* Medium weight */
         @font-face {
             font-family: 'GE SS Two';
-            src: url('{% static "fonts/GE-SS-Two-Medium.otf" %}') format('opentype'),
-                 url('{% static "fonts/GE-SS-Two-Medium.ttf" %}') format('truetype');
+            src: url('{% static "fonts/ArbFONTS-GE_SS_Two_Medium.otf" %}') format('opentype');
             font-weight: 500;
             font-style: normal;
             font-display: swap;
         }
         
-        /* Universal font application - ensure GE SS Two is used everywhere */
-        /* Apply to all elements except Bootstrap Icons */
-        body *:not([class*="bi"]):not([class*="icon"]) {
-            font-family: 'GE SS Two', 'Roboto', 'Segoe UI', 'Tahoma', 'Arial', sans-serif !important;
-        }
-        
-        /* Ensure all text elements use GE SS Two */
-        h1, h2, h3, h4, h5, h6,
-        p, span, div, a, label, button, input, select, textarea,
-        .card, .card-header, .card-body, .card-title, .card-text,
-        .btn, .form-control, .form-label, .form-select,
-        .nav-link, .navbar-brand, .table, .table td, .table th,
-        .alert, .badge, .pagination, .breadcrumb,
-        .sidebar, .sidebar *, .main-content, .main-content * {
-            font-family: 'GE SS Two', 'Roboto', 'Segoe UI', 'Tahoma', 'Arial', sans-serif !important;
-        }
-        
-        /* Preserve icon fonts - Bootstrap Icons */
-        [class*="bi"], i[class*="bi"], .bi, i.bi, .bootstrap-icons {
-            font-family: "bootstrap-icons" !important;
-        }
-        
-        /* Ensure scrollbar space is always reserved to prevent layout shifts */
-        /* This prevents the jarring layout shift when switching between pages with/without scroll */
-        /* Force scrollbar to left side while keeping sidebar on right */
-        html {
-            overflow-y: scroll; /* Always reserve scrollbar space - prevents layout shift */
-            /* Firefox scrollbar styling - matches theme colors */
-            scrollbar-width: thin;
-            scrollbar-color: rgba(0, 51, 102, 0.7) rgba(0, 51, 102, 0.08);
-        }
-        
-        /* Force scrollbar to left side - body direction RTL controls scrollbar position */
-        body {
-            direction: rtl; /* This makes scrollbar appear on left side */
-        }
-        
-        /* Sidebar is fixed positioned on right, unaffected by direction */
-        .sidebar {
-            direction: rtl; /* Keep sidebar content RTL */
-            /* Sidebar stays on right because it's fixed with right: 0 */
-        }
-        
-        /* Main content - keep RTL for Arabic text but ensure proper layout */
-        .main-content {
-            direction: rtl; /* Keep RTL for Arabic content */
-        }
-        
-        /* Modern browsers: reserve space without forcing scrollbar visibility */
-        @supports (scrollbar-gutter: stable) {
-            html {
-                overflow-y: auto; /* Allow auto when scrollbar-gutter is supported */
-                scrollbar-gutter: stable; /* Reserve space without showing scrollbar */
-            }
-        }
-        
-        /* Custom scrollbar styling - matches sidebar theme (Webkit browsers) */
-        html::-webkit-scrollbar {
-            width: 12px;
-            background: transparent !important;
-        }
-        
-        html::-webkit-scrollbar-track {
-            background: rgba(0, 51, 102, 0.08) !important; /* Dark blue theme track */
-            border-left: 1px solid rgba(0, 51, 102, 0.2) !important; /* Left border (scrollbar on left) */
-            border-radius: 0;
-        }
-        
-        html::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, rgba(0, 51, 102, 0.7) 0%, rgba(255, 153, 51, 0.7) 100%) !important;
-            border-radius: 6px;
-            border: 2px solid rgba(0, 51, 102, 0.08) !important;
-            transition: background 0.2s ease;
-        }
-        
-        html::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, rgba(0, 51, 102, 0.9) 0%, rgba(255, 153, 51, 0.9) 100%) !important;
-        }
-        
-        /* Ensure scrollbar track is visible and themed */
-        * {
-            scrollbar-color: rgba(0, 51, 102, 0.7) rgba(0, 51, 102, 0.08) !important;
-        }
-        
-        body {
-            font-family: 'GE SS Two', 'Roboto', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        
-        /* Smooth Page Transitions - Faster */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(5px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* Main content fade-in - faster */
-        .main-content,
-        .container {
-            animation: fadeIn 0.2s ease-out;
-        }
-        
-        /* Cards fade-in - faster with minimal delay */
-        .card {
-            animation: fadeInUp 0.25s ease-out;
-            animation-fill-mode: both;
-        }
-        
-        /* Stagger card animations - minimal delays */
-        .card:nth-child(1) { animation-delay: 0.02s; }
-        .card:nth-child(2) { animation-delay: 0.04s; }
-        .card:nth-child(3) { animation-delay: 0.06s; }
-        .card:nth-child(4) { animation-delay: 0.08s; }
-        .card:nth-child(5) { animation-delay: 0.1s; }
-        .card:nth-child(n+6) { animation-delay: 0.12s; }
-        
-        /* Table rows fade-in - very fast */
-        .table tbody tr {
-            animation: fadeIn 0.15s ease-out;
-            animation-fill-mode: both;
-        }
-        
-        .table tbody tr:nth-child(1) { animation-delay: 0.01s; }
-        .table tbody tr:nth-child(2) { animation-delay: 0.02s; }
-        .table tbody tr:nth-child(3) { animation-delay: 0.03s; }
-        .table tbody tr:nth-child(4) { animation-delay: 0.04s; }
-        .table tbody tr:nth-child(5) { animation-delay: 0.05s; }
-        .table tbody tr:nth-child(n+6) { animation-delay: 0.06s; }
-        
-        /* Sidebar should not be affected by page transitions */
-        .sidebar,
-        .sidebar * {
-            animation: none !important;
-        }
-        
-        /* Smooth link transitions */
-        a {
-            transition: opacity 0.2s ease, transform 0.2s ease;
-        }
-        
-        a:hover {
-            opacity: 0.9;
-        }
-        
-        /* Smooth button transitions */
-        .btn {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        /* Form elements fade-in */
-        .form-control,
-        .form-select,
-        .form-check-input {
-            transition: all 0.3s ease;
-        }
-        
-        /* Alerts fade-in - faster */
-        .alert {
-            animation: fadeInUp 0.2s ease-out;
-        }
-        
-        /* Sidebar fade-in */
-        .sidebar {
-            position: fixed;
-            right: 0;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            top: 0;
-            bottom: 0;
-            width: 250px;
-            background: linear-gradient(135deg, #003366 0%, #FF9933 100%);
-            padding-top: 0;
-            z-index: 1000;
-            transition: width 0.3s ease-in-out, right 0.3s ease-in-out;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        
-        /* Prevent transition flash on initial load */
-        .sidebar:not(.state-initialized) {
-            transition: none !important;
-        }
-        
-        /* Prevent main-content transitions during sidebar initialization */
-        .main-content:not(.state-initialized) {
-            transition: none !important;
-        }
-        
-        .sidebar.collapsed {
-            width: 70px;
-            right: 0;
-        }
-        
-        .sidebar.expanded {
-            width: 250px;
-            right: 0;
-        }
-        
-        .sidebar-content {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 20px 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-        
-        .sidebar.collapsed .sidebar-content {
-            padding: 10px 0;
-        }
-        
-        /* Custom Scrollbar for Sidebar - Webkit browsers (Chrome, Safari, Edge) */
-        .sidebar-content::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .sidebar-content::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            margin: 10px 5px;
-        }
-        
-        .sidebar-content::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.5) 100%);
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: background 0.3s ease;
-        }
-        
-        .sidebar-content::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.7) 100%);
-        }
-        
-        /* Firefox scrollbar */
-        .sidebar-content {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.5) rgba(255, 255, 255, 0.1);
-        }
-        
-        
-        
-        .sidebar-toggle {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: rgba(255, 255, 255, 0.95);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-            padding: 0;
-            z-index: 10;
-            flex-shrink: 0;
-        }
-        
-        .sidebar-toggle i {
-            font-size: 1.25rem;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .sidebar-toggle:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.3);
-            color: white;
-            transform: scale(1.1);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-        
-        .sidebar-toggle:active {
-            transform: scale(0.95);
-        }
-        
-        .sidebar-toggle:focus {
-            outline: 2px solid rgba(255, 255, 255, 0.5);
-            outline-offset: 2px;
-        }
-        
-        .sidebar-toggle.sidebar-open {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-        
-        .sidebar-toggle.sidebar-open:hover {
-            background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(255, 255, 255, 0.35);
-        }
-        
-        .sidebar.collapsed .sidebar-toggle {
-            position: relative;
-            top: auto;
-            left: auto;
-            right: auto;
-            transform: none;
-            margin: 4px 5px;
-            width: auto;
-            height: auto;
-            padding: 12px 0;
-            border-radius: 8px;
-            background: transparent;
-            border: 1px solid transparent;
-            box-shadow: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 50px;
-        }
-        
-        .sidebar.collapsed .sidebar-toggle i {
-            font-size: 1.4rem;
-            margin: 0;
-        }
-        
-        .sidebar.collapsed .sidebar-toggle:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: none;
-            box-shadow: none;
-            padding: 12px 5px;
-            margin: 4px 0;
-            min-width: 60px;
-        }
-        
-        .sidebar.collapsed .sidebar-toggle:active {
-            transform: none;
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .sidebar.collapsed .sidebar-toggle.sidebar-open {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.2);
-            padding: 12px 5px;
-            margin: 4px 0;
-            min-width: 60px;
-        }
-        
-        .sidebar.collapsed .sidebar-toggle.sidebar-open:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.25);
-        }
-        
-        .sidebar-content {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding-bottom: 20px;
-        }
-        
-        .sidebar .nav {
-            padding-bottom: 20px;
-        }
-        
-        .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.9);
-            padding: 12px 20px;
-            margin: 4px 15px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-            overflow: hidden;
-            background: transparent;
-            border: 1px solid transparent;
-        }
-        
-        .sidebar.collapsed .nav-link {
-            padding: 12px 0;
-            margin: 4px 10px;
-            justify-content: center;
-        }
-        
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-        
-        .sidebar .nav-link.active {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.25);
-        }
-        
-        .sidebar .nav-link i {
-            margin-left: 10px;
-            font-size: 1.2rem;
-            min-width: 24px;
-            text-align: center;
-            transition: margin 0.3s ease-in-out;
-            flex-shrink: 0;
-        }
-        
-        .sidebar.collapsed .nav-link i {
-            margin-left: 0;
-            margin-right: 0;
-            font-size: 1.4rem;
-        }
-        
-        .sidebar .nav-link span {
-            opacity: 1;
-            transition: opacity 0.2s ease-in-out, max-width 0.2s ease-in-out, margin 0.2s ease-in-out, width 0.2s ease-in-out;
-            max-width: 200px;
-            overflow: hidden;
-            margin-right: 8px;
-            display: inline-block;
-            white-space: nowrap;
-        }
-        
-        .sidebar.collapsed .nav-link span {
-            opacity: 0 !important;
-            max-width: 0 !important;
-            width: 0 !important;
-            margin: 0 !important;
-            display: none !important;
-            visibility: hidden !important;
-            overflow: hidden !important;
-        }
-        
-        .sidebar.collapsed .nav-link {
-            text-align: center;
-            justify-content: center;
-        }
-        
-        .sidebar.collapsed .nav-link:hover {
-            position: relative;
-        }
-        
-        .sidebar.collapsed .nav-link:hover::after {
-            content: attr(title);
-            position: absolute;
-            right: 75px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            white-space: nowrap;
-            z-index: 1001;
-            font-size: 0.9rem;
-            pointer-events: none;
-        }
-        
-        .sidebar-time {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.9rem;
-            font-weight: 500;
-            direction: ltr;
-            text-align: center;
-            padding: 15px 20px;
-            margin: 10px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-        }
-        
-        .sidebar.collapsed .sidebar-time {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            height: 0 !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            overflow: hidden !important;
-        }
-        
-        .sidebar.collapsed .sidebar-time #timeDisplay {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            height: 0 !important;
-            overflow: hidden !important;
-        }
-        
-        .sidebar.collapsed .sidebar-time br {
-            display: none !important;
-        }
-        
-        .sidebar.collapsed .sidebar-time i {
-            display: none !important;
-        }
-
-        .sidebar-user-link {
-            text-decoration: none;
-            display: block;
-            margin: 10px 15px;
-            transition: all 0.3s ease;
-        }
-        
-        .sidebar.collapsed .sidebar-user-link {
-            margin: 10px 8px;
-        }
-        
-        .sidebar-user-link:hover {
-            transform: translateX(-3px);
-        }
-        
-        .sidebar.collapsed .sidebar-user-link:hover {
-            transform: none;
-        }
-        
-        .sidebar-user-link:hover .sidebar-user {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.15);
-            cursor: pointer;
-            color: rgba(255, 255, 255, 0.95);
-        }
-        
-        .sidebar-user-link.active .sidebar-user {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-        
-        .sidebar-user-link.active:hover .sidebar-user {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.25);
-        }
-
-        .sidebar-user {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: rgba(255, 255, 255, 0.85);
-            padding: 15px 20px;
-            background: transparent;
-            border-radius: 8px;
-            border: 1px solid transparent;
-            transition: all 0.3s ease;
-        }
-        
-        .sidebar.collapsed .sidebar-user {
-            padding: 10px;
-            justify-content: center;
-            gap: 0;
-        }
-
-        .sidebar-user-avatar {
-            width: 35px;
-            height: 35px;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            flex-shrink: 0;
-            transition: width 0.3s ease-in-out, height 0.3s ease-in-out;
-        }
-        
-        .sidebar.collapsed .sidebar-user-avatar {
-            width: 40px;
-            height: 40px;
-            font-size: 1.3rem;
-        }
-
-        .sidebar-user-name {
-            font-weight: 500;
-            font-size: 0.95rem;
-            flex: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            opacity: 1;
-            transition: opacity 0.2s ease-in-out, max-width 0.2s ease-in-out, margin 0.2s ease-in-out;
-            max-width: 150px;
-            display: block;
-        }
-        
-        .sidebar.collapsed .sidebar-user-name {
-            opacity: 0;
-            max-width: 0;
-            margin: 0;
-            height: 0;
-            display: none;
-        }
-
-        .main-content {
-            margin-right: 70px;
-            padding: 30px;
-            min-height: 100vh;
-            background: #f8f9fa;
-            transition: margin-right 0.3s ease-in-out;
-            /* Ensure consistent layout with scrollbar */
-            box-sizing: border-box;
-        }
-        
-        .main-content.sidebar-expanded {
-            margin-right: 250px;
-        }
-        
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-            margin-bottom: 20px;
-        }
-        
-        .card-header {
-            background: linear-gradient(135deg, #003366 0%, #FF9933 100%);
-            color: white;
-            border-radius: 15px 15px 0 0 !important;
-            padding: 15px 20px;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #003366 0%, #FF9933 100%);
-            border: none;
-        }
-        
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #FF9933 0%, #003366 100%);
-        }
-        
-        /* Secondary Buttons (Back Buttons) - Theme Colors */
-        .btn-secondary {
-            background-color: #6c757d;
-            border-color: #6c757d;
-            color: white;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #003366;
-            border-color: #003366;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 51, 102, 0.3);
-        }
-        
-        .btn-secondary:focus {
-            background-color: #003366;
-            border-color: #003366;
-            color: white;
-            box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
-        }
-        
-        .btn-secondary:active {
-            background-color: #002244;
-            border-color: #002244;
-            color: white;
-        }
-        
-        /* Icons in secondary buttons */
-        .btn-secondary .bi,
-        .btn-secondary i.bi {
-            color: white;
-            transition: color 0.3s ease;
-        }
-        
-        .btn-secondary:hover .bi,
-        .btn-secondary:hover i.bi {
-            color: white;
-        }
-        
-        /* Outline Buttons - Theme Colors */
-        .btn-outline-primary {
-            color: #003366;
-            border-color: #003366;
-            background-color: transparent;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-outline-primary:hover {
-            background: linear-gradient(135deg, #003366 0%, #FF9933 100%);
-            border-color: #003366;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 51, 102, 0.3);
-        }
-        
-        .btn-outline-primary:focus {
-            box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
-            border-color: #003366;
-        }
-        
-        .btn-outline-primary:active {
-            background: linear-gradient(135deg, #002244 0%, #003366 100%);
-            border-color: #002244;
-            color: white;
-        }
-        
-        .btn-outline-primary .bi,
-        .btn-outline-primary i.bi {
-            color: #003366;
-            transition: color 0.3s ease;
-        }
-        
-        .btn-outline-primary:hover .bi,
-        .btn-outline-primary:hover i.bi {
-            color: white;
-        }
-        
-        .btn-outline-secondary {
-            color: #6c757d;
-            border-color: #6c757d;
-            background-color: transparent;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-outline-secondary:hover {
-            background-color: #003366;
-            border-color: #003366;
-            color: white;
-        }
-        
-        .btn-outline-secondary:focus {
-            box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
-            border-color: #003366;
-        }
-        
-        .btn-outline-secondary .bi,
-        .btn-outline-secondary i.bi {
-            color: #6c757d;
-            transition: color 0.3s ease;
-        }
-        
-        .btn-outline-secondary:hover .bi,
-        .btn-outline-secondary:hover i.bi {
-            color: white;
-        }
-        
-        .table-hover tbody tr:hover {
-            background-color: rgba(0, 51, 102, 0.1);
-        }
-        
-        /* Badges - Theme Colors */
-        .badge.bg-primary {
-            background: linear-gradient(135deg, #003366 0%, #FF9933 100%) !important;
-            color: white;
-        }
-        
-        .badge.bg-secondary {
-            background-color: #6c757d !important;
-            color: white;
-        }
-        
-        .badge.bg-success {
-            background-color: #28a745 !important;
-            color: white;
-        }
-        
-        .badge.bg-info {
-            background-color: #17a2b8 !important;
-            color: white;
-        }
-        
-        .badge.bg-warning {
-            background-color: #FF9933 !important;
-            color: white;
-        }
-        
-        .badge.bg-danger {
-            background-color: #dc3545 !important;
-            color: white;
-        }
-        
-        /* Pagination - Theme Colors */
-        .pagination .page-link {
-            color: #003366;
-            border-color: #dee2e6;
-            transition: all 0.3s ease;
-        }
-        
-        .pagination .page-link:hover {
-            color: white;
-            background-color: #003366;
-            border-color: #003366;
-            transform: translateY(-2px);
-            box-shadow: 0 2px 4px rgba(0, 51, 102, 0.2);
-        }
-        
-        .pagination .page-link:focus {
-            color: #003366;
-            background-color: #f8f9fa;
-            border-color: #003366;
-            box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
-        }
-        
-        .pagination .page-item.active .page-link {
-            background: linear-gradient(135deg, #003366 0%, #FF9933 100%);
-            border-color: #003366;
-            color: white;
-        }
-        
-        .pagination .page-item.disabled .page-link {
-            color: #6c757d;
-            background-color: #fff;
-            border-color: #dee2e6;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        
-        /* Radio Buttons - Theme Colors */
-        .form-check-input[type="radio"] {
-            border-color: #ced4da;
-            transition: all 0.3s ease;
-        }
-        
-        .form-check-input[type="radio"]:checked {
-            background-color: #003366;
-            border-color: #003366;
-            box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
-        }
-        
-        .form-check-input[type="radio"]:focus {
-            border-color: #003366;
-            box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
-        }
-        
-        .form-check-input[type="radio"]:hover:not(:checked) {
-            border-color: #003366;
-        }
-        
-        input[type="radio"]:not(.form-check-input) {
-            accent-color: #003366;
-        }
-        
-        /* Checkboxes - Theme Colors */
-        .form-check-input[type="checkbox"] {
-            border-color: #ced4da;
-            transition: all 0.3s ease;
-        }
-        
-        .form-check-input[type="checkbox"]:checked {
-            background-color: #003366;
-            border-color: #003366;
-            box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
-        }
-        
-        .form-check-input[type="checkbox"]:focus {
-            border-color: #003366;
-            box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
-        }
-        
-        .form-check-input[type="checkbox"]:hover:not(:checked) {
-            border-color: #003366;
-        }
-        
-        input[type="checkbox"]:not(.form-check-input) {
-            accent-color: #003366;
-        }
-        
-        /* Form Switches (Toggle Switches) - Theme Colors */
-        .form-check-input[type="checkbox"].form-check-input:is(:checked) {
-            background-color: #003366;
-            border-color: #003366;
-        }
-        
-        .form-switch .form-check-input {
-            background-color: #ced4da;
-            border-color: #ced4da;
-            transition: all 0.3s ease;
-        }
-        
-        .form-switch .form-check-input:checked {
-            background-color: #003366;
-            border-color: #003366;
-        }
-        
-        .form-switch .form-check-input:focus {
-            border-color: #003366;
-            box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
-        }
-        
-        .form-switch .form-check-input:hover:not(:checked) {
-            border-color: #003366;
-        }
-        
-        /* Bootstrap Icons - Theme Colors */
-        .bi {
-            color: inherit;
-        }
-        
-        /* Icons in primary buttons */
-        .btn-primary .bi,
-        .btn-primary i.bi {
-            color: white;
-        }
-        
-        /* Icons in card headers */
-        .card-header .bi,
-        .card-header i.bi {
-            color: white;
-        }
-        
-        /* Icons in sidebar */
-        .sidebar .bi,
-        .sidebar i.bi {
-            color: rgba(255, 255, 255, 0.9);
-        }
-        
-        .sidebar .nav-link.active .bi,
-        .sidebar .nav-link.active i.bi {
-            color: white;
-        }
-        
-        /* Icons with text-primary class */
-        .text-primary .bi,
-        .bi.text-primary,
-        i.bi.text-primary {
-            color: #003366 !important;
-        }
-        
-        /* Icons with accent color */
-        .text-accent .bi,
-        .bi.text-accent,
-        i.bi.text-accent {
-            color: #FF9933 !important;
-        }
-        
-        /* Hover effects for icons in links */
-        a:hover .bi:not(.no-hover),
-        a:hover i.bi:not(.no-hover) {
-            color: #003366;
-            transition: color 0.3s ease;
-        }
-        
-        /* Icons in buttons - hover effects */
-        .btn:hover .bi,
-        .btn:hover i.bi {
-            transition: color 0.3s ease;
-        }
-        
-        .btn-primary:hover .bi,
-        .btn-primary:hover i.bi {
-            color: white;
-        }
-        
-        .sidebar-brand {
-            color: white;
-            font-size: 1.5rem;
+        /* Bold weight - using underscore version */
+        @font-face {
+            font-family: 'GE SS Two';
+            src: url('{% static "fonts/ArbFONTS-GE_SS_Two_Bold.otf" %}') format('opentype');
             font-weight: bold;
-            padding: 20px 15px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
-            width: 100%;
-            transition: padding 0.3s ease-in-out;
-            overflow: visible;
-            position: relative;
-        }
-        
-        .sidebar.collapsed .sidebar-brand {
-            padding: 15px 10px;
-        }
-        
-        .sidebar-brand-header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            position: relative;
-            min-height: 40px;
-            margin-bottom: 10px;
-            padding-top: 12px;
-        }
-        
-        .sidebar.collapsed .sidebar-brand-header {
-            justify-content: center;
-            min-height: auto;
-            margin-bottom: 0;
-            padding: 0;
-        }
-        
-        .sidebar-logo {
-            width: 90%;
-            max-width: 200px;
-            height: auto;
-            min-height: 80px;
-            display: block;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.15);
-            padding: 18px;
-            border-radius: 12px;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            object-fit: contain;
-            transition: width 0.3s ease-in-out, padding 0.3s ease-in-out, min-height 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-        }
-        
-        .sidebar.collapsed .sidebar-logo {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            width: 0 !important;
-            height: 0 !important;
-            padding: 0 !important;
-            margin: 0 !important;
-        }
-        
-        .sidebar-brand-text {
-            font-size: 1.4rem;
-            margin-top: 8px;
-            font-weight: 600;
-            white-space: nowrap;
-            opacity: 1;
-            transition: opacity 0.2s ease-in-out, max-width 0.2s ease-in-out, margin 0.2s ease-in-out, height 0.2s ease-in-out;
-            max-width: 200px;
-            overflow: hidden;
-            display: block;
-        }
-        
-        .sidebar.collapsed .sidebar-brand-text {
-            opacity: 0 !important;
-            max-width: 0 !important;
-            margin: 0 !important;
-            height: 0 !important;
-            display: none !important;
-            visibility: hidden !important;
-            overflow: hidden !important;
-        }
-        
-        @media (max-width: 768px) {
-            .sidebar-logo {
-                width: 85%;
-                max-width: 180px;
-                padding: 15px;
-                min-height: 70px;
-            }
-            
-            .sidebar-brand-text {
-                font-size: 1.2rem;
-            }
-        }
-        
-        .alert {
-            border-radius: 10px;
-        }
-        
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-        }
-        
-        .sidebar-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 280px;
-                position: fixed;
-                height: 100vh;
-            }
-            
-            .sidebar.collapsed {
-                right: -280px;
-                width: 280px;
-            }
-            
-            .sidebar.expanded {
-                right: 0;
-                width: 280px;
-            }
-            
-            .main-content {
-                margin-right: 0;
-            }
-            
-            .main-content.sidebar-expanded {
-                margin-right: 0;
-            }
-            
-            .main-content.sidebar-collapsed {
-                margin-right: 0;
-            }
-            
-            .sidebar-time {
-                margin: 5px 10px;
-                padding: 10px 15px;
-            }
-            
-            .sidebar-user-link {
-                margin: 5px 10px;
-            }
-            
-            .sidebar-user {
-                margin: 0;
-                padding: 10px 15px;
-            }
-            
-            .sidebar-user-name {
-                font-size: 0.9rem;
-            }
-            
-            .main-content {
-                margin-right: 0;
-            }
-            
-            .sidebar-toggle {
-                position: relative;
-                top: auto;
-                right: auto;
-                transform: none;
-                margin: 0 auto;
-                width: 40px;
-                height: 40px;
-            }
-            
-            .sidebar-toggle:hover {
-                transform: scale(1.1);
-            }
+            font-style: normal;
+            font-display: swap;
         }
     </style>
     
@@ -1324,7 +252,7 @@
     {% endif %}
     
     <!-- Main Content -->
-    <div class="{% if user.is_authenticated %}main-content{% else %}container mt-5{% endif %}">
+    <main class="{% if user.is_authenticated %}main-content{% else %}container mt-5{% endif %}">
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -1335,12 +263,19 @@
         {% endif %}
         
         {% block content %}{% endblock %}
-    </div>
+        
+        <!-- Page-specific scripts -->
+        {% block extra_js %}{% endblock %}
+    </main>
     
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- GSAP Animation Library (for sidebar animations) -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    
     <script>
+        
         // Real-time clock with timezone for sidebar
         function updateTime() {
             const now = new Date();
@@ -1394,6 +329,12 @@
                 updateTime();
             }
         });
+        
+        // Add js-enabled class to body (for future use if needed)
+        (function() {
+            document.documentElement.classList.add('js-enabled');
+            document.body.classList.add('js-enabled');
+        })();
         
         // Sidebar toggle functionality with enhanced UX and persistence
         document.addEventListener('DOMContentLoaded', function() {
@@ -1452,8 +393,88 @@
             // Update time display based on current state
             updateTime();
             
-            // Function to expand sidebar with smooth animation
+            // Function to expand sidebar with GSAP smooth animation
             function expandSidebar() {
+                // Check if GSAP is available
+                if (typeof gsap !== 'undefined') {
+                    const tl = gsap.timeline();
+                    
+                    // Fade in overlay first (subtle background)
+                    tl.to(sidebarOverlay, {
+                        opacity: 1,
+                        visibility: 'visible',
+                        duration: 0.35,
+                        ease: 'expo.out'
+                    })
+                    // Animate sidebar width and main content margin simultaneously
+                    .to(sidebar, {
+                        width: '250px',
+                        duration: 0.45,
+                        ease: 'expo.out'
+                    }, '-=0.35')
+                    .to(mainContent, {
+                        marginRight: '250px',
+                        duration: 0.45,
+                        ease: 'expo.out'
+                    }, '-=0.45')
+                    // Animate sidebar content fade in
+                    .to('.sidebar-content', {
+                        opacity: 1,
+                        duration: 0.4,
+                        ease: 'power1.out'
+                    }, '-=0.35')
+                    // Animate brand elements
+                    .to('.sidebar-logo', {
+                        opacity: 1,
+                        width: '90%',
+                        padding: '18px',
+                        minHeight: '80px',
+                        duration: 0.35,
+                        ease: 'expo.out'
+                    }, '-=0.3')
+                    .to('.sidebar-brand-text', {
+                        opacity: 1,
+                        maxWidth: '200px',
+                        duration: 0.35,
+                        ease: 'expo.out'
+                    }, '-=0.3')
+                    // Animate time display
+                    .to('.sidebar-time', {
+                        opacity: 1,
+                        height: 'auto',
+                        padding: '15px var(--spacing-lg)',
+                        margin: '10px 15px',
+                        duration: 0.35,
+                        ease: 'expo.out'
+                    }, '-=0.25')
+                    // Animate user name
+                    .to('.sidebar-user-name', {
+                        opacity: 1,
+                        maxWidth: '150px',
+                        duration: 0.35,
+                        ease: 'expo.out'
+                    }, '-=0.25')
+                    // Show nav link spans immediately (no animation, just make visible)
+                    .set('.nav-link span', {
+                        opacity: 1,
+                        maxWidth: '200px',
+                        display: 'inline-block',
+                        visibility: 'visible'
+                    }, '-=0.25')
+                    // Animate toggle button
+                    .to(sidebarToggle, {
+                        scale: 1.1,
+                        duration: 0.2,
+                        yoyo: true,
+                        repeat: 1,
+                        ease: 'power1.out'
+                    }, '-=0.1');
+                } else {
+                    // Fallback to CSS transitions if GSAP is not available
+                    sidebar.classList.remove('collapsed');
+                    sidebar.classList.add('expanded');
+                }
+                
                 sidebar.classList.remove('collapsed');
                 sidebar.classList.add('expanded');
                 if (mainContent) {
@@ -1469,16 +490,87 @@
                 
                 // Update time display to show full content
                 updateTime();
-                
-                // Add subtle animation to toggle button
-                sidebarToggle.style.transform = 'scale(1.1)';
-                setTimeout(() => {
-                    sidebarToggle.style.transform = '';
-                }, 200);
             }
             
-            // Function to collapse sidebar with smooth animation (icons only)
+            // Function to collapse sidebar with GSAP smooth animation
             function collapseSidebar() {
+                // Check if GSAP is available
+                if (typeof gsap !== 'undefined') {
+                    const tl = gsap.timeline();
+                    
+                    // Start sidebar width and main content margin IMMEDIATELY with smooth easing
+                    tl.to(sidebar, {
+                        width: '70px',
+                        duration: 0.4,
+                        ease: 'power1.in'
+                    })
+                    .to(mainContent, {
+                        marginRight: '70px',
+                        duration: 0.4,
+                        ease: 'power1.in'
+                    }, '<')
+                    // Fade out content elements smoothly, slightly staggered for fluid motion
+                    .to('.sidebar-content', {
+                        opacity: 0.5,
+                        duration: 0.3,
+                        ease: 'power1.out'
+                    }, '<+=0.05')
+                    .to('.nav-link span', {
+                        opacity: 0,
+                        maxWidth: 0,
+                        duration: 0.25,
+                        stagger: 0.008,
+                        ease: 'power1.out'
+                    }, '<')
+                    .to('.sidebar-user-name', {
+                        opacity: 0,
+                        maxWidth: 0,
+                        duration: 0.25,
+                        ease: 'power1.out'
+                    }, '<+=0.02')
+                    .to('.sidebar-time', {
+                        opacity: 0,
+                        height: 0,
+                        padding: 0,
+                        margin: 0,
+                        duration: 0.25,
+                        ease: 'power1.out'
+                    }, '<')
+                    .to('.sidebar-brand-text', {
+                        opacity: 0,
+                        maxWidth: 0,
+                        duration: 0.25,
+                        ease: 'power1.out'
+                    }, '<')
+                    .to('.sidebar-logo', {
+                        opacity: 0,
+                        width: 0,
+                        padding: 0,
+                        minHeight: 0,
+                        duration: 0.25,
+                        ease: 'power1.out'
+                    }, '<')
+                    // Fade out overlay smoothly
+                    .to(sidebarOverlay, {
+                        opacity: 0,
+                        visibility: 'hidden',
+                        duration: 0.3,
+                        ease: 'power1.out'
+                    }, '<+=0.1')
+                    // Quick toggle button feedback (runs in parallel)
+                    .to(sidebarToggle, {
+                        scale: 0.95,
+                        duration: 0.12,
+                        yoyo: true,
+                        repeat: 1,
+                        ease: 'power1.out'
+                    }, '<');
+                } else {
+                    // Fallback to CSS transitions if GSAP is not available
+                    sidebar.classList.add('collapsed');
+                    sidebar.classList.remove('expanded');
+                }
+                
                 sidebar.classList.add('collapsed');
                 sidebar.classList.remove('expanded');
                 if (mainContent) {
@@ -1494,12 +586,6 @@
                 
                 // Update time display to hide text
                 updateTime();
-                
-                // Add subtle animation to toggle button
-                sidebarToggle.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    sidebarToggle.style.transform = '';
-                }, 200);
             }
             
             // Toggle sidebar when button is clicked
@@ -1564,61 +650,16 @@
             });
         });
         
-        // Smooth page transitions - faster, sidebar excluded
-        (function() {
-            // Add fade-out effect when navigating to another page
-            const links = document.querySelectorAll('a[href^="/"], a[href^="http"]');
-            const mainContent = document.querySelector('.main-content') || document.querySelector('.container');
-            const sidebar = document.getElementById('sidebar');
-            
-            links.forEach(link => {
-                // Skip sidebar links - they should not trigger page transitions
-                if (sidebar && sidebar.contains(link)) {
-                    return;
-                }
-                
-                // Skip if it's a special link (like download, target="_blank", etc.)
-                if (link.target === '_blank' || 
-                    link.hasAttribute('download') || 
-                    link.getAttribute('href').startsWith('#') ||
-                    link.getAttribute('href').startsWith('javascript:') ||
-                    link.classList.contains('no-transition')) {
-                    return;
-                }
-                
-                link.addEventListener('click', function(e) {
-                    // Only apply transition if it's a same-origin navigation
-                    const href = link.getAttribute('href');
-                    if (href && (href.startsWith('/') || href.startsWith(window.location.origin))) {
-                        // Add faster fade-out to main content only
-                        if (mainContent && !mainContent.closest('.sidebar')) {
-                            mainContent.style.transition = 'opacity 0.1s ease-out, transform 0.1s ease-out';
-                            mainContent.style.opacity = '0';
-                            mainContent.style.transform = 'translateY(-5px)';
-                        }
-                    }
-                });
-            });
-            
-            // Handle browser back/forward buttons - faster
-            window.addEventListener('pageshow', function(event) {
-                if (event.persisted) {
-                    // Page was loaded from cache (back/forward navigation)
-                    if (mainContent && !mainContent.closest('.sidebar')) {
-                        mainContent.style.opacity = '0';
-                        mainContent.style.transform = 'translateY(5px)';
-                        setTimeout(() => {
-                            mainContent.style.transition = 'opacity 0.2s ease-in, transform 0.2s ease-in';
-                            mainContent.style.opacity = '1';
-                            mainContent.style.transform = 'translateY(0)';
-                        }, 10);
-                    }
-                }
-            });
-        })();
+        // Simple page fade-in animation on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add fade-in class to main content for CSS animation
+            const mainContent = document.querySelector('main');
+            if (mainContent) {
+                mainContent.classList.add('page-loaded');
+            }
+        });
     </script>
     
-    {% block extra_js %}{% endblock %}
 </body>
 </html>
 

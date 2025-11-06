@@ -1,0 +1,89 @@
+/* CSS Custom Properties - Theme Variables */
+:root {
+    /* Primary Colors */
+    --color-primary: #003366;
+    --color-primary-dark: #002244;
+    --color-primary-light: rgba(0, 51, 102, 0.1);
+    --color-primary-alpha-7: rgba(0, 51, 102, 0.7);
+    --color-primary-alpha-9: rgba(0, 51, 102, 0.9);
+    --color-primary-alpha-25: rgba(0, 51, 102, 0.25);
+    --color-primary-alpha-2: rgba(0, 51, 102, 0.2);
+    --color-primary-alpha-08: rgba(0, 51, 102, 0.08);
+    --color-primary-alpha-3: rgba(0, 51, 102, 0.3);
+    
+    /* Accent Colors */
+    --color-accent: #FF9933;
+    --color-accent-alpha-7: rgba(255, 153, 51, 0.7);
+    --color-accent-alpha-9: rgba(255, 153, 51, 0.9);
+    
+    /* Secondary Colors */
+    --color-secondary: #6c757d;
+    
+    /* Status Colors */
+    --color-success: #28a745;
+    --color-info: #17a2b8;
+    --color-warning: #FF9933;
+    --color-danger: #dc3545;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #003366 0%, #FF9933 100%);
+    --gradient-primary-reverse: linear-gradient(135deg, #FF9933 0%, #003366 100%);
+    --gradient-primary-dark: linear-gradient(135deg, #002244 0%, #003366 100%);
+    
+    /* Text Colors */
+    --text-primary: #495057;
+    --text-secondary: #6c757d;
+    --text-muted: #6c757d;
+    
+    /* Background Colors */
+    --bg-body: #f8f9fa;
+    --bg-white: #ffffff;
+    --bg-light: #f8f9fa;
+    --bg-hover: rgba(0, 51, 102, 0.1);
+    
+    /* Border Colors */
+    --border-color: #dee2e6;
+    --border-color-light: #e9ecef;
+    --border-color-dark: #ced4da;
+    
+    /* Font Family */
+    --font-primary: 'GE SS Two', 'Roboto', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+    --font-icons: 'bootstrap-icons';
+    
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 20px;
+    --spacing-xl: 30px;
+    
+    /* Border Radius */
+    --radius-sm: 5px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+    --radius-xl: 15px;
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 51, 102, 0.2);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 4px 15px rgba(0, 51, 102, 0.3);
+    --shadow-xl: 0 10px 30px rgba(0, 0, 0, 0.2);
+    
+    /* Transitions */
+    --transition-fast: 0.3s ease-out;
+    --transition-normal: 0.5s ease-out;
+    --transition-medium: 0.5s ease;
+    --transition-slow: 0.6s ease-in-out;
+    --transition-cubic: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Sidebar */
+    --sidebar-width-expanded: 250px;
+    --sidebar-width-collapsed: 70px;
+    --sidebar-width-mobile: 280px;
+    
+    /* Z-index */
+    --z-sidebar-overlay: 999;
+    --z-sidebar: 1000;
+    --z-sidebar-tooltip: 1001;
+}
+

@@ -3,7 +3,7 @@
 
 {% block title %}معلومات الحساب - نظام إدارة الأسطول{% endblock %}
 
-{% block extra_css %}
+{% block content %}
 <style>
     .account-card {
         background: white;
@@ -88,26 +88,30 @@
         margin: 0;
     }
     
-    .form-group {
+    .account-card .form-group,
+    .password-section .form-group {
         margin-bottom: 20px;
     }
     
-    .form-label {
+    .account-card .form-label,
+    .password-section .form-label {
         font-weight: 500;
         color: #495057;
         margin-bottom: 8px;
     }
     
-    .form-control {
-        border-radius: 8px;
-        border: 1px solid #ced4da;
-        padding: 12px 15px;
+    .account-card .form-control,
+    .password-section .form-control {
+        border-radius: 8px !important;
+        border: 1px solid #ced4da !important;
+        padding: 12px 15px !important;
         transition: all 0.3s ease;
     }
     
-    .form-control:focus {
-        border-color: #003366;
-        box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
+    .account-card .form-control:focus,
+    .password-section .form-control:focus {
+        border-color: #003366 !important;
+        box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25) !important;
     }
     
     .password-input-wrapper {
@@ -117,7 +121,7 @@
     }
     
     .password-input-wrapper .form-control {
-        padding-right: 45px;
+        padding-right: 45px !important;
     }
     
     .password-toggle-icon {
@@ -145,20 +149,22 @@
         margin-top: 5px;
     }
     
-    .btn-submit {
-        background: linear-gradient(135deg, #003366 0%, #FF9933 100%);
-        border: none;
-        border-radius: 8px;
-        padding: 12px 30px;
+    .account-card .btn-submit,
+    .password-section .btn-submit {
+        background: linear-gradient(135deg, #003366 0%, #FF9933 100%) !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 12px 30px !important;
         font-weight: 500;
-        color: white;
+        color: white !important;
         transition: all 0.3s ease;
     }
     
-    .btn-submit:hover {
+    .account-card .btn-submit:hover,
+    .password-section .btn-submit:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0, 51, 102, 0.3);
-        color: white;
+        box-shadow: 0 4px 15px rgba(0, 51, 102, 0.3) !important;
+        color: white !important;
     }
     
     .account-icon {
@@ -167,16 +173,15 @@
         opacity: 0.9;
     }
 </style>
-{% endblock %}
 
-{% block content %}
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <!-- Back Button -->
-            <div class="mb-4">
-                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-right"></i> العودة إلى لوحة القيادة
+            <div class="back-button">
+                <a href="{% url 'dashboard' %}" class="btn-back">
+                    <i class="bi bi-arrow-right"></i> 
+                    <span>العودة إلى لوحة القيادة</span>
                 </a>
             </div>
             
@@ -332,23 +337,24 @@
 
 {% block extra_js %}
 <script>
+// Account Profile JavaScript - Clean and Simple
 document.addEventListener('DOMContentLoaded', function() {
     // Password toggle show/hide functionality
     const passwordToggleIcons = document.querySelectorAll('.password-toggle-icon');
+    
     passwordToggleIcons.forEach(function(toggleIcon) {
-        toggleIcon.addEventListener('click', function() {
+        toggleIcon.addEventListener('click', function(e) {
+            e.preventDefault();
             const targetId = this.getAttribute('data-target');
             const passwordInput = document.getElementById(targetId);
             const iconElement = this.querySelector('i');
             
             if (passwordInput && iconElement) {
                 if (passwordInput.type === 'password') {
-                    // Show password
                     passwordInput.type = 'text';
                     iconElement.classList.remove('bi-eye');
                     iconElement.classList.add('bi-eye-slash');
                 } else {
-                    // Hide password
                     passwordInput.type = 'password';
                     iconElement.classList.remove('bi-eye-slash');
                     iconElement.classList.add('bi-eye');
@@ -356,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
+
     // Form validation
     const form = document.querySelector('form');
     if (form) {

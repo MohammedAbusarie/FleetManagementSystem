@@ -1,0 +1,120 @@
+/* Form Styles */
+
+/* Radio Buttons - Theme Colors */
+.form-check-input[type="radio"] {
+    border-color: var(--border-color-dark);
+    transition: all var(--transition-medium);
+}
+
+.form-check-input[type="radio"]:checked {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem var(--color-primary-alpha-25);
+}
+
+.form-check-input[type="radio"]:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem var(--color-primary-alpha-25);
+}
+
+.form-check-input[type="radio"]:hover:not(:checked) {
+    border-color: var(--color-primary);
+}
+
+input[type="radio"]:not(.form-check-input) {
+    accent-color: var(--color-primary);
+}
+
+/* Checkboxes - Theme Colors */
+.form-check-input[type="checkbox"] {
+    border-color: var(--border-color-dark);
+    transition: all var(--transition-medium);
+}
+
+.form-check-input[type="checkbox"]:checked {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem var(--color-primary-alpha-25);
+}
+
+.form-check-input[type="checkbox"]:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem var(--color-primary-alpha-25);
+}
+
+.form-check-input[type="checkbox"]:hover:not(:checked) {
+    border-color: var(--color-primary);
+}
+
+input[type="checkbox"]:not(.form-check-input) {
+    accent-color: var(--color-primary);
+}
+
+/* Form Switches (Toggle Switches) - Theme Colors */
+.form-check-input[type="checkbox"].form-check-input:is(:checked) {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.form-switch .form-check-input {
+    background-color: var(--border-color-dark);
+    border-color: var(--border-color-dark);
+    transition: all var(--transition-medium);
+}
+
+.form-switch .form-check-input:checked {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.form-switch .form-check-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem var(--color-primary-alpha-25);
+}
+
+.form-switch .form-check-input:hover:not(:checked) {
+    border-color: var(--color-primary);
+}
+
+/* Form Controls */
+.form-control {
+    border-radius: var(--radius-md);
+    border: 2px solid var(--border-color-light);
+    padding: var(--spacing-md) 15px;
+    transition: all var(--transition-medium);
+}
+
+.form-control:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem var(--color-primary-alpha-25);
+}
+
+/* Login page form controls */
+.login-container .form-control {
+    border-radius: var(--radius-md);
+    border: 2px solid var(--border-color-light);
+    padding: var(--spacing-md) 15px;
+    transition: all var(--transition-medium);
+}
+
+.login-container .form-control:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem var(--color-primary-alpha-25);
+}
+
+/* Login page button primary */
+.login-container .btn-primary {
+    background: var(--gradient-primary);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    font-weight: 500;
+    transition: all var(--transition-medium);
+}
+
+.login-container .btn-primary:hover {
+    background: var(--gradient-primary-reverse);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+

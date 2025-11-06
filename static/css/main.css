@@ -1,0 +1,32 @@
+/* Main CSS Entry Point - Imports all partials in correct order */
+
+/* Base Styles - Must be imported first */
+@import url('base/_variables.css');
+@import url('base/_fonts.css');
+@import url('base/_reset.css');
+@import url('base/_typography.css');
+
+/* Layout Styles */
+@import url('layouts/_main-content.css');
+@import url('layouts/_login.css');
+
+/* Component Styles */
+@import url('components/_sidebar.css');
+@import url('components/_buttons.css');
+@import url('components/_cards.css');
+@import url('components/_forms.css');
+@import url('components/_tables.css');
+@import url('components/_badges.css');
+@import url('components/_pagination.css');
+@import url('components/_alerts.css');
+@import url('components/_icons.css');
+
+/* Page-Specific Styles */
+@import url('pages/_car-list.css');
+@import url('pages/_equipment-list.css');
+@import url('pages/_admin-panel.css');
+@import url('pages/_action-logs.css');
+
+/* Transitions */
+@import url('transitions/_swup.css');
+

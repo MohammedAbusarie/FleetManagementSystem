@@ -1,0 +1,15 @@
+/* Table Styles */
+
+.table-hover tbody tr:hover {
+    background-color: var(--color-primary-light);
+}
+
+/* Table cell images */
+.table td img,
+.table-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+}
+

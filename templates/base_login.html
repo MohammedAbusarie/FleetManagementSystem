@@ -21,175 +21,46 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    
+    <!-- Font Face Declarations (must be in template for Django static tag) -->
     <style>
-        /* GE SS Two Font Arabic */
+        /* GE SS Two Font Arabic - Using actual font file names */
+        /* Regular weight - using Medium as fallback since Regular doesn't exist */
         @font-face {
             font-family: 'GE SS Two';
-            src: url('{% static "fonts/GE-SS-Two-Regular.otf" %}') format('opentype'),
-                 url('{% static "fonts/GE-SS-Two-Regular.ttf" %}') format('truetype');
+            src: url('{% static "fonts/ArbFONTS-GE_SS_Two_Medium.otf" %}') format('opentype');
             font-weight: normal;
             font-style: normal;
             font-display: swap;
         }
         
+        /* Light weight */
         @font-face {
             font-family: 'GE SS Two';
-            src: url('{% static "fonts/GE-SS-Two-Bold.otf" %}') format('opentype'),
-                 url('{% static "fonts/GE-SS-Two-Bold.ttf" %}') format('truetype');
-            font-weight: bold;
-            font-style: normal;
-            font-display: swap;
-        }
-        
-        @font-face {
-            font-family: 'GE SS Two';
-            src: url('{% static "fonts/GE-SS-Two-Light.otf" %}') format('opentype'),
-                 url('{% static "fonts/GE-SS-Two-Light.ttf" %}') format('truetype');
+            src: url('{% static "fonts/ArbFONTS-GE_SS_Two_Light.otf" %}') format('opentype');
             font-weight: 300;
             font-style: normal;
             font-display: swap;
         }
         
+        /* Medium weight */
         @font-face {
             font-family: 'GE SS Two';
-            src: url('{% static "fonts/GE-SS-Two-Medium.otf" %}') format('opentype'),
-                 url('{% static "fonts/GE-SS-Two-Medium.ttf" %}') format('truetype');
+            src: url('{% static "fonts/ArbFONTS-GE_SS_Two_Medium.otf" %}') format('opentype');
             font-weight: 500;
             font-style: normal;
             font-display: swap;
         }
         
-        /* Universal font application - ensure GE SS Two is used everywhere */
-        /* Apply to all elements except Bootstrap Icons */
-        body *:not([class*="bi"]):not([class*="icon"]) {
-            font-family: 'GE SS Two', 'Roboto', 'Segoe UI', 'Tahoma', 'Arial', sans-serif !important;
-        }
-        
-        /* Ensure all text elements use GE SS Two */
-        h1, h2, h3, h4, h5, h6,
-        p, span, div, a, label, button, input, select, textarea,
-        .card, .card-header, .card-body, .card-title, .card-text,
-        .btn, .form-control, .form-label, .form-select,
-        .nav-link, .navbar-brand, .table, .table td, .table th,
-        .alert, .badge, .pagination, .breadcrumb,
-        .login-container, .login-container * {
-            font-family: 'GE SS Two', 'Roboto', 'Segoe UI', 'Tahoma', 'Arial', sans-serif !important;
-        }
-        
-        /* Preserve icon fonts - Bootstrap Icons */
-        [class*="bi"], i[class*="bi"], .bi, i.bi, .bootstrap-icons {
-            font-family: "bootstrap-icons" !important;
-        }
-        
-        body {
-            font-family: 'GE SS Two', 'Roboto', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
-            background: linear-gradient(135deg, #003366 0%, #FF9933 100%);
-            min-height: 100vh;
-        }
-        
-        .login-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            margin-bottom: 20px;
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.95);
-        }
-        
-        .card-header {
-            background: linear-gradient(135deg, #003366 0%, #FF9933 100%);
-            color: white;
-            border-radius: 15px 15px 0 0 !important;
-            padding: 25px 20px;
-            text-align: center;
-            width: 100%;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #003366 0%, #FF9933 100%);
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #FF9933 0%, #003366 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .alert {
-            border-radius: 10px;
-            border: none;
-        }
-        
-        .form-control {
-            border-radius: 8px;
-            border: 2px solid #e9ecef;
-            padding: 12px 15px;
-            transition: all 0.3s ease;
-        }
-        
-        .form-control:focus {
-            border-color: #003366;
-            box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
-        }
-        
-        .login-brand {
-            font-size: 1.8rem;
+        /* Bold weight */
+        @font-face {
+            font-family: 'GE SS Two';
+            src: url('{% static "fonts/ArbFONTS-GE_SS_Two_Bold.otf" %}') format('opentype');
             font-weight: bold;
-            margin-bottom: 0;
-        }
-        
-        .login-subtitle {
-            font-size: 1.1rem;
-            margin-bottom: 0;
-            opacity: 0.9;
-        }
-        
-        .login-logo {
-            width: 100%;
-            max-width: 500px;
-            height: auto;
-            min-height: 120px;
-            margin-bottom: 25px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            object-fit: contain;
-            /* Logo stretches to fill available space */
-        }
-        
-        .login-logo-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 30px 20px;
-            width: 100%;
-        }
-        
-        @media (max-width: 768px) {
-            .login-logo {
-                max-width: 400px;
-                min-height: 100px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .login-logo {
-                max-width: 300px;
-                min-height: 80px;
-            }
+            font-style: normal;
+            font-display: swap;
         }
     </style>
     

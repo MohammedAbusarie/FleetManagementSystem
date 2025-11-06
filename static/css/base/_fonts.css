@@ -1,0 +1,28 @@
+/* GE SS Two Font Arabic - Font paths will be handled by Django static files */
+/* Note: Font files are in static/fonts/ and will be referenced correctly via Django's static tag */
+/* The actual font-face declarations need to be in templates or use absolute paths */
+/* For now, we'll keep the font-family rules but font-face should remain in template or use absolute URLs */
+
+/* Universal font application - ensure GE SS Two is used everywhere */
+/* Apply to all elements except Bootstrap Icons */
+body *:not([class*="bi"]):not([class*="icon"]) {
+    font-family: var(--font-primary) !important;
+}
+
+/* Ensure all text elements use GE SS Two */
+h1, h2, h3, h4, h5, h6,
+p, span, div, a, label, button, input, select, textarea,
+.card, .card-header, .card-body, .card-title, .card-text,
+.btn, .form-control, .form-label, .form-select,
+.nav-link, .navbar-brand, .table, .table td, .table th,
+.alert, .badge, .pagination, .breadcrumb,
+.sidebar, .sidebar *, .main-content, .main-content *,
+.login-container, .login-container * {
+    font-family: var(--font-primary) !important;
+}
+
+/* Preserve icon fonts - Bootstrap Icons */
+[class*="bi"], i[class*="bi"], .bi, i.bi, .bootstrap-icons {
+    font-family: var(--font-icons) !important;
+}
+

@@ -1,0 +1,53 @@
+/* Card Styles */
+
+.card {
+    border: none;
+    border-radius: var(--radius-xl, 15px);
+    box-shadow: var(--shadow-md, 0 4px 6px rgba(0, 0, 0, 0.07));
+    margin-bottom: var(--spacing-lg, 20px);
+    background-color: #ffffff;
+    overflow: hidden;
+}
+
+.card-header {
+    background: var(--gradient-primary, linear-gradient(135deg, #003366 0%, #FF9933 100%));
+    color: white;
+    border-radius: var(--radius-xl, 15px) var(--radius-xl, 15px) 0 0 !important;
+    padding: 15px var(--spacing-lg, 20px);
+    border-bottom: none;
+}
+
+.card-body {
+    padding: var(--spacing-lg, 20px);
+    background-color: #ffffff;
+}
+
+.card-title {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: inherit;
+}
+
+.card-text {
+    margin-bottom: 1rem;
+}
+
+/* Login page specific card styles */
+.login-container .card {
+    border: none;
+    border-radius: var(--radius-xl, 15px);
+    box-shadow: var(--shadow-xl, 0 10px 30px rgba(0, 0, 0, 0.2));
+    margin-bottom: var(--spacing-lg, 20px);
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.login-container .card-header {
+    background: var(--gradient-primary, linear-gradient(135deg, #003366 0%, #FF9933 100%));
+    color: white;
+    border-radius: var(--radius-xl, 15px) var(--radius-xl, 15px) 0 0 !important;
+    padding: 25px var(--spacing-lg, 20px);
+    text-align: center;
+    width: 100%;
+}
+

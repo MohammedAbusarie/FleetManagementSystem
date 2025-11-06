@@ -34,8 +34,6 @@ urlpatterns = [
 if settings.DEBUG:
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns
     urlpatterns += staticfiles_urlpatterns()
-    # Also serve from STATICFILES_DIRS for development
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT)
 
 # Custom error handlers
 handler400 = custom_400_handler

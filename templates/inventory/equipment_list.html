@@ -5,108 +5,6 @@
 {% block title %}المعدات - نظام إدارة الأسطول{% endblock %}
 
 {% block content %}
-<style>
-    /* Equipment table improvements - prevent cell wrapping */
-    #equipmentTable {
-        table-layout: auto;
-        white-space: nowrap;
-    }
-    
-    #equipmentTable th,
-    #equipmentTable td {
-        white-space: nowrap;
-        overflow: visible;
-        text-overflow: unset;
-        padding: 8px 12px;
-        vertical-align: middle;
-    }
-    
-    /* Ensure table expands to accommodate content */
-    #equipmentTable {
-        min-width: auto;
-        width: max-content;
-    }
-    
-    /* Maintain responsive behavior while preventing wrapping */
-    .table-responsive {
-        overflow-x: auto;
-        overflow-y: visible;
-    }
-    
-    /* Improve readability with better spacing */
-    #equipmentTable tbody tr {
-        height: auto;
-        min-height: 50px;
-    }
-    
-    /* Ensure action buttons column doesn't shrink */
-    #equipmentTable th:last-child,
-    #equipmentTable td:last-child {
-        min-width: 160px;
-        width: auto;
-    }
-    
-    /* Style for image column */
-    #equipmentTable td img {
-        width: 50px;
-        height: 50px;
-        object-fit: cover;
-        border-radius: 5px;
-    }
-    
-    /* Specific column width optimizations */
-    #equipmentTable th:nth-child(1), /* Door No */
-    #equipmentTable td:nth-child(1) {
-        min-width: 100px;
-    }
-    
-    #equipmentTable th:nth-child(2), /* Plate No */
-    #equipmentTable td:nth-child(2),
-    #equipmentTable th:nth-child(3), /* Manufacture Year */
-    #equipmentTable td:nth-child(3) {
-        min-width: 120px;
-    }
-    
-    #equipmentTable th:nth-child(4), /* Manufacturer */
-    #equipmentTable td:nth-child(4),
-    #equipmentTable th:nth-child(5), /* Model */
-    #equipmentTable td:nth-child(5),
-    #equipmentTable th:nth-child(6), /* Location */
-    #equipmentTable td:nth-child(6),
-    #equipmentTable th:nth-child(7), /* Sector */
-    #equipmentTable td:nth-child(7),
-    #equipmentTable th:nth-child(8) { /* Status */
-        min-width: 130px;
-    }
-    
-    #equipmentTable td:nth-child(8) {
-        min-width: 130px;
-        text-align: center;
-    }
-    
-    /* Date columns */
-    #equipmentTable th:nth-child(9), /* Equipment License Start Date */
-    #equipmentTable td:nth-child(9),
-    #equipmentTable th:nth-child(10), /* Equipment License End Date */
-    #equipmentTable td:nth-child(10),
-    #equipmentTable th:nth-child(11), /* Annual Inspection Start Date */
-    #equipmentTable td:nth-child(11),
-    #equipmentTable th:nth-child(12), /* Annual Inspection End Date */
-    #equipmentTable td:nth-child(12),
-    #equipmentTable th:nth-child(13), /* Last Maintenance Date */
-    #equipmentTable td:nth-child(13),
-    #equipmentTable th:nth-child(14), /* Last Maintenance Cost */
-    #equipmentTable td:nth-child(14) {
-        min-width: 140px;
-    }
-    
-    /* Image column */
-    #equipmentTable th:nth-child(15),
-    #equipmentTable td:nth-child(15) {
-        min-width: 80px;
-        text-align: center;
-    }
-</style>
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -151,7 +49,7 @@
     <div class="card">
         <div class="card-body">
             {% if page_obj %}
-                <div class="table-responsive" style="overflow-x: auto;">
+                <div class="table-responsive">
                     <table class="table table-hover table-striped" id="equipmentTable">
                         <thead>
                             <tr>
@@ -202,7 +100,7 @@
                                 <td dir="ltr">{% if equipment.last_maintenance_cost %}{{ equipment.last_maintenance_cost|floatformat:2 }}{% else %}-{% endif %}</td>
                                 <td>
                                     {% if equipment.equipment_image %}
-                                        <img src="{{ equipment.equipment_image|secure_media_url }}" alt="{{ equipment.door_no }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                                        <img src="{{ equipment.equipment_image|secure_media_url }}" alt="{{ equipment.door_no }}" class="table-img">
                                     {% else %}
                                         <span class="text-muted">لا توجد صورة</span>
                                     {% endif %}
@@ -276,143 +174,149 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Sorting functionality
-        document.querySelectorAll('#equipmentTable th[data-sort]').forEach(header => {
-            header.style.cursor = 'pointer';
-            header.addEventListener('click', function() {
-                const sortBy = this.dataset.sort;
-                const currentUrl = new URL(window.location.href);
-                const currentSortBy = currentUrl.searchParams.get('sort_by');
-                let sortOrder = '';
+// Equipment List JavaScript - Clean and Simple
+document.addEventListener('DOMContentLoaded', function() {
+    const equipmentTable = document.getElementById('equipmentTable');
+    if (!equipmentTable) return; // Not on equipment list page
+    
+    // Sorting functionality
+    const sortHeaders = document.querySelectorAll('#equipmentTable th[data-sort]');
+    sortHeaders.forEach(header => {
+        header.style.cursor = 'pointer';
+        header.addEventListener('click', function() {
+            const sortBy = this.dataset.sort;
+            const currentUrl = new URL(window.location.href);
+            const currentSortBy = currentUrl.searchParams.get('sort_by');
+            let sortOrder = '';
 
-                if (currentSortBy === sortBy) {
-                    sortOrder = currentUrl.searchParams.get('sort_order') === 'asc' ? 'desc' : 'asc';
-                } else {
-                    sortOrder = 'asc';
-                }
+            if (currentSortBy === sortBy) {
+                sortOrder = currentUrl.searchParams.get('sort_order') === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortOrder = 'asc';
+            }
 
-                currentUrl.searchParams.set('sort_by', sortBy);
-                currentUrl.searchParams.set('sort_order', sortOrder);
-                window.location.href = currentUrl.toString();
-            });
-        });
-
-        // Pop-up card functionality
-        document.querySelectorAll('#equipmentTable tbody tr').forEach(row => {
-            row.addEventListener('click', function(e) {
-                // Don't trigger if clicking on action buttons
-                if (e.target.closest('a.btn')) {
-                    return;
-                }
-                
-                const equipmentId = this.dataset.equipmentId;
-                fetch(`/equipment/${equipmentId}/detail_json/`)
-                    .then(response => response.json())
-                    .then(data => {
-                        let content = `
-                            <div class="row">
-                                <div class="col-md-4">
-                                    ${data.equipment_image_url ? `
-                                        <div class="text-center">
-                                            <img src="${data.equipment_image_url}" class="img-fluid rounded mb-3" alt="${data.door_no}" style="max-height: 300px;">
-                                            <br>
-                                            <a href="${data.equipment_image_url}" download="${data.door_no}_image.jpg" class="btn btn-sm btn-info w-100">
-                                                <i class="bi bi-download"></i> {% trans "Download Image" %}
-                                            </a>
-                                        </div>
-                                    ` : `
-                                        <div class="text-center">
-                                            <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
-                                            <p class="text-muted">{% trans "No Image" %}</p>
-                                        </div>
-                                    `}
-                                    ${data.calibration_certificates.length > 0 ? `
-                                        <hr>
-                                        <h6>{% trans "Calibration Certificates" %}:</h6>
-                                        <div class="row">
-                                            ${data.calibration_certificates.map((cert, index) => `
-                                                <div class="col-6 mb-2">
-                                                    <img src="${cert.image_url}" class="img-fluid rounded" alt="Certificate ${index + 1}" style="max-height: 100px;">
-                                                    <br>
-                                                    <a href="${cert.image_url}" download="${data.door_no}_certificate_${index + 1}.jpg" class="btn btn-sm btn-secondary w-100 mt-1">
-                                                        <i class="bi bi-download"></i> {% trans "Download" %}
-                                                    </a>
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    ` : `
-                                        <hr>
-                                        <h6>{% trans "Calibration Certificates" %}:</h6>
-                                        <p class="text-muted">{% trans "No certificates" %}</p>
-                                    `}
-                                </div>
-                                <div class="col-md-8">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <p><strong>{% trans "Door No" %}:</strong> ${data.door_no}</p>
-                                            <p><strong>{% trans "Plate No" %}:</strong> ${data.plate_no}</p>
-                                            <p><strong>{% trans "Manufacture Year" %}:</strong> ${data.manufacture_year || '-'}</p>
-                                            <p><strong>{% trans "Manufacturer" %}:</strong> ${data.manufacturer}</p>
-                                            <p><strong>{% trans "Model" %}:</strong> ${data.model}</p>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <p><strong>{% trans "Location" %}:</strong> ${data.location}</p>
-                                            <p><strong>{% trans "Sector" %}:</strong> ${data.sector}</p>
-                                            <p><strong>{% trans "Status" %}:</strong> ${data.status_display}</p>
-                                        </div>
-                                    </div>
-                                    <hr>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <p><strong>{% trans "Equipment License Start Date" %}:</strong> ${data.equipment_license_start_date || '-'}</p>
-                                            <p><strong>{% trans "Equipment License End Date" %}:</strong> ${data.equipment_license_end_date || '-'}</p>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <p><strong>{% trans "Annual Inspection Start Date" %}:</strong> ${data.annual_inspection_start_date || '-'}</p>
-                                            <p><strong>{% trans "Annual Inspection End Date" %}:</strong> ${data.annual_inspection_end_date || '-'}</p>
-                                        </div>
-                                    </div>
-                                    ${data.maintenance_records.length > 0 ? `
-                                        <hr>
-                                        <h6>{% trans "Maintenance Records" %}:</h6>
-                                        <div class="table-responsive">
-                                            <table class="table table-sm">
-                                                <thead>
-                                                    <tr>
-                                                        <th>تاريخ الصيانة</th>
-                                                        <th>تاريخ الإصلاح</th>
-                                                        <th>التكلفة</th>
-                                                        <th>الوصف</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    ${data.maintenance_records.map(maint => `
-                                                        <tr>
-                                                            <td>${maint.maintenance_date || '-'}</td>
-                                                            <td>${maint.restoration_date || '-'}</td>
-                                                            <td>${maint.cost || '-'}</td>
-                                                            <td>${maint.description || '-'}</td>
-                                                        </tr>
-                                                    `).join('')}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    ` : `
-                                        <hr>
-                                        <h6>{% trans "Maintenance Records" %}:</h6>
-                                        <p class="text-muted">{% trans "No maintenance records" %}</p>
-                                    `}
-                                </div>
-                            </div>
-                        `;
-                        document.getElementById('equipment-details-content').innerHTML = content;
-                        var equipmentDetailModal = new bootstrap.Modal(document.getElementById('equipmentDetailModal'));
-                        equipmentDetailModal.show();
-                    })
-                    .catch(error => console.error('Error fetching equipment details:', error));
-            });
+            currentUrl.searchParams.set('sort_by', sortBy);
+            currentUrl.searchParams.set('sort_order', sortOrder);
+            window.location.href = currentUrl.toString();
         });
     });
+
+    // Pop-up card functionality
+    const rows = document.querySelectorAll('#equipmentTable tbody tr');
+    rows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            // Don't trigger if clicking on action buttons
+            if (e.target.closest('a.btn')) {
+                return;
+            }
+            
+            const equipmentId = this.dataset.equipmentId;
+            fetch(`/equipment/${equipmentId}/detail_json/`)
+                .then(response => response.json())
+                .then(data => {
+                    let content = `
+                        <div class="row">
+                            <div class="col-md-4">
+                                ${data.equipment_image_url ? `
+                                    <div class="text-center">
+                                        <img src="${data.equipment_image_url}" class="img-fluid rounded mb-3" alt="${data.door_no}" style="max-height: 300px;">
+                                        <br>
+                                        <a href="${data.equipment_image_url}" download="${data.door_no}_image.jpg" class="btn btn-sm btn-info w-100">
+                                            <i class="bi bi-download"></i> {% trans "Download Image" %}
+                                        </a>
+                                    </div>
+                                ` : `
+                                    <div class="text-center">
+                                        <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+                                        <p class="text-muted">{% trans "No Image" %}</p>
+                                    </div>
+                                `}
+                                ${data.calibration_certificates.length > 0 ? `
+                                    <hr>
+                                    <h6>{% trans "Calibration Certificates" %}:</h6>
+                                    <div class="row">
+                                        ${data.calibration_certificates.map((cert, index) => `
+                                            <div class="col-6 mb-2">
+                                                <img src="${cert.image_url}" class="img-fluid rounded" alt="Certificate ${index + 1}" style="max-height: 100px;">
+                                                <br>
+                                                <a href="${cert.image_url}" download="${data.door_no}_certificate_${index + 1}.jpg" class="btn btn-sm btn-secondary w-100 mt-1">
+                                                    <i class="bi bi-download"></i> {% trans "Download" %}
+                                                </a>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : `
+                                    <hr>
+                                    <h6>{% trans "Calibration Certificates" %}:</h6>
+                                    <p class="text-muted">{% trans "No certificates" %}</p>
+                                `}
+                            </div>
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>{% trans "Door No" %}:</strong> ${data.door_no}</p>
+                                        <p><strong>{% trans "Plate No" %}:</strong> ${data.plate_no}</p>
+                                        <p><strong>{% trans "Manufacture Year" %}:</strong> ${data.manufacture_year || '-'}</p>
+                                        <p><strong>{% trans "Manufacturer" %}:</strong> ${data.manufacturer}</p>
+                                        <p><strong>{% trans "Model" %}:</strong> ${data.model}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>{% trans "Location" %}:</strong> ${data.location}</p>
+                                        <p><strong>{% trans "Sector" %}:</strong> ${data.sector}</p>
+                                        <p><strong>{% trans "Status" %}:</strong> ${data.status_display}</p>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>{% trans "Equipment License Start Date" %}:</strong> ${data.equipment_license_start_date || '-'}</p>
+                                        <p><strong>{% trans "Equipment License End Date" %}:</strong> ${data.equipment_license_end_date || '-'}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>{% trans "Annual Inspection Start Date" %}:</strong> ${data.annual_inspection_start_date || '-'}</p>
+                                        <p><strong>{% trans "Annual Inspection End Date" %}:</strong> ${data.annual_inspection_end_date || '-'}</p>
+                                    </div>
+                                </div>
+                                ${data.maintenance_records.length > 0 ? `
+                                    <hr>
+                                    <h6>{% trans "Maintenance Records" %}:</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>تاريخ الصيانة</th>
+                                                    <th>تاريخ الإصلاح</th>
+                                                    <th>التكلفة</th>
+                                                    <th>الوصف</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${data.maintenance_records.map(maint => `
+                                                    <tr>
+                                                        <td>${maint.maintenance_date || '-'}</td>
+                                                        <td>${maint.restoration_date || '-'}</td>
+                                                        <td>${maint.cost || '-'}</td>
+                                                        <td>${maint.description || '-'}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ` : `
+                                    <hr>
+                                    <h6>{% trans "Maintenance Records" %}:</h6>
+                                    <p class="text-muted">{% trans "No maintenance records" %}</p>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('equipment-details-content').innerHTML = content;
+                    var equipmentDetailModal = new bootstrap.Modal(document.getElementById('equipmentDetailModal'));
+                    equipmentDetailModal.show();
+                })
+                .catch(error => console.error('Error fetching equipment details:', error));
+        });
+    });
+});
 </script>
 {% endblock %}

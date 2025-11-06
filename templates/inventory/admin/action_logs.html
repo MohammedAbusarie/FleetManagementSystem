@@ -5,22 +5,29 @@
 
 {% block extra_css %}
 <style>
+    .search-form {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
     .logs-card {
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        border: none;
+        background: white !important;
+        border-radius: 15px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+        border: none !important;
     }
     
     .logs-header {
-        background: linear-gradient(135deg, #003366 0%, #FF9933 100%);
-        color: white;
-        border-radius: 15px 15px 0 0;
-        padding: 20px;
+        background: linear-gradient(135deg, #003366 0%, #FF9933 100%) !important;
+        color: white !important;
+        border-radius: 15px 15px 0 0 !important;
+        padding: 20px !important;
     }
     
     .logs-body {
-        padding: 0;
+        padding: 0 !important;
         overflow-x: auto;
     }
     
@@ -58,65 +65,6 @@
         background-color: #f8f9fa;
     }
     
-    .logs-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-    
-    .module-badge {
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 500;
-        white-space: nowrap;
-    }
-    
-    .module-cars {
-        background-color: #d4edda;
-        color: #155724;
-    }
-    
-    .module-equipment {
-        background-color: #d1ecf1;
-        color: #0c5460;
-    }
-    
-    .module-generic_tables {
-        background-color: #fff3cd;
-        color: #856404;
-    }
-    
-    .module-admin {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-    
-    .user-name {
-        font-weight: 500;
-        color: #495057;
-    }
-    
-    .log-action {
-        color: #495057;
-        font-weight: 500;
-    }
-    
-    .log-description {
-        color: #6c757d;
-        font-size: 0.85rem;
-    }
-    
-    .log-time {
-        color: #6c757d;
-        font-size: 0.85rem;
-    }
-    
-    .search-form {
-        background: #f8f9fa;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    
     .filter-badge {
         background-color: #e9ecef;
         color: #495057;
@@ -140,25 +88,6 @@
         background-color: #f8f9fa;
         border-top: 1px solid #dee2e6;
     }
-    
-    .page-size-selector {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .page-size-selector label {
-        margin: 0;
-        font-size: 0.9rem;
-        color: #495057;
-    }
-    
-    .page-size-selector select {
-        padding: 5px 10px;
-        border: 1px solid #ced4da;
-        border-radius: 5px;
-        font-size: 0.9rem;
-    }
 </style>
 {% endblock %}
 
@@ -176,9 +105,9 @@
                     <p class="text-muted mb-0">مراقبة جميع العمليات والأنشطة في النظام</p>
                 </div>
                 <div>
-                    <a href="{% url 'admin_panel' %}" class="btn btn-outline-primary">
-                        <i class="bi bi-arrow-right me-2"></i>
-                        العودة للوحة الإدارة
+                    <a href="{% url 'admin_panel' %}" class="btn-back">
+                        <i class="bi bi-arrow-right"></i> 
+                        <span>العودة للوحة الإدارة</span>
                     </a>
                 </div>
             </div>

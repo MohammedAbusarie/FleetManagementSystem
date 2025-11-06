@@ -1,0 +1,61 @@
+/* Icon Styles */
+
+.bi {
+    color: inherit;
+}
+
+/* Icons in primary buttons */
+.btn-primary .bi,
+.btn-primary i.bi {
+    color: white;
+}
+
+/* Icons in card headers */
+.card-header .bi,
+.card-header i.bi {
+    color: white;
+}
+
+/* Icons in sidebar */
+.sidebar .bi,
+.sidebar i.bi {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.sidebar .nav-link.active .bi,
+.sidebar .nav-link.active i.bi {
+    color: white;
+}
+
+/* Icons with text-primary class */
+.text-primary .bi,
+.bi.text-primary,
+i.bi.text-primary {
+    color: var(--color-primary) !important;
+}
+
+/* Icons with accent color */
+.text-accent .bi,
+.bi.text-accent,
+i.bi.text-accent {
+    color: var(--color-accent) !important;
+}
+
+/* Hover effects for icons in links */
+a:hover .bi:not(.no-hover),
+a:hover i.bi:not(.no-hover) {
+    color: var(--color-primary);
+    transition: color var(--transition-medium);
+}
+
+/* Icons in buttons - hover effects */
+.btn:hover .bi,
+.btn:hover i.bi {
+    transition: color var(--transition-medium);
+}
+
+.btn-primary:hover .bi,
+.btn-primary:hover i.bi {
+    color: white;
+}
+

@@ -1,0 +1,39 @@
+/* Swup Page Transition Styles */
+
+/* Swup container */
+#swup {
+    min-height: 100vh;
+}
+
+/* Transition states for Swup */
+.swup-transition-main {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Ensure smooth transitions */
+.swup-transition-main.swup-transition-enter {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.swup-transition-main.swup-transition-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.swup-transition-main.swup-transition-exit {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.swup-transition-main.swup-transition-exit-active {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+/* Prevent layout shift during transitions */
+#swup .main-content,
+#swup .container {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+

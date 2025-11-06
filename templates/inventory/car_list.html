@@ -5,140 +5,6 @@
 {% block title %}السيارات - نظام إدارة الأسطول{% endblock %}
 
 {% block content %}
-<style>
-    /* Car table improvements - prevent cell wrapping */
-    #carTable {
-        table-layout: auto;
-        white-space: nowrap;
-    }
-    
-    #carTable th,
-    #carTable td {
-        white-space: nowrap;
-        overflow: visible;
-        text-overflow: unset;
-        padding: 8px 12px;
-        vertical-align: middle;
-    }
-    
-    /* Ensure table expands to accommodate content */
-    #carTable {
-        min-width: auto;
-        width: max-content;
-    }
-    
-    /* Maintain responsive behavior while preventing wrapping */
-    .table-responsive {
-        overflow-x: auto;
-        overflow-y: visible;
-    }
-    
-    /* Improve readability with better spacing */
-    #carTable tbody tr {
-        height: auto;
-        min-height: 50px;
-    }
-    
-    /* Ensure action buttons column doesn't shrink */
-    #carTable th:last-child,
-    #carTable td:last-child {
-        min-width: 120px;
-        width: auto;
-    }
-    
-    /* Style for image column */
-    #carTable td img {
-        width: 50px;
-        height: 50px;
-        object-fit: cover;
-        border-radius: 5px;
-    }
-    
-    /* Specific column width optimizations */
-    #carTable th:nth-child(1), /* Fleet No */
-    #carTable td:nth-child(1) {
-        min-width: 100px;
-    }
-    
-    #carTable th:nth-child(2), /* Plate No EN */
-    #carTable td:nth-child(2),
-    #carTable th:nth-child(3), /* Plate No AR */
-    #carTable td:nth-child(3) {
-        min-width: 120px;
-    }
-    
-    #carTable th:nth-child(4), /* Department */
-    #carTable td:nth-child(4),
-    #carTable th:nth-child(5), /* Driver */
-    #carTable td:nth-child(5) {
-        min-width: 150px;
-    }
-    
-    #carTable th:nth-child(6), /* Car Class */
-    #carTable td:nth-child(6),
-    #carTable th:nth-child(7), /* Manufacturer */
-    #carTable td:nth-child(7),
-    #carTable th:nth-child(8), /* Model */
-    #carTable td:nth-child(8) {
-        min-width: 130px;
-    }
-    
-    #carTable th:nth-child(9), /* Functional Location */
-    #carTable td:nth-child(9),
-    #carTable th:nth-child(10), /* Room */
-    #carTable td:nth-child(10),
-    #carTable th:nth-child(11), /* Notification Recipient */
-    #carTable td:nth-child(11),
-    #carTable th:nth-child(12), /* Contract Type */
-    #carTable td:nth-child(12),
-    #carTable th:nth-child(13), /* Activity */
-    #carTable td:nth-child(13) {
-        min-width: 140px;
-    }
-    
-    #carTable th:nth-child(14), /* Ownership Type */
-    #carTable td:nth-child(14),
-    #carTable th:nth-child(15), /* Status */
-    #carTable td:nth-child(15) {
-        min-width: 120px;
-    }
-    
-    #carTable th:nth-child(16), /* Location Description */
-    #carTable td:nth-child(16),
-    #carTable th:nth-child(17), /* Address Details */
-    #carTable td:nth-child(17) {
-        min-width: 180px;
-    }
-    
-    /* Date columns */
-    #carTable th:nth-child(18), /* License Start */
-    #carTable td:nth-child(18),
-    #carTable th:nth-child(19), /* License End */
-    #carTable td:nth-child(19),
-    #carTable th:nth-child(20), /* Inspection Start */
-    #carTable td:nth-child(20),
-    #carTable th:nth-child(21), /* Inspection End */
-    #carTable td:nth-child(21),
-    #carTable th:nth-child(22), /* Last Maintenance Date */
-    #carTable td:nth-child(22),
-    #carTable th:nth-child(23), /* Last Maintenance Cost */
-    #carTable td:nth-child(23) {
-        min-width: 130px;
-    }
-    
-    /* Image column */
-    #carTable th:nth-child(24),
-    #carTable td:nth-child(24) {
-        min-width: 80px;
-        text-align: center;
-    }
-    
-    /* Visited Regions column */
-    #carTable th:nth-child(25),
-    #carTable td:nth-child(25) {
-        min-width: 160px;
-    }
-</style>
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -184,7 +50,7 @@
     <div class="card">
         <div class="card-body">
             {% if page_obj %}
-                <div class="table-responsive" style="overflow-x: auto;">
+                <div class="table-responsive">
                     <table class="table table-hover table-striped" id="carTable">
                         <thead>
                             <tr>
@@ -254,10 +120,10 @@
                                 <td>{{ car.last_maintenance_cost|default:"-" }}</td>
                                 <td>
                                     {% if car.car_image %}
-                                        <img src="{{ car.car_image|secure_media_url }}" alt="{{ car.fleet_no }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                                        <img src="{{ car.car_image|secure_media_url }}" alt="{{ car.fleet_no }}" class="table-img">
                                     {% elif car.car_images.all %}
                                         {% with car.car_images.all|first as first_image %}
-                                            <img src="{{ first_image.image|secure_media_url }}" alt="{{ car.fleet_no }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                                            <img src="{{ first_image.image|secure_media_url }}" alt="{{ car.fleet_no }}" class="table-img">
                                         {% endwith %}
                                     {% else %}
                                         <span class="text-muted">لا توجد صورة</span>
@@ -325,28 +191,31 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Sorting functionality
-        document.querySelectorAll('#carTable th[data-sort]').forEach(header => {
-            header.style.cursor = 'pointer';
-            header.addEventListener('click', function() {
-                const sortBy = this.dataset.sort;
-                const currentUrl = new URL(window.location.href);
-                const currentSortBy = currentUrl.searchParams.get('sort_by');
-                let sortOrder = '';
+// Car List JavaScript - Clean and Simple
+document.addEventListener('DOMContentLoaded', function() {
+    // Sorting functionality
+    const sortHeaders = document.querySelectorAll('#carTable th[data-sort]');
+    if (sortHeaders.length === 0) return; // Not on car list page
+    
+    sortHeaders.forEach(header => {
+        header.style.cursor = 'pointer';
+        header.addEventListener('click', function() {
+            const sortBy = this.dataset.sort;
+            const currentUrl = new URL(window.location.href);
+            const currentSortBy = currentUrl.searchParams.get('sort_by');
+            let sortOrder = '';
 
-                if (currentSortBy === sortBy) {
-                    sortOrder = currentUrl.searchParams.get('sort_order') === 'asc' ? 'desc' : 'asc';
-                } else {
-                    sortOrder = 'asc';
-                }
+            if (currentSortBy === sortBy) {
+                sortOrder = currentUrl.searchParams.get('sort_order') === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortOrder = 'asc';
+            }
 
-                currentUrl.searchParams.set('sort_by', sortBy);
-                currentUrl.searchParams.set('sort_order', sortOrder);
-                window.location.href = currentUrl.toString();
-            });
+            currentUrl.searchParams.set('sort_by', sortBy);
+            currentUrl.searchParams.set('sort_order', sortOrder);
+            window.location.href = currentUrl.toString();
         });
-
     });
+});
 </script>
 {% endblock %}

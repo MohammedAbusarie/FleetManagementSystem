@@ -1,0 +1,32 @@
+/* Badge Styles */
+
+.badge.bg-primary {
+    background: var(--gradient-primary) !important;
+    color: white;
+}
+
+.badge.bg-secondary {
+    background-color: var(--color-secondary) !important;
+    color: white;
+}
+
+.badge.bg-success {
+    background-color: var(--color-success) !important;
+    color: white;
+}
+
+.badge.bg-info {
+    background-color: var(--color-info) !important;
+    color: white;
+}
+
+.badge.bg-warning {
+    background-color: var(--color-warning) !important;
+    color: white;
+}
+
+.badge.bg-danger {
+    background-color: var(--color-danger) !important;
+    color: white;
+}
+

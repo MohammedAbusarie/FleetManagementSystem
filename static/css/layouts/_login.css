@@ -1,0 +1,62 @@
+/* Login Page Layout */
+
+body {
+    font-family: var(--font-primary);
+    background: var(--gradient-primary);
+    min-height: 100vh;
+}
+
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-brand {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 0;
+}
+
+.login-subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 0;
+    opacity: 0.9;
+}
+
+.login-logo {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    min-height: 120px;
+    margin-bottom: 25px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    object-fit: contain;
+}
+
+.login-logo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl) var(--spacing-lg);
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .login-logo {
+        max-width: 400px;
+        min-height: 100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-logo {
+        max-width: 300px;
+        min-height: 80px;
+    }
+}
+

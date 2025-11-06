@@ -1,0 +1,99 @@
+/* Equipment List Page Specific Styles */
+
+/* Equipment table improvements - prevent cell wrapping */
+#equipmentTable {
+    table-layout: auto;
+    white-space: nowrap;
+    min-width: auto;
+    width: max-content;
+}
+
+#equipmentTable th,
+#equipmentTable td {
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: unset;
+    padding: var(--spacing-sm) var(--spacing-md);
+    vertical-align: middle;
+}
+
+/* Maintain responsive behavior while preventing wrapping */
+.table-responsive {
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+/* Improve readability with better spacing */
+#equipmentTable tbody tr {
+    height: auto;
+    min-height: 50px;
+}
+
+/* Ensure action buttons column doesn't shrink */
+#equipmentTable th:last-child,
+#equipmentTable td:last-child {
+    min-width: 160px;
+    width: auto;
+}
+
+/* Style for image column */
+#equipmentTable td img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+}
+
+/* Specific column width optimizations */
+#equipmentTable th:nth-child(1), /* Door No */
+#equipmentTable td:nth-child(1) {
+    min-width: 100px;
+}
+
+#equipmentTable th:nth-child(2), /* Plate No */
+#equipmentTable td:nth-child(2),
+#equipmentTable th:nth-child(3), /* Manufacture Year */
+#equipmentTable td:nth-child(3) {
+    min-width: 120px;
+}
+
+#equipmentTable th:nth-child(4), /* Manufacturer */
+#equipmentTable td:nth-child(4),
+#equipmentTable th:nth-child(5), /* Model */
+#equipmentTable td:nth-child(5),
+#equipmentTable th:nth-child(6), /* Location */
+#equipmentTable td:nth-child(6),
+#equipmentTable th:nth-child(7), /* Sector */
+#equipmentTable td:nth-child(7),
+#equipmentTable th:nth-child(8) { /* Status */
+    min-width: 130px;
+}
+
+#equipmentTable td:nth-child(8) {
+    min-width: 130px;
+    text-align: center;
+}
+
+/* Date columns */
+#equipmentTable th:nth-child(9), /* Equipment License Start Date */
+#equipmentTable td:nth-child(9),
+#equipmentTable th:nth-child(10), /* Equipment License End Date */
+#equipmentTable td:nth-child(10),
+#equipmentTable th:nth-child(11), /* Annual Inspection Start Date */
+#equipmentTable td:nth-child(11),
+#equipmentTable th:nth-child(12), /* Annual Inspection End Date */
+#equipmentTable td:nth-child(12),
+#equipmentTable th:nth-child(13), /* Last Maintenance Date */
+#equipmentTable td:nth-child(13),
+#equipmentTable th:nth-child(14), /* Last Maintenance Cost */
+#equipmentTable td:nth-child(14) {
+    min-width: 140px;
+}
+
+/* Image column */
+#equipmentTable th:nth-child(15),
+#equipmentTable td:nth-child(15) {
+    min-width: 80px;
+    text-align: center;
+}
+
