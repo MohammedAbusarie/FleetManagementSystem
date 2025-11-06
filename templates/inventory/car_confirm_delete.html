@@ -16,8 +16,8 @@
         <div class="card-body">
             <div class="alert alert-danger">
                 <h5><i class="bi bi-exclamation-triangle"></i> هل أنت متأكد أنك تريد حذف هذه السيارة؟</h5>
-                <p><strong>رقم الأسطول:</strong> {{ car.fleet_no }}</p>
-                <p><strong>رقم اللوحة (الإنجليزية):</strong> {{ car.plate_no_en }}</p>
+                <p><strong>رقم الأسطول:</strong> <span class="fleet-no-value">{{ car.fleet_no }}</span></p>
+                <p><strong>رقم اللوحة (الإنجليزية):</strong> <span class="plate-no-en-value">{{ car.plate_no_en }}</span></p>
                 <p><strong>الشركة المصنعة:</strong> {{ car.manufacturer.name }}</p>
                 <p><strong>الموديل:</strong> {{ car.model.name }}</p>
             </div>
