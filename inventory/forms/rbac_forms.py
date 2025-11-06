@@ -16,7 +16,15 @@ class UserCreateForm(UserCreationForm):
     )
     first_name = forms.CharField(max_length=30, label="الاسم الأول")
     last_name = forms.CharField(max_length=30, label="الاسم الأخير")
-    email = forms.EmailField(label="البريد الإلكتروني")
+    email = forms.EmailField(
+        label="البريد الإلكتروني",
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control english-field',
+            'placeholder': 'email@example.com',
+            'lang': 'en',
+            'inputmode': 'latin'
+        })
+    )
 
     class Meta:
         model = User
@@ -25,6 +33,14 @@ class UserCreateForm(UserCreationForm):
             'username': 'اسم المستخدم',
             'password1': 'كلمة المرور',
             'password2': 'تأكيد كلمة المرور',
+        }
+        widgets = {
+            'username': forms.TextInput(attrs={
+                'class': 'form-control english-field',
+                'placeholder': 'username',
+                'lang': 'en',
+                'inputmode': 'latin'
+            }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -64,11 +80,17 @@ class UserCreateForm(UserCreationForm):
                 'password_mismatch': password_error_messages['password_mismatch'],
             })
 
-        # Add Arabic styling
+        # Add styling - English fields use english-field class for LTR display
         for field_name, field in self.fields.items():
-            if isinstance(field.widget, forms.TextInput) or isinstance(field.widget, forms.EmailInput):
-                field.widget.attrs.update({'class': 'form-control'})
+            if field_name in ['username', 'email']:
+                # Username and email should display in English/LTR
+                if isinstance(field.widget, forms.TextInput) or isinstance(field.widget, forms.EmailInput):
+                    field.widget.attrs.update({'class': 'form-control english-field'})
             elif isinstance(field.widget, forms.PasswordInput):
+                # Password fields are automatically handled by CSS
+                field.widget.attrs.update({'class': 'form-control'})
+            elif isinstance(field.widget, forms.TextInput):
+                # Other text fields use regular form-control
                 field.widget.attrs.update({'class': 'form-control'})
 
     def clean(self):
@@ -167,15 +189,35 @@ class UserUpdateForm(forms.ModelForm):
             'email': 'البريد الإلكتروني',
             'is_active': 'نشط',
         }
+        widgets = {
+            'username': forms.TextInput(attrs={
+                'class': 'form-control english-field',
+                'placeholder': 'username',
+                'lang': 'en',
+                'inputmode': 'latin'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control english-field',
+                'placeholder': 'email@example.com',
+                'lang': 'en',
+                'inputmode': 'latin'
+            }),
+        }
 
     def __init__(self, *args, **kwargs):
         # Extract current_user from kwargs if provided (needed for validation)
         self.current_user = kwargs.pop('current_user', None)
         super().__init__(*args, **kwargs)
 
-        # Add Arabic styling
+        # Add styling - preserve english-field class for username and email
         for field_name, field in self.fields.items():
-            if isinstance(field.widget, forms.TextInput) or isinstance(field.widget, forms.EmailInput):
+            if field_name in ['username', 'email']:
+                # Username and email should display in English/LTR - preserve existing class
+                current_class = field.widget.attrs.get('class', 'form-control english-field')
+                if 'english-field' not in current_class:
+                    current_class += ' english-field'
+                field.widget.attrs['class'] = current_class
+            elif isinstance(field.widget, forms.TextInput) or isinstance(field.widget, forms.EmailInput):
                 field.widget.attrs.update({'class': 'form-control'})
             elif isinstance(field.widget, forms.PasswordInput):
                 # Password fields already have form-control class, but ensure it's set

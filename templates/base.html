@@ -24,6 +24,9 @@
     <!-- Main CSS -->
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     
+    <!-- English Fields CSS - For LTR fields like usernames, emails, passwords, license plates -->
+    <link rel="stylesheet" href="{% static 'css/english-fields.css' %}">
+    
     <!-- Critical CSS Fallbacks - Ensure styles work even if @import fails -->
     <style>
         /* Critical CSS Variables Fallback */
@@ -265,6 +268,9 @@
         {% block content %}{% endblock %}
         
         <!-- Page-specific scripts -->
+        <!-- English Fields JavaScript - Converts Arabic numerals to English -->
+        <script src="{% static 'js/english-fields.js' %}"></script>
+        
         {% block extra_js %}{% endblock %}
     </main>
     

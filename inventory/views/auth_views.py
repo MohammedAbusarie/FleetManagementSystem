@@ -19,8 +19,24 @@ def is_admin(user):
 def login_view(request):
     """Login view with enhanced logging and user type support"""
     class ArabicAuthenticationForm(AuthenticationForm):
-        username = forms.CharField(label='اسم المستخدم')
-        password = forms.CharField(label='كلمة المرور', widget=forms.PasswordInput)
+        username = forms.CharField(
+            label='اسم المستخدم',
+            widget=forms.TextInput(attrs={
+                'class': 'form-control english-field',
+                'placeholder': 'username',
+                'lang': 'en',
+                'inputmode': 'latin'
+            })
+        )
+        password = forms.CharField(
+            label='كلمة المرور',
+            widget=forms.PasswordInput(attrs={
+                'class': 'form-control',
+                'placeholder': '••••••••',
+                'lang': 'en',
+                'inputmode': 'latin'
+            })
+        )
         
     if request.method == 'POST':
         form = ArabicAuthenticationForm(request, data=request.POST)

@@ -21,6 +21,21 @@ class CarForm(forms.ModelForm):
             'contract_type', 'activity', 'sector', 'department', 'division', 'status'
         ]
         widgets = {
+            # English/LTR fields
+            'fleet_no': forms.TextInput(attrs={
+                'class': 'form-control english-field',
+                'placeholder': 'Fleet Number',
+                'style': 'text-transform: uppercase;',
+                'lang': 'en',
+                'inputmode': 'latin'
+            }),
+            'plate_no_en': forms.TextInput(attrs={
+                'class': 'form-control english-field',
+                'placeholder': 'License Plate (English)',
+                'style': 'text-transform: uppercase;',
+                'lang': 'en',
+                'inputmode': 'latin'
+            }),
             # Foreign key fields with search functionality
             'administrative_unit': Select2Widget(attrs={'data-placeholder': 'اختر الإدارة...'}),
             'department_code': Select2Widget(attrs={'data-placeholder': 'اختر رمز القسم...'}),
