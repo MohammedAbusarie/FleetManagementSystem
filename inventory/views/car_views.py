@@ -70,11 +70,35 @@ def car_create_view(request):
     """Car create view"""
     if request.method == 'POST':
         form = CarForm(request.POST, request.FILES)
-        maintenance_formset = CarMaintenanceFormSet(request.POST, request.FILES)
         license_formset = CarLicenseRecordFormSet(request.POST)
         inspection_formset = CarInspectionRecordFormSet(request.POST)
         
-        if form.is_valid() and maintenance_formset.is_valid() and license_formset.is_valid() and inspection_formset.is_valid():
+        # Get status from POST data to determine if maintenance formset needs validation
+        status = request.POST.get('status', '')
+        maintenance_formset_valid = True
+        maintenance_formset = None
+        
+        # Only validate maintenance formset if status is under_maintenance
+        # For new cars, generic inline formsets need an instance to validate,
+        # so we'll validate it after the car is saved if status is under_maintenance
+        if status == 'under_maintenance':
+            # Validate form first to get cleaned data
+            if form.is_valid():
+                # Create a temporary car instance (not saved) for formset validation
+                temp_car = form.save(commit=False)
+                maintenance_formset = CarMaintenanceFormSet(request.POST, request.FILES, instance=temp_car)
+                maintenance_formset_valid = maintenance_formset.is_valid()
+            else:
+                # Form not valid yet, create formset without instance
+                # Will validate after car is saved
+                maintenance_formset = CarMaintenanceFormSet(request.POST, request.FILES)
+                maintenance_formset_valid = True
+        else:
+            # Status is not under_maintenance, create empty formset (no validation needed)
+            maintenance_formset = CarMaintenanceFormSet()
+            maintenance_formset_valid = True
+        
+        if form.is_valid() and maintenance_formset_valid and license_formset.is_valid() and inspection_formset.is_valid():
             car = form.save(commit=False)
             car.save()
 
@@ -107,10 +131,28 @@ def car_create_view(request):
 
             # Save maintenance records if status is under_maintenance
             if car.status == 'under_maintenance':
-                instances = maintenance_formset.save(commit=False)
-                for obj in instances:
-                    obj.content_object = car
-                    obj.save()
+                # Re-create formset with the saved car instance for proper validation and saving
+                maintenance_formset = CarMaintenanceFormSet(request.POST, request.FILES, instance=car)
+                if maintenance_formset.is_valid():
+                    instances = maintenance_formset.save(commit=False)
+                    for obj in instances:
+                        obj.content_object = car
+                        obj.save()
+                else:
+                    # If maintenance formset is invalid after car is saved, rollback
+                    car.delete()
+                    messages.error(request, get_message_template('validation_error'))
+                    # Re-create formsets with errors for display
+                    maintenance_formset = CarMaintenanceFormSet(request.POST, request.FILES)
+                    context = {
+                        'form': form,
+                        'maintenance_formset': maintenance_formset,
+                        'license_formset': license_formset,
+                        'inspection_formset': inspection_formset,
+                        'action': 'Create',
+                        'all_regions': Region.objects.all()
+                    }
+                    return render(request, 'inventory/car_form.html', context)
 
             # Log the action
             log_user_action(
@@ -125,6 +167,13 @@ def car_create_view(request):
             messages.success(request, get_message_template('create_success', 'Car', 'create'))
             return redirect('car_list')
         else:
+            # Validation failed - ensure maintenance_formset is available for error display
+            if maintenance_formset is None:
+                status = request.POST.get('status', '')
+                if status == 'under_maintenance':
+                    maintenance_formset = CarMaintenanceFormSet(request.POST, request.FILES)
+                else:
+                    maintenance_formset = CarMaintenanceFormSet()
             messages.error(request, get_message_template('validation_error'))
     else:
         form = CarForm()
