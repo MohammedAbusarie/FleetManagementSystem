@@ -4,11 +4,17 @@ A comprehensive fleet and equipment management system built with Django, featuri
 
 ## 📚 Documentation
 
-- **[PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md)** - Complete architectural reference for developers and AI agents
-- **[ADMIN_PANEL_USER_GUIDE.md](ADMIN_PANEL_USER_GUIDE.md)** - User guide for the admin panel (Arabic)
-- **[AI_AGENT_RULES.md](AI_AGENT_RULES.md)** - Guidelines for AI agents working on this project
-- **[QUICKSTART.md](QUICKSTART.md)** - Quick setup guide
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Production deployment instructions
+All documentation files are organized in the `docs/` folder:
+
+- **[docs/PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md)** - Complete architectural reference for developers and AI agents
+- **[docs/ADMIN_PANEL_USER_GUIDE.md](docs/ADMIN_PANEL_USER_GUIDE.md)** - User guide for the admin panel (Arabic)
+- **[docs/QUICKSTART.md](docs/QUICKSTART.md)** - Quick setup guide
+- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Production deployment instructions
+- **[docs/RBAC_MIGRATION_GUIDE.md](docs/RBAC_MIGRATION_GUIDE.md)** - RBAC system migration guide
+- **[docs/ADMIN_PANEL_RBAC_PLAN.md](docs/ADMIN_PANEL_RBAC_PLAN.md)** - Admin panel RBAC implementation plan
+- **[docs/REFACTORING_PLAN.md](docs/REFACTORING_PLAN.md)** - Project refactoring plan
+- **[docs/TESTING_HANDOFF.md](docs/TESTING_HANDOFF.md)** - Testing handoff documentation
+- **[docs/POPULATE_DATA_README.md](docs/POPULATE_DATA_README.md)** - Data population guide
 
 ## Features
 
