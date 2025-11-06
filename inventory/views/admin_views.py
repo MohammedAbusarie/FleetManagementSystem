@@ -901,7 +901,14 @@ def login_logs_export(request):
         writer = csv.writer(response)
         writer.writerow(['المستخدم', 'اسم المستخدم', 'عنوان IP', 'المتصفح', 'نجاح', 'وقت الدخول', 'وقت الخروج', 'الدور'])
         for l in logs:
-            role = getattr(getattr(l.user, 'profile', None), 'user_type', '')
+            # Get Arabic role name
+            profile = getattr(l.user, 'profile', None)
+            if profile:
+                role = profile.get_user_type_display()
+            elif l.user.is_superuser:
+                role = 'مدير عام'
+            else:
+                role = 'مستخدم عادي'
             writer.writerow([
                 l.user.get_full_name() or '',
                 l.user.username,
@@ -971,7 +978,14 @@ def action_logs_export(request):
         writer = csv.writer(response)
         writer.writerow(['المستخدم', 'اسم المستخدم', 'نوع العملية', 'الوحدة', 'الوصف', 'عنوان IP', 'الوقت', 'الدور'])
         for l in logs:
-            role = getattr(getattr(l.user, 'profile', None), 'user_type', '')
+            # Get Arabic role name
+            profile = getattr(l.user, 'profile', None)
+            if profile:
+                role = profile.get_user_type_display()
+            elif l.user.is_superuser:
+                role = 'مدير عام'
+            else:
+                role = 'مستخدم عادي'
             writer.writerow([
                 l.user.get_full_name() or '',
                 l.user.username,
