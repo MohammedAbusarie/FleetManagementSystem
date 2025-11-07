@@ -66,3 +66,9 @@ logs/
 # Node.js
 node_modules/
 package-lock.json
+
+# Playwright Tests
+playwright_tests/reports/
+playwright_tests/.pytest_cache/
+playwright_tests/__pycache__/
+*.pyc
