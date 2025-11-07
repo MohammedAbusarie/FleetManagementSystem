@@ -1,6 +1,6 @@
 /* 
  * English Fields CSS - For fields that should display and accept English input only
- * This file ensures specific fields use LTR direction and Latin/English fonts
+ * This file ensures specific fields use RTL direction and Latin/English fonts
  * Applied to: usernames, emails, passwords, license plates, fleet numbers, technical codes, etc.
  * Font: Roboto (loaded via Google Fonts in base templates)
  * Numerals: Forces Western numerals (0123456789) instead of Arabic numerals (٠١٢٣٤٥٦٧٨٩)
@@ -10,7 +10,7 @@
  */
 
 /* =============================================================================
-   USERNAME FIELDS - Force English/LTR
+   USERNAME FIELDS - Force English/RTL
    ============================================================================= */
 /* Maximum specificity to override global Arabic font */
 body input[name="username"],
@@ -20,8 +20,8 @@ body .form-control[name="username"],
 body .form-control[id*="username"],
 body .info-value.readonly:has(~ .info-label:contains("اسم المستخدم")),
 body div:has(> .info-label:contains("اسم المستخدم")) .info-value {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     unicode-bidi: plaintext !important;
     font-variant-numeric: lining-nums !important;
@@ -33,8 +33,8 @@ body div:has(> .info-label:contains("اسم المستخدم")) .info-value {
 
 /* Username display in account profile */
 body .info-row:has(.info-label:contains("اسم المستخدم")) .info-value {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     font-variant-numeric: lining-nums !important;
     -webkit-font-feature-settings: "lnum" !important;
@@ -42,7 +42,7 @@ body .info-row:has(.info-label:contains("اسم المستخدم")) .info-value 
 }
 
 /* =============================================================================
-   EMAIL FIELDS - Force English/LTR
+   EMAIL FIELDS - Force English/RTL
    ============================================================================= */
 body input[type="email"],
 body input[name="email"],
@@ -51,8 +51,8 @@ body input[id*="id_email"],
 body .form-control[type="email"],
 body .form-control[name="email"],
 body .info-row:has(.info-label:contains("البريد الإلكتروني")) .info-value {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     unicode-bidi: plaintext !important;
     font-variant-numeric: lining-nums !important;
@@ -63,7 +63,7 @@ body .info-row:has(.info-label:contains("البريد الإلكتروني")) .i
 }
 
 /* =============================================================================
-   PASSWORD FIELDS - Force English/LTR
+   PASSWORD FIELDS - Force English/RTL
    ============================================================================= */
 body input[type="password"],
 body input[name*="password"],
@@ -71,8 +71,8 @@ body input[id*="password"],
 body .form-control[type="password"],
 body .password-input-wrapper input,
 body .password-input-wrapper .form-control {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', "Courier New", monospace, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     unicode-bidi: plaintext !important;
     letter-spacing: 0.5px;
@@ -84,7 +84,7 @@ body .password-input-wrapper .form-control {
 }
 
 /* =============================================================================
-   LICENSE PLATE FIELDS (ENGLISH) - Force English/LTR
+   LICENSE PLATE FIELDS (ENGLISH) - Force English/RTL
    ============================================================================= */
 body input[name="plate_no_en"],
 body input[id*="plate_no_en"],
@@ -104,8 +104,8 @@ body .card-body .plate-no-en-value,
 body .detail-row .plate-no-en-value,
 body .detail-card .plate-no-en-value,
 body .detail-card-body .plate-no-en-value {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     /* Force Roboto font - must come first in font-family to override Arabic font */
     font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     unicode-bidi: plaintext !important;
@@ -124,8 +124,8 @@ body .detail-card-body .plate-no-en-value {
 /* License plate in tables */
 body td[data-field="plate_no_en"],
 body table td:nth-child(2) {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     font-variant-numeric: lining-nums !important;
     -webkit-font-feature-settings: "lnum" !important;
@@ -133,7 +133,7 @@ body table td:nth-child(2) {
 }
 
 /* =============================================================================
-   FLEET NUMBER FIELDS - Force English/LTR
+   FLEET NUMBER FIELDS - Force English/RTL
    ============================================================================= */
 body input[name="fleet_no"],
 body input[id*="fleet_no"],
@@ -152,8 +152,8 @@ body .card-body .fleet-no-value,
 body .detail-row .fleet-no-value,
 body .detail-card .fleet-no-value,
 body .detail-card-body .fleet-no-value {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     /* Force Roboto font - must come first in font-family to override Arabic font */
     font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     unicode-bidi: plaintext !important;
@@ -173,8 +173,8 @@ body .detail-card-body .fleet-no-value {
 body table#carTable tbody tr td:first-child,
 body table.table-hover tbody tr td:first-child,
 body td[data-field="fleet_no"] {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     font-variant-numeric: lining-nums !important;
     -webkit-font-feature-settings: "lnum" !important;
@@ -184,7 +184,7 @@ body td[data-field="fleet_no"] {
 }
 
 /* =============================================================================
-   PHONE NUMBER FIELDS - Force English/LTR
+   PHONE NUMBER FIELDS - Force English/RTL
    ============================================================================= */
 body input[type="tel"],
 body input[name*="phone"],
@@ -193,8 +193,8 @@ body input[name*="mobile"],
 body input[id*="mobile"],
 body .form-control[type="tel"],
 body .form-control[name*="phone"] {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     unicode-bidi: plaintext !important;
     font-variant-numeric: lining-nums !important;
@@ -205,7 +205,7 @@ body .form-control[name*="phone"] {
 }
 
 /* =============================================================================
-   URL FIELDS - Force English/LTR
+   URL FIELDS - Force English/RTL
    ============================================================================= */
 body input[type="url"],
 body input[name*="url"],
@@ -213,8 +213,8 @@ body input[id*="url"],
 body input[name*="website"],
 body input[id*="website"],
 body .form-control[type="url"] {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', "Courier New", monospace, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     unicode-bidi: plaintext !important;
     font-variant-numeric: lining-nums !important;
@@ -225,7 +225,7 @@ body .form-control[type="url"] {
 }
 
 /* =============================================================================
-   TECHNICAL CODE/ID FIELDS - Force English/LTR
+   TECHNICAL CODE/ID FIELDS - Force English/RTL
    ============================================================================= */
 body input[name*="code"],
 body input[id*="code"],
@@ -238,8 +238,8 @@ body input[id*="vin"],
 body .form-control[name*="code"],
 body .form-control[name*="serial"],
 body .form-control[name*="vin"] {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', "Courier New", monospace, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     unicode-bidi: plaintext !important;
     text-transform: uppercase;
@@ -256,8 +256,8 @@ body .form-control[name*="vin"] {
 body input[type="number"],
 body input[inputmode="numeric"],
 body .form-control[type="number"] {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     font-variant-numeric: lining-nums !important;
     -webkit-font-feature-settings: "lnum" !important;
@@ -277,8 +277,8 @@ body input.latin-text,
 body .form-control.latin-text,
 body input.english-only,
 body .form-control.english-only {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     unicode-bidi: plaintext !important;
     font-variant-numeric: lining-nums !important;
@@ -292,8 +292,8 @@ body input.english-code,
 body .form-control.english-code,
 body input.technical-code,
 body .form-control.technical-code {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', "Courier New", monospace, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     unicode-bidi: plaintext !important;
     text-transform: uppercase;
@@ -316,13 +316,13 @@ body input[type="password"]::placeholder,
 body input[name="username"]::placeholder,
 body input[name="plate_no_en"]::placeholder,
 body input[name="fleet_no"]::placeholder {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
 }
 
 /* =============================================================================
-   FORCE RTL OVERRIDE - Ensure these fields ignore parent RTL
+   FORCE RTL OVERRIDE - Ensure these fields use RTL
    ============================================================================= */
 body[dir="rtl"] input[type="email"],
 body[dir="rtl"] input[type="password"],
@@ -331,8 +331,8 @@ body[dir="rtl"] input[name="plate_no_en"],
 body[dir="rtl"] input[name="fleet_no"],
 body[dir="rtl"] input[type="url"],
 body[dir="rtl"] .form-control.english-field {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
 }
 
@@ -352,8 +352,8 @@ body .table-hover tbody tr td:nth-child(3) {
 body table td[data-type="english"],
 body table td[data-type="code"],
 body table td[data-type="technical"] {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     font-variant-numeric: lining-nums !important;
     -webkit-font-feature-settings: "lnum" !important;
@@ -361,7 +361,7 @@ body table td[data-type="technical"] {
 }
 
 /* =============================================================================
-   RESPONSIVE - Maintain LTR on mobile
+   RESPONSIVE - Maintain RTL on mobile
    ============================================================================= */
 @media (max-width: 768px) {
     body input.english-field,
@@ -372,8 +372,8 @@ body table td[data-type="technical"] {
     body input[name="username"],
     body input[name="plate_no_en"],
     body input[name="fleet_no"] {
-        direction: ltr !important;
-        text-align: left !important;
+        direction: rtl !important;
+        text-align: right !important;
         font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     }
 }
@@ -391,8 +391,8 @@ body table td[data-type="technical"] {
     body input[name="username"],
     body input[name="plate_no_en"],
     body input[name="fleet_no"] {
-        direction: ltr !important;
-        text-align: left !important;
+        direction: rtl !important;
+        text-align: right !important;
         font-family: 'Roboto', 'Roboto', 'Roboto', Arial, sans-serif !important;
         font-variant-numeric: lining-nums !important;
         -webkit-font-feature-settings: "lnum" !important;
@@ -411,8 +411,8 @@ body div[id*="div_id_email"] input,
 body div[id*="div_id_password"] input,
 body div[id*="div_id_plate_no_en"] input,
 body div[id*="div_id_fleet_no"] input {
-    direction: ltr !important;
-    text-align: left !important;
+    direction: rtl !important;
+    text-align: right !important;
     font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
     unicode-bidi: plaintext !important;
     font-variant-numeric: lining-nums !important;
@@ -423,7 +423,7 @@ body div[id*="div_id_fleet_no"] input {
 }
 
 /* =============================================================================
-   PASSWORD TOGGLE ICON POSITIONING - Account for LTR text
+   PASSWORD TOGGLE ICON POSITIONING - Account for RTL text
    ============================================================================= */
 .password-input-wrapper {
     position: relative;
@@ -431,22 +431,22 @@ body div[id*="div_id_fleet_no"] input {
     align-items: center;
 }
 
-/* Password fields in LTR context - icon on left, proper padding */
+/* Password fields in RTL context - icon on right, proper padding */
 .password-input-wrapper input[type="password"],
 .password-input-wrapper input[name*="password"],
 .password-input-wrapper .form-control[type="password"] {
-    padding-left: 45px !important;
-    padding-right: 15px !important;
-    direction: ltr !important;
-    text-align: left !important;
+    padding-right: 45px !important;
+    padding-left: 15px !important;
+    direction: rtl !important;
+    text-align: right !important;
 }
 
-/* Override template styles for password toggle icon - position on left, vertically centered */
+/* Override template styles for password toggle icon - position on right, vertically centered */
 .password-input-wrapper .password-toggle-icon,
 .password-input-wrapper span.password-toggle-icon {
     position: absolute !important;
-    left: 15px !important;
-    right: auto !important;
+    right: 15px !important;
+    left: auto !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
     margin: 0 !important;
@@ -475,11 +475,11 @@ body div[id*="div_id_fleet_no"] input {
     line-height: 1;
 }
 
-/* RTL context - keep icon on left for LTR password fields */
+/* RTL context - keep icon on right for RTL password fields */
 [dir="rtl"] .password-input-wrapper .password-toggle-icon,
 [dir="rtl"] .password-input-wrapper span.password-toggle-icon {
-    left: 15px !important;
-    right: auto !important;
+    right: 15px !important;
+    left: auto !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
 }
