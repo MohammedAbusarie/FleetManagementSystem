@@ -74,7 +74,7 @@ class Command(BaseCommand):
             {
                 'username': 'user3',
                 'email': 'user3@fleet.com',
-                'password': 'User789!',
+                'password': 'Saher22er',
                 'first_name': 'مستخدم',
                 'last_name': 'ثالث',
                 'user_type': 'normal'
@@ -138,23 +138,46 @@ class Command(BaseCommand):
 
                 self.stdout.write('\n' + '=' * 70)
                 self.stdout.write(
-                    self.style.SUCCESS('Users reset completed successfully!')
+                    self.style.SUCCESS('All users have been reset and created successfully.')
                 )
-                self.stdout.write('=' * 70 + '\n')
-                
-                # Display credentials
-                self.stdout.write(
-                    self.style.SUCCESS('New User Credentials:')
-                )
+                self.stdout.write('\nSummary:\n')
+                self.stdout.write(f'Total Users: {created_count}\n')
+                self.stdout.write(f'2 Superadmins\n')
+                self.stdout.write(f'2 Admins\n')
+                self.stdout.write(f'3 Normal Users\n')
+                self.stdout.write('\nUser credentials:\n')
                 self.stdout.write('=' * 70)
                 
+                # Display credentials grouped by type
+                self.stdout.write('\nSUPERADMINS:\n')
                 for user_data in users_to_create:
-                    self.stdout.write(f'\n{user_data["user_type"].upper().replace("_", " ")}:')
-                    self.stdout.write(f'  Username: {user_data["username"]}')
-                    self.stdout.write(f'  Password: {user_data["password"]}')
-                    self.stdout.write(f'  Email: {user_data["email"]}')
+                    if user_data['user_type'] == 'super_admin':
+                        self.stdout.write(f'Username: {user_data["username"]}')
+                        self.stdout.write(f'Password: {user_data["password"]}')
+                        self.stdout.write(f'Email: {user_data["email"]}\n')
+                
+                self.stdout.write('ADMINS:\n')
+                for user_data in users_to_create:
+                    if user_data['user_type'] == 'admin':
+                        self.stdout.write(f'Username: {user_data["username"]}')
+                        self.stdout.write(f'Password: {user_data["password"]}')
+                        self.stdout.write(f'Email: {user_data["email"]}\n')
+                
+                self.stdout.write('NORMAL USERS:\n')
+                for user_data in users_to_create:
+                    if user_data['user_type'] == 'normal':
+                        self.stdout.write(f'Username: {user_data["username"]}')
+                        self.stdout.write(f'Password: {user_data["password"]}')
+                        self.stdout.write(f'Email: {user_data["email"]}\n')
 
-                self.stdout.write('\n' + '=' * 70 + '\n')
+                self.stdout.write('=' * 70)
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        '\nAll users have been created with UserProfile entries and are ready to use. '
+                        'You can now log in with any of these accounts.'
+                    )
+                )
+                self.stdout.write('\n')
 
         except Exception as e:
             self.stdout.write(
