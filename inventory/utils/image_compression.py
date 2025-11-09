@@ -5,7 +5,7 @@ from PIL import Image
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
-def compress_image(image_field, quality=90, optimize=True):
+def compress_image(image_field, quality=80, optimize=True):
     """
     Compress an image while maintaining quality and resolution.
     
@@ -135,7 +135,7 @@ def compress_image(image_field, quality=90, optimize=True):
         return image_field
 
 
-def compress_image_file(file_path, output_path=None, quality=90, optimize=True):
+def compress_image_file(file_path, output_path=None, quality=80, optimize=True):
     """
     Compress an image file on disk.
     
