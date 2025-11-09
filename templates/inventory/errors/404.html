@@ -74,7 +74,13 @@
                                 <ul class="mb-3">
                                     <li><strong>المسار:</strong> {{ request_path }}</li>
                                     <li><strong>الطريقة:</strong> {{ request_method }}</li>
-                                    <li><strong>المستخدم:</strong> {{ user.username|default:"غير مسجل دخول" }}</li>
+                                    <li><strong>المستخدم:</strong>
+                                        {% if user.username %}
+                                            <span class="english-display" lang="en" dir="ltr">{{ user.username }}</span>
+                                        {% else %}
+                                            غير مسجل دخول
+                                        {% endif %}
+                                    </li>
                                 </ul>
                                 
                                 <h6>تفاصيل الخطأ:</h6>

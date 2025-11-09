@@ -177,7 +177,11 @@
                             <div class="d-flex justify-content-between align-items-start">
                                 <div class="flex-grow-1">
                                     <div class="activity-user">
-                                        {{ login.user.get_full_name|default:login.user.username }}
+                                        {% if login.user.get_full_name %}
+                                            {{ login.user.get_full_name }}
+                                        {% else %}
+                                            <span class="english-display" lang="en" dir="ltr">{{ login.user.username }}</span>
+                                        {% endif %}
                                     </div>
                                     <div class="activity-description">
                                         {{ login.ip_address }}
@@ -228,7 +232,11 @@
                             <div class="d-flex justify-content-between align-items-start">
                                 <div class="flex-grow-1">
                                     <div class="activity-user">
-                                        {{ action.user.get_full_name|default:action.user.username }}
+                                        {% if action.user.get_full_name %}
+                                            {{ action.user.get_full_name }}
+                                        {% else %}
+                                            <span class="english-display" lang="en" dir="ltr">{{ action.user.username }}</span>
+                                        {% endif %}
                                     </div>
                                     <div class="activity-description">
                                         {{ action.description|default:action.action_type }}

@@ -274,7 +274,11 @@
                         <td>
                             <div class="user-name">
                                 <i class="bi bi-person me-2"></i>
-                                {{ log.user.get_full_name|default:log.user.username }}
+                                {% if log.user.get_full_name %}
+                                    {{ log.user.get_full_name }}
+                                {% else %}
+                                    <span class="english-display" lang="en" dir="ltr">{{ log.user.username }}</span>
+                                {% endif %}
                             </div>
                         </td>
                         <td>
