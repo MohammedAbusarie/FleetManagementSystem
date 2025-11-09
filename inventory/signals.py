@@ -1,5 +1,5 @@
-"""Django signals for automatic image compression"""
-from django.db.models.signals import pre_save
+"""Django signals for automatic image compression and file cleanup"""
+from django.db.models.signals import pre_save, post_delete
 from django.dispatch import receiver
 from django.core.files.uploadedfile import UploadedFile
 from .models import (
@@ -76,4 +76,31 @@ def compress_calibration_certificate_image(sender, instance, **kwargs):
         file_extension = instance.image.name.lower().split('.')[-1] if '.' in instance.image.name else ''
         if file_extension in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']:
             instance.image = compress_image(instance.image)
+
+
+def _delete_file_safely(file_field):
+    """Delete file from storage if it exists."""
+    if not file_field:
+        return
+    storage = getattr(file_field, 'storage', None)
+    file_name = getattr(file_field, 'name', '')
+    if storage and file_name:
+        try:
+            if storage.exists(file_name):
+                storage.delete(file_name)
+        except Exception:
+            # Swallow exceptions to avoid breaking delete flow
+            pass
+
+
+@receiver(post_delete, sender=CarImage)
+def delete_car_image_file(sender, instance, **kwargs):
+    """Remove car image file from storage after record deletion."""
+    _delete_file_safely(instance.image)
+
+
+@receiver(post_delete, sender=Car)
+def delete_car_main_image(sender, instance, **kwargs):
+    """Remove main car image file from storage after car deletion."""
+    _delete_file_safely(instance.car_image)
 
