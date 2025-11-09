@@ -201,28 +201,8 @@ class Command(BaseCommand):
         """Handle Sector, Department, and Division clearing with foreign key constraints
         This is called after Cars and Equipment are cleared, so there are no PROTECT FK issues"""
         try:
-            # Clear non-dummy Divisions (preserve dummy ones)
-            # Cars and Equipment are already cleared, so no PROTECT FK issues
-            division_queryset = Division.objects.filter(is_dummy=False)
-            division_count = division_queryset.count()
-            dummy_division_count = Division.objects.filter(is_dummy=True).count()
-            if division_count > 0:
-                # Set department reference to None for non-dummy divisions to avoid FK issues
-                division_queryset.update(department=None)
-                division_queryset.delete()
-                if dummy_division_count > 0:
-                    self._safe_write(f'  Cleared {division_count} divisions (kept {dummy_division_count} default values)')
-                else:
-                    self._safe_write(f'  Cleared {division_count} divisions')
-            
             # Clear non-dummy Departments first (keep default/dummy departments)
-            # But first, set their sector references to NULL to avoid FK issues
             dept_queryset = Department.objects.filter(is_dummy=False)
-            dept_count_with_sector = dept_queryset.exclude(sector__isnull=True).count()
-            if dept_count_with_sector > 0:
-                dept_queryset.exclude(sector__isnull=True).update(sector=None)
-                self._safe_write(f'  Cleared sector references from {dept_count_with_sector} departments')
-            
             dept_delete_count = dept_queryset.count()
             dummy_dept_count = Department.objects.filter(is_dummy=True).count()
             if dept_delete_count > 0:
@@ -231,15 +211,36 @@ class Command(BaseCommand):
                     self._safe_write(f'  Cleared {dept_delete_count} departments (kept {dummy_dept_count} default values)')
                 else:
                     self._safe_write(f'  Cleared {dept_delete_count} departments')
-            
+
+            # Ensure dummy departments remain linked to the dummy division
+            dummy_division = Division.objects.filter(name='غير محدد', is_dummy=True).first()
+            if dummy_division:
+                Department.objects.filter(is_dummy=True).update(division=dummy_division)
+
+            # Clear non-dummy Divisions (preserve dummy ones)
+            division_queryset = Division.objects.filter(is_dummy=False)
+            division_count = division_queryset.count()
+            dummy_division_count = Division.objects.filter(is_dummy=True).count()
+            if division_count > 0:
+                division_queryset.delete()
+                if dummy_division_count > 0:
+                    self._safe_write(f'  Cleared {division_count} divisions (kept {dummy_division_count} default values)')
+                else:
+                    self._safe_write(f'  Cleared {division_count} divisions')
+
+            # Clear non-dummy Administrative Units (keep default/dummy units)
+            admin_unit_queryset = AdministrativeUnit.objects.filter(is_dummy=False)
+            admin_unit_delete_count = admin_unit_queryset.count()
+            dummy_admin_unit_count = AdministrativeUnit.objects.filter(is_dummy=True).count()
+            if admin_unit_delete_count > 0:
+                admin_unit_queryset.update(sector=None)
+                admin_unit_queryset.delete()
+                if dummy_admin_unit_count > 0:
+                    self._safe_write(f'  Cleared {admin_unit_delete_count} administrative units (kept {dummy_admin_unit_count} default values)')
+                else:
+                    self._safe_write(f'  Cleared {admin_unit_delete_count} administrative units')
+
             # Now clear non-dummy Sectors (keep default/dummy sectors)
-            # But first, set dummy departments' sector references to NULL to avoid FK issues
-            dummy_depts_with_sector = Department.objects.filter(is_dummy=True).exclude(sector__isnull=True)
-            dummy_dept_sector_count = dummy_depts_with_sector.count()
-            if dummy_dept_sector_count > 0:
-                dummy_depts_with_sector.update(sector=None)
-                self._safe_write(f'  Cleared sector references from {dummy_dept_sector_count} dummy departments')
-            
             sector_queryset = Sector.objects.filter(is_dummy=False)
             sector_count = sector_queryset.count()
             dummy_sector_count = Sector.objects.filter(is_dummy=True).count()

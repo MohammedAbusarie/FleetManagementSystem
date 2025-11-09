@@ -55,23 +55,21 @@ class InventoryConfig(AppConfig):
             )
             dummy_admin_unit.refresh_from_db()
         
-        # Create dummy Department (separate "قسم") linked to dummy Sector if it doesn't exist
-        dummy_department, _ = Department.objects.get_or_create(
-            name='غير محدد',
-            defaults={'sector': dummy_sector, 'is_dummy': True}
-        )
-        
-        # Ensure department is linked to dummy sector (in case it wasn't)
-        # Use update() to bypass the save() method protection
-        if dummy_department.sector != dummy_sector:
-            Department.objects.filter(pk=dummy_department.pk).update(
-                sector=dummy_sector,
-                is_dummy=True
-            )
-            dummy_department.refresh_from_db()
-        
         # Create dummy Division linked to dummy Administrative Unit if it doesn't exist
-        Division.objects.get_or_create(
+        dummy_division, _ = Division.objects.get_or_create(
             name='غير محدد',
             defaults={'administrative_unit': dummy_admin_unit, 'is_dummy': True}
         )
+
+        # Create dummy Department linked to dummy Division if it doesn't exist
+        dummy_department, _ = Department.objects.get_or_create(
+            name='غير محدد',
+            defaults={'division': dummy_division, 'is_dummy': True}
+        )
+        
+        # Ensure department is linked to dummy division (in case it wasn't)
+        if dummy_department.division != dummy_division:
+            Department.objects.filter(pk=dummy_department.pk).update(
+                division=dummy_division,
+                is_dummy=True
+            )

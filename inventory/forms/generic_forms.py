@@ -166,32 +166,32 @@ class DepartmentForm(forms.ModelForm):
     
     class Meta:
         model = Department
-        fields = ['name', 'sector']
+        fields = ['name', 'division']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'sector': forms.Select(attrs={'class': 'form-control'}),
+            'division': forms.Select(attrs={'class': 'form-control'}),
         }
         labels = {
             'name': 'الاسم',
-            'sector': 'القطاع',
+            'division': 'الدائرة',
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['sector'].queryset = Sector.objects.all().order_by('name')
-        self.fields['sector'].required = False
+        self.fields['division'].queryset = Division.objects.select_related('administrative_unit').all().order_by('name')
+        self.fields['division'].required = True
         
         # Make fields readonly if this is a protected default record
         if self.instance and self.instance.pk and self.instance.is_protected_default:
             self.fields['name'].widget.attrs['readonly'] = True
             self.fields['name'].widget.attrs['disabled'] = True
-            self.fields['sector'].widget.attrs['disabled'] = True
+            self.fields['division'].widget.attrs['disabled'] = True
         
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.layout = Layout(
             Field('name'),
-            Field('sector'),
+            Field('division'),
             HTML('<div class="mt-4">'),
             Submit('submit', 'حفظ', css_class='btn btn-primary'),
             HTML('<a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>'),

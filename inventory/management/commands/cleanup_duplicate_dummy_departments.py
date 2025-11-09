@@ -1,6 +1,6 @@
 """Management command to clean up duplicate dummy departments"""
 from django.core.management.base import BaseCommand
-from inventory.models import Sector, Department, Car, Equipment
+from inventory.models import Division, Department, Car, Equipment
 
 
 class Command(BaseCommand):
@@ -19,24 +19,24 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(self.style.WARNING('DRY RUN MODE - No changes will be made'))
         
-        # Find the main dummy department (linked to dummy sector)
-        dummy_sector = Sector.objects.filter(name='غير محدد', is_dummy=True).first()
+        # Find the main dummy department (linked to dummy division)
+        dummy_division = Division.objects.filter(name='غير محدد', is_dummy=True).first()
         
-        if not dummy_sector:
-            self.stdout.write(self.style.ERROR('Dummy sector "غير محدد" not found!'))
+        if not dummy_division:
+            self.stdout.write(self.style.ERROR('Dummy division "غير محدد" not found!'))
             return
         
-        # Find the main dummy department (the one linked to dummy sector with exact name "غير محدد")
+        # Find the main dummy department (the one linked to dummy division with exact name "غير محدد")
         main_dummy_dept = Department.objects.filter(
             name='غير محدد',
-            sector=dummy_sector,
+            division=dummy_division,
             is_dummy=True
         ).first()
         
         if not main_dummy_dept:
-            # Try to find any dummy department linked to dummy sector
+            # Try to find any dummy department linked to dummy division
             main_dummy_dept = Department.objects.filter(
-                sector=dummy_sector,
+                division=dummy_division,
                 is_dummy=True
             ).first()
             
@@ -73,7 +73,8 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING(f'Found {count} duplicate dummy department(s) to clean up:'))
         
         for dept in duplicate_dummy_depts:
-            self.stdout.write(f'  - ID {dept.id}: "{dept.name}" (Sector: {dept.sector.name if dept.sector else "None"})')
+            division_name = dept.division.name if dept.division else "None"
+            self.stdout.write(f'  - ID {dept.id}: "{dept.name}" (Division: {division_name})')
         
         if dry_run:
             self.stdout.write(self.style.WARNING('\nIn real mode, would:'))

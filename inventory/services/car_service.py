@@ -13,7 +13,9 @@ class CarService(BaseService):
     def get_cars_with_related(self):
         """Get cars with all related objects prefetched"""
         return self.model.objects.select_related(
-            'manufacturer', 'model', 'administrative_unit', 
+            'manufacturer', 'model', 'administrative_unit',
+            'division', 'department', 'department__division',
+            'department__division__administrative_unit',
             'department_code', 'car_class', 'driver_name',
             'functional_location', 'room', 'notification_recipient',
             'contract_type', 'activity'

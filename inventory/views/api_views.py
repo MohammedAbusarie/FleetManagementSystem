@@ -2,7 +2,7 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from ..models import Sector, AdministrativeUnit, Division
+from ..models import Sector, AdministrativeUnit, Division, Department
 
 
 @require_http_methods(["GET"])
@@ -101,4 +101,59 @@ def divisions_by_administrative_unit(request):
     } for div in divisions_list]
     
     return JsonResponse({'divisions': data})
+
+
+@require_http_methods(["GET"])
+def departments_by_division(request):
+    """Get departments filtered by division"""
+    division_id = request.GET.get('division_id')
+
+    main_dummy_department = Department.objects.filter(
+        name='غير محدد',
+        is_dummy=True
+    ).first()
+
+    if division_id:
+        try:
+            division = Division.objects.get(id=division_id)
+            departments = Department.objects.filter(division=division)
+
+            departments_list = list(departments)
+            if main_dummy_department and not any(d.id == main_dummy_department.id for d in departments_list):
+                departments_list.append(main_dummy_department)
+        except Division.DoesNotExist:
+            departments_list = []
+            if main_dummy_department:
+                departments_list = [main_dummy_department]
+    else:
+        departments_list = list(Department.objects.all())
+
+    dummy_departments = [d for d in departments_list if d.is_dummy and d.name == 'غير محدد']
+    if len(dummy_departments) > 1:
+        dummy_departments = [dummy_departments[0]]
+
+    other_departments = [d for d in departments_list if d not in dummy_departments]
+    other_departments = sorted(other_departments, key=lambda x: x.name)
+    departments_list = dummy_departments + other_departments
+
+    data = [{
+        'id': dept.id,
+        'name': dept.name,
+        'is_dummy': dept.is_dummy,
+        'division_id': dept.division.id if dept.division else None,
+        'administrative_unit_id': (
+            dept.division.administrative_unit.id
+            if dept.division and dept.division.administrative_unit
+            else None
+        ),
+        'sector_id': (
+            dept.division.administrative_unit.sector.id
+            if dept.division
+            and dept.division.administrative_unit
+            and dept.division.administrative_unit.sector
+            else None
+        )
+    } for dept in departments_list]
+
+    return JsonResponse({'departments': data})
 

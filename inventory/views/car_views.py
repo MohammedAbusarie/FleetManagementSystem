@@ -206,7 +206,17 @@ def car_create_view(request):
 @admin_or_permission_required_with_message('cars', 'update')
 def car_update_view(request, pk):
     """Car update view"""
-    car = get_object_or_404(Car.objects.select_related('sector', 'department', 'division'), pk=pk)
+    car = get_object_or_404(
+        Car.objects.select_related(
+            'sector',
+            'administrative_unit',
+            'department',
+            'department__division',
+            'department__division__administrative_unit',
+            'division'
+        ),
+        pk=pk
+    )
     from django.contrib.contenttypes.models import ContentType
     
     if request.method == 'POST':

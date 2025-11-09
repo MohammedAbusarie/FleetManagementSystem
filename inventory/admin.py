@@ -20,9 +20,9 @@ class AdministrativeUnitAdmin(admin.ModelAdmin):
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
-    list_display = ['name', 'sector', 'is_dummy', 'created_at']
+    list_display = ['name', 'division', 'get_administrative_unit', 'get_sector', 'is_dummy', 'created_at']
     search_fields = ['name']
-    list_filter = ['sector', 'is_dummy', 'created_at']
+    list_filter = ['division', 'division__administrative_unit', 'is_dummy', 'created_at']
     
     def has_delete_permission(self, request, obj=None):
         """Prevent deletion of protected default record"""
@@ -33,8 +33,17 @@ class DepartmentAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         """Make fields readonly for protected default record"""
         if obj and obj.is_protected_default:
-            return ['name', 'sector', 'is_dummy', 'created_at', 'updated_at']
+            return ['name', 'division', 'is_dummy', 'created_at', 'updated_at']
         return ['created_at', 'updated_at']
+
+    @admin.display(description='الإدارة', ordering='division__administrative_unit__name')
+    def get_administrative_unit(self, obj):
+        return obj.administrative_unit
+
+    @admin.display(description='القطاع', ordering='division__administrative_unit__sector__name')
+    def get_sector(self, obj):
+        sector = obj.sector
+        return sector.name if sector else '-'
 
 
 @admin.register(Driver)

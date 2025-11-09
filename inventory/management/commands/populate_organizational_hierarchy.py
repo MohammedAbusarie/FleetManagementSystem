@@ -64,15 +64,21 @@ class Command(BaseCommand):
             defaults={'sector': dummy_sector, 'is_dummy': True}
         )
         
-        dummy_department, _ = Department.objects.get_or_create(
-            name='غير محدد',
-            defaults={'sector': dummy_sector, 'is_dummy': True}
-        )
-        
         dummy_division, _ = Division.objects.get_or_create(
             name='غير محدد',
             defaults={'administrative_unit': dummy_admin_unit, 'is_dummy': True}
         )
+
+        dummy_department, _ = Department.objects.get_or_create(
+            name='غير محدد',
+            defaults={'division': dummy_division, 'is_dummy': True}
+        )
+        if dummy_department.division != dummy_division:
+            Department.objects.filter(pk=dummy_department.pk).update(
+                division=dummy_division,
+                is_dummy=True
+            )
+            dummy_department.refresh_from_db()
         
         self.stdout.write(self.style.SUCCESS('Dummy records ready'))
         
@@ -140,40 +146,6 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(self.style.SUCCESS(f'  Created Administrative Unit: {admin_unit.id}'))
         
-        # Create representative Departments (أقسام) for each sector
-        departments_data = [
-            {'name': 'قسم العمليات', 'sector': created_sectors[0]},
-            {'name': 'قسم الدعم', 'sector': created_sectors[0]},
-            {'name': 'قسم الخدمات الميدانية', 'sector': created_sectors[1]},
-            {'name': 'قسم اللوجستيات', 'sector': created_sectors[1]},
-            {'name': 'قسم التخطيط', 'sector': created_sectors[2]},
-            {'name': 'قسم المتابعة', 'sector': created_sectors[2]},
-            {'name': 'قسم التوظيف', 'sector': created_sectors[3]},
-            {'name': 'قسم التدريب', 'sector': created_sectors[3]},
-            {'name': 'قسم المحاسبة', 'sector': created_sectors[4]},
-            {'name': 'قسم الميزانية', 'sector': created_sectors[4]},
-        ]
-        
-        created_departments = []
-        for dept_data in departments_data:
-            department, created = Department.objects.get_or_create(
-                name=dept_data['name'],
-                defaults={'sector': dept_data['sector'], 'is_dummy': False}
-            )
-            if not created:
-                updated = False
-                if department.sector != dept_data['sector']:
-                    department.sector = dept_data['sector']
-                    updated = True
-                if department.is_dummy:
-                    department.is_dummy = False
-                    updated = True
-                if updated:
-                    department.save()
-            created_departments.append(department)
-            if created:
-                self.stdout.write(self.style.SUCCESS(f'  Created Department: {department.id}'))
-        
         # Create test Divisions for each administrative unit
         divisions_data = [
             # إدارة تقنية المعلومات
@@ -231,12 +203,14 @@ class Command(BaseCommand):
             {'name': 'دائرة مؤقتة', 'administrative_unit': dummy_admin_unit, 'is_dummy': False},
             {'name': 'دائرة غير مصنفة', 'administrative_unit': dummy_admin_unit, 'is_dummy': False},
         ]
+        division_lookup = {}
         
         for div_data in valid_divisions_for_dummy_unit:
             division, created = Division.objects.get_or_create(
                 name=div_data['name'],
                 defaults={'administrative_unit': div_data['administrative_unit'], 'is_dummy': div_data['is_dummy']}
             )
+            division_lookup[division.name] = division
             if created:
                 self.stdout.write(self.style.SUCCESS(f'  Created Valid Division for Dummy Administrative Unit: {division.id}'))
         
@@ -248,6 +222,7 @@ class Command(BaseCommand):
             name='غير محدد',
             defaults={'administrative_unit': dummy_admin_unit, 'is_dummy': True}
         )
+        division_lookup[dummy_div.name] = dummy_div
         if created:
             self.stdout.write(self.style.SUCCESS(f'  Created Dummy Division: {dummy_div.id}'))
         
@@ -257,8 +232,45 @@ class Command(BaseCommand):
                 name=div_data['name'],
                 defaults={'administrative_unit': div_data['administrative_unit'], 'is_dummy': False}
             )
+            division_lookup[division.name] = division
             if created:
                 self.stdout.write(self.style.SUCCESS(f'  Created Division: {division.id}'))
+
+        # Create representative Departments (أقسام) linked to specific divisions
+        departments_data = [
+            {'name': 'قسم العمليات', 'division_name': 'دائرة تطوير الأنظمة'},
+            {'name': 'قسم الدعم', 'division_name': 'دائرة الدعم الفني'},
+            {'name': 'قسم الخدمات الميدانية', 'division_name': 'دائرة الصيانة العامة'},
+            {'name': 'قسم اللوجستيات', 'division_name': 'دائرة اللوجستيات'},
+            {'name': 'قسم التخطيط', 'division_name': 'دائرة التخطيط الاستراتيجي'},
+            {'name': 'قسم المتابعة', 'division_name': 'دائرة المتابعة والرقابة'},
+            {'name': 'قسم التوظيف', 'division_name': 'دائرة التوظيف والاختيار'},
+            {'name': 'قسم التدريب', 'division_name': 'دائرة التدريب والتطوير'},
+            {'name': 'قسم المحاسبة', 'division_name': 'دائرة الحسابات'},
+            {'name': 'قسم الميزانية', 'division_name': 'دائرة التخطيط المالي'},
+        ]
+
+        created_departments = []
+        for dept_data in departments_data:
+            target_division = division_lookup.get(dept_data['division_name'], dummy_div)
+
+            department, created = Department.objects.get_or_create(
+                name=dept_data['name'],
+                defaults={'division': target_division, 'is_dummy': False}
+            )
+            if not created:
+                updated = False
+                if department.division != target_division:
+                    department.division = target_division
+                    updated = True
+                if department.is_dummy:
+                    department.is_dummy = False
+                    updated = True
+                if updated:
+                    department.save()
+            created_departments.append(department)
+            if created:
+                self.stdout.write(self.style.SUCCESS(f'  Created Department: {department.id}'))
         
         # Summary
         total_sectors = Sector.objects.count()
@@ -279,5 +291,5 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING('  - Only ONE main dummy division "غير محدد" exists'))
         self.stdout.write(self.style.WARNING('  - Users can select dummy administrative unit/division regardless of sector'))
         self.stdout.write(self.style.WARNING('  - Valid Sector -> Valid Administrative Unit -> Valid Division'))
-        self.stdout.write(self.style.WARNING('  - Departments (الأقسام) تبقى اختيارية وخارج التسلسل الهرمي'))
+        self.stdout.write(self.style.WARNING('  - Departments (الأقسام) مرتبطة مباشرة بالإدارة ضمن التسلسل الهرمي'))
 

@@ -69,9 +69,13 @@ class AdministrativeUnit(BaseDDLModel):
 
 class Department(BaseDDLModel):
     """Department lookup table"""
-    sector = models.ForeignKey(
-        'Sector', on_delete=models.PROTECT, related_name='departments',
-        verbose_name="القطاع", null=True, blank=True
+    division = models.ForeignKey(
+        'Division',
+        on_delete=models.PROTECT,
+        related_name='departments',
+        verbose_name="الدائرة",
+        null=True,
+        blank=True
     )
     is_dummy = models.BooleanField(default=False, verbose_name="قيمة افتراضية")
     
@@ -90,10 +94,12 @@ class Department(BaseDDLModel):
             try:
                 old_instance = Department.objects.get(pk=self.pk)
                 if old_instance.is_protected_default:
-                    # Prevent name, is_dummy, and sector changes
-                    if (self.name != old_instance.name or 
-                        self.is_dummy != old_instance.is_dummy or
-                        self.sector_id != old_instance.sector_id):
+                    # Prevent name, is_dummy, and division changes
+                    if (
+                        self.name != old_instance.name
+                        or self.is_dummy != old_instance.is_dummy
+                        or self.division_id != old_instance.division_id
+                    ):
                         raise ValueError('لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
             except Department.DoesNotExist:
                 pass
@@ -104,6 +110,17 @@ class Department(BaseDDLModel):
         if self.is_protected_default:
             raise ValueError('لا يمكن حذف السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
         super().delete(*args, **kwargs)
+
+    @property
+    def administrative_unit(self):
+        """Return the administrative unit this department belongs to"""
+        return self.division.administrative_unit if self.division else None
+
+    @property
+    def sector(self):
+        """Return the sector this department belongs to"""
+        admin_unit = self.administrative_unit
+        return admin_unit.sector if admin_unit else None
 
 
 class Driver(BaseDDLModel):

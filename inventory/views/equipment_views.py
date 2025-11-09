@@ -182,7 +182,17 @@ def equipment_create_view(request):
 @admin_or_permission_required_with_message('equipment', 'update')
 def equipment_update_view(request, pk):
     """Equipment update view"""
-    equipment = get_object_or_404(Equipment.objects.select_related('sector', 'department', 'division'), pk=pk)
+    equipment = get_object_or_404(
+        Equipment.objects.select_related(
+            'sector',
+            'administrative_unit',
+            'department',
+            'department__division',
+            'department__division__administrative_unit',
+            'division'
+        ),
+        pk=pk
+    )
     if request.method == 'POST':
         form = EquipmentForm(request.POST, request.FILES, instance=equipment)
         maintenance_formset = EquipmentMaintenanceFormSet(

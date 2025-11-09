@@ -8,7 +8,7 @@ from inventory.services import (
     AdminService, LoggingServiceNew, PermissionServiceNew
 )
 from inventory.models import (
-    Car, Equipment, Maintenance, AdministrativeUnit, Department, Driver, CarClass, 
+    Car, Equipment, Maintenance, AdministrativeUnit, Division, Department, Driver, CarClass, 
     Manufacturer, CarModel, EquipmentModel, FunctionalLocation, Room, Location, 
     Sector, NotificationRecipient, ContractType, Activity, Region,
     UserProfile, ModulePermission, UserPermission, LoginLog, ActionLog
@@ -29,7 +29,14 @@ class CarServiceTest(TestCase):
             name="Camry"
         )
         self.administrative_unit = AdministrativeUnit.objects.create(name="IT Department")
-        self.department = Department.objects.create(name="Software")
+        self.division = Division.objects.create(
+            name="Applications Division",
+            administrative_unit=self.administrative_unit
+        )
+        self.department = Department.objects.create(
+            name="Software",
+            division=self.division
+        )
         self.driver = Driver.objects.create(name="Ahmed Ali")
         self.car_class = CarClass.objects.create(name="Sedan")
         self.functional_location = FunctionalLocation.objects.create(name="Office Building")

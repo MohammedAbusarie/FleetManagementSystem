@@ -59,11 +59,15 @@ def generic_table_detail_view(request, model_name):
     if model_name == 'Sector':
         objects = model.objects.all().order_by('-is_dummy', 'name')
     elif model_name == 'AdministrativeUnit':
-        objects = model.objects.all().order_by('-is_dummy', 'sector__name', 'name')
+        objects = model.objects.select_related('sector').all().order_by('-is_dummy', 'sector__name', 'name')
     elif model_name == 'Department':
-        objects = model.objects.all().order_by('-is_dummy', 'sector__name', 'name')
+        objects = model.objects.select_related(
+            'division',
+            'division__administrative_unit',
+            'division__administrative_unit__sector'
+        ).all().order_by('-is_dummy', 'division__name', 'name')
     elif model_name == 'Division':
-        objects = model.objects.all().order_by('-is_dummy', 'administrative_unit__name', 'name')
+        objects = model.objects.select_related('administrative_unit').all().order_by('-is_dummy', 'administrative_unit__name', 'name')
     else:
         objects = model.objects.all().order_by('name') # Default sort for generic tables
     
