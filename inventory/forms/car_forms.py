@@ -183,6 +183,30 @@ class CarForm(forms.ModelForm):
         administrative_unit = cleaned_data.get('administrative_unit')
         department = cleaned_data.get('department')
         division = cleaned_data.get('division')
+        fleet_no = (cleaned_data.get('fleet_no') or '').strip()
+        plate_no_en = (cleaned_data.get('plate_no_en') or '').strip()
+        plate_no_ar = (cleaned_data.get('plate_no_ar') or '').strip()
+
+        # Unique constraints validation with Arabic messages
+        duplicate_errors = {}
+        qs_base = Car.objects.all()
+        if self.instance.pk:
+            qs_base = qs_base.exclude(pk=self.instance.pk)
+
+        if fleet_no:
+            if qs_base.filter(fleet_no__iexact=fleet_no).exists():
+                duplicate_errors['fleet_no'] = 'رقم الأسطول مستخدم بالفعل، يرجى إدخال رقم مختلف.'
+
+        if plate_no_en:
+            if qs_base.filter(plate_no_en__iexact=plate_no_en).exists():
+                duplicate_errors['plate_no_en'] = 'رقم اللوحة (الإنجليزية) مستخدم بالفعل، يرجى إدخال رقم مختلف.'
+
+        if plate_no_ar:
+            if qs_base.filter(plate_no_ar=plate_no_ar).exists():
+                duplicate_errors['plate_no_ar'] = 'رقم اللوحة (العربية) مستخدم بالفعل، يرجى إدخال رقم مختلف.'
+
+        if duplicate_errors:
+            raise forms.ValidationError(duplicate_errors)
         
         # Validation for new records - division is required
         # For existing records, allow NULL values (backward compatibility)
