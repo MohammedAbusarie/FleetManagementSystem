@@ -104,3 +104,26 @@ def delete_car_main_image(sender, instance, **kwargs):
     """Remove main car image file from storage after car deletion."""
     _delete_file_safely(instance.car_image)
 
+
+@receiver(post_delete, sender=EquipmentImage)
+def delete_equipment_image_file(sender, instance, **kwargs):
+    """Remove equipment gallery image file from storage after record deletion."""
+    _delete_file_safely(instance.image)
+
+
+@receiver(post_delete, sender=CalibrationCertificateImage)
+def delete_calibration_certificate_file(sender, instance, **kwargs):
+    """Remove calibration certificate file from storage after record deletion."""
+    _delete_file_safely(instance.image)
+
+
+@receiver(post_delete, sender=FireExtinguisherImage)
+def delete_fire_extinguisher_image_file(sender, instance, **kwargs):
+    """Remove fire extinguisher image file from storage after record deletion."""
+    _delete_file_safely(instance.image)
+
+
+@receiver(post_delete, sender=Equipment)
+def delete_equipment_main_image(sender, instance, **kwargs):
+    """Remove main equipment image file and related files from storage after equipment deletion."""
+    _delete_file_safely(instance.equipment_image)
