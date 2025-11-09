@@ -30,10 +30,41 @@ class BaseDDLModel(models.Model):
 class AdministrativeUnit(BaseDDLModel):
     """Administrative Unit lookup table - الإدارة"""
     is_dummy = models.BooleanField(default=False, verbose_name="قيمة افتراضية")
+    sector = models.ForeignKey(
+        'Sector', on_delete=models.PROTECT, related_name='administrative_units',
+        verbose_name="القطاع", null=True, blank=True
+    )
     
     class Meta:
         verbose_name = "إدارة"
         verbose_name_plural = "الإدارات"
+
+    @property
+    def is_protected_default(self):
+        """Check if this is the protected default 'غير محدد' record"""
+        return self.is_dummy and self.name == 'غير محدد'
+
+    def save(self, *args, **kwargs):
+        """Prevent editing the protected default record"""
+        if self.pk:
+            try:
+                old_instance = AdministrativeUnit.objects.get(pk=self.pk)
+                if old_instance.is_protected_default:
+                    if (
+                        self.name != old_instance.name or
+                        self.is_dummy != old_instance.is_dummy or
+                        self.sector_id != old_instance.sector_id
+                    ):
+                        raise ValueError('لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+            except AdministrativeUnit.DoesNotExist:
+                pass
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """Prevent deletion of the protected default record"""
+        if self.is_protected_default:
+            raise ValueError('لا يمكن حذف السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+        super().delete(*args, **kwargs)
 
 
 class Department(BaseDDLModel):
@@ -214,8 +245,8 @@ class Region(BaseDDLModel):
 
 class Division(BaseDDLModel):
     """Division lookup table - دائرة"""
-    department = models.ForeignKey(
-        'Department', on_delete=models.PROTECT, related_name='divisions',
+    administrative_unit = models.ForeignKey(
+        'AdministrativeUnit', on_delete=models.PROTECT, related_name='divisions',
         verbose_name="الإدارة", null=True, blank=True
     )
     is_dummy = models.BooleanField(default=False, verbose_name="قيمة افتراضية")
@@ -238,7 +269,7 @@ class Division(BaseDDLModel):
                     # Prevent name, is_dummy, and department changes
                     if (self.name != old_instance.name or 
                         self.is_dummy != old_instance.is_dummy or
-                        self.department_id != old_instance.department_id):
+                        self.administrative_unit_id != old_instance.administrative_unit_id):
                         raise ValueError('لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
             except Division.DoesNotExist:
                 pass
@@ -316,7 +347,7 @@ class Car(models.Model):
     )
     department = models.ForeignKey(
         Department, on_delete=models.PROTECT, related_name='cars_by_department',
-        verbose_name="الإدارة", null=True, blank=True
+        verbose_name="القسم", null=True, blank=True
     )
     division = models.ForeignKey(
         'Division', on_delete=models.PROTECT, related_name='cars',
@@ -421,9 +452,13 @@ class Equipment(models.Model):
     )
     
     # Organizational Hierarchy
+    administrative_unit = models.ForeignKey(
+        AdministrativeUnit, on_delete=models.PROTECT, related_name='equipment_by_unit',
+        verbose_name="الإدارة", null=True, blank=True
+    )
     department = models.ForeignKey(
         Department, on_delete=models.PROTECT, related_name='equipment',
-        verbose_name="الإدارة", null=True, blank=True
+        verbose_name="القسم", null=True, blank=True
     )
     division = models.ForeignKey(
         'Division', on_delete=models.PROTECT, related_name='equipment',

@@ -5,7 +5,10 @@ from django.contrib import messages
 from django.apps import apps
 from django.db.models.deletion import ProtectedError
 from ..translation_utils import get_verbose_model_translations, get_model_arabic_name, get_message_template
-from ..forms import EquipmentModelForm, SectorForm, DepartmentForm, DivisionForm
+from ..forms import (
+    EquipmentModelForm, SectorForm, AdministrativeUnitForm,
+    DepartmentForm, DivisionForm
+)
 from .auth_views import is_admin
 from ..utils.decorators import admin_or_permission_required, admin_or_permission_required_with_message
 from ..utils.helpers import has_permission, log_user_action, get_client_ip
@@ -55,10 +58,12 @@ def generic_table_detail_view(request, model_name):
     # Custom ordering for hierarchy models
     if model_name == 'Sector':
         objects = model.objects.all().order_by('-is_dummy', 'name')
+    elif model_name == 'AdministrativeUnit':
+        objects = model.objects.all().order_by('-is_dummy', 'sector__name', 'name')
     elif model_name == 'Department':
         objects = model.objects.all().order_by('-is_dummy', 'sector__name', 'name')
     elif model_name == 'Division':
-        objects = model.objects.all().order_by('-is_dummy', 'department__name', 'name')
+        objects = model.objects.all().order_by('-is_dummy', 'administrative_unit__name', 'name')
     else:
         objects = model.objects.all().order_by('name') # Default sort for generic tables
     
@@ -91,6 +96,8 @@ def generic_table_create_view(request, model_name):
         form_class = EquipmentModelForm
     elif model_name == 'Sector':
         form_class = SectorForm
+    elif model_name == 'AdministrativeUnit':
+        form_class = AdministrativeUnitForm
     elif model_name == 'Department':
         form_class = DepartmentForm
     elif model_name == 'Division':
@@ -163,7 +170,7 @@ def generic_table_update_view(request, model_name, pk):
     obj = get_object_or_404(model, pk=pk)
     
     # Prevent editing protected default records
-    if model_name in ['Sector', 'Department', 'Division']:
+    if model_name in ['Sector', 'AdministrativeUnit', 'Department', 'Division']:
         if hasattr(obj, 'is_protected_default') and obj.is_protected_default:
             messages.error(
                 request,
@@ -179,6 +186,8 @@ def generic_table_update_view(request, model_name, pk):
         form_class = EquipmentModelForm
     elif model_name == 'Sector':
         form_class = SectorForm
+    elif model_name == 'AdministrativeUnit':
+        form_class = AdministrativeUnitForm
     elif model_name == 'Department':
         form_class = DepartmentForm
     elif model_name == 'Division':
@@ -254,7 +263,7 @@ def generic_table_delete_view(request, model_name, pk):
     obj = get_object_or_404(model, pk=pk)
     
     # Prevent deletion of "غير محدد" (dummy) records for hierarchy models
-    if model_name in ['Sector', 'Department', 'Division']:
+    if model_name in ['Sector', 'AdministrativeUnit', 'Department', 'Division']:
         if hasattr(obj, 'is_protected_default') and obj.is_protected_default:
             messages.error(
                 request,

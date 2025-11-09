@@ -46,7 +46,7 @@ class EquipmentManager(models.Manager):
     def with_related(self):
         """Prefetch all related objects"""
         return self.select_related(
-            'manufacturer', 'model', 'location', 'sector', 'department', 'division'
+            'manufacturer', 'model', 'location', 'sector', 'administrative_unit', 'department', 'division'
         ).prefetch_related('calibration_certificates')
 
     def by_status(self, status):

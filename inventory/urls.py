@@ -40,8 +40,8 @@ urlpatterns = [
 
     # API Endpoints for Dynamic Filtering
     path("api/sectors/", api_views.sectors_list, name="api_sectors"),
-    path("api/departments/", api_views.departments_by_sector, name="api_departments"),
-    path("api/divisions/", api_views.divisions_by_department, name="api_divisions"),
+    path("api/administrative-units/", api_views.administrative_units_by_sector, name="api_administrative_units"),
+    path("api/divisions/", api_views.divisions_by_administrative_unit, name="api_divisions"),
 
     # Admin Panel
     path("admin/", admin_views.admin_panel_view, name="admin_panel"),

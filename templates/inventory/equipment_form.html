@@ -67,10 +67,10 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="{{ form.department.id_for_label }}" class="form-label fw-bold">{{ form.department.label }}</label>
-                                        {{ form.department }}
-                                        {% if form.department.errors %}
-                                            <div class="text-danger small mt-1">{{ form.department.errors.0 }}</div>
+                                        <label for="{{ form.administrative_unit.id_for_label }}" class="form-label fw-bold">{{ form.administrative_unit.label }} <span class="text-danger">*</span></label>
+                                        {{ form.administrative_unit }}
+                                        {% if form.administrative_unit.errors %}
+                                            <div class="text-danger small mt-1">{{ form.administrative_unit.errors.0 }}</div>
                                         {% endif %}
                                         <div class="form-text">اختر الإدارة بعد القطاع</div>
                                     </div>
@@ -102,7 +102,7 @@
                         <div class="card-body">
                             <div class="row">
                                 {% for field in form %}
-                                    {% if field.name == 'location' %}
+                                    {% if field.name == 'department' or field.name == 'location' %}
                                         <div class="col-md-6 mb-3">
                                             {{ field|as_crispy_field }}
                                         </div>
@@ -1570,13 +1570,13 @@
         });
     });
     
-    // Nested Selector Functionality for Sector -> Department -> Division
+    // Nested Selector Functionality for Sector -> Administrative Unit -> Division
     (function() {
         const sectorField = document.getElementById('id_sector');
-        const departmentField = document.getElementById('id_department');
+        const administrativeUnitField = document.getElementById('id_administrative_unit');
         const divisionField = document.getElementById('id_division');
         
-        if (!sectorField || !departmentField || !divisionField) {
+        if (!sectorField || !administrativeUnitField || !divisionField) {
             return; // Fields not present, skip initialization
         }
         
@@ -1595,30 +1595,30 @@
             $(sectorField).on('select2:select select2:clear', function(e) {
                 const sectorId = $(this).val();
                 
-                // Clear and disable department and division
-                $(departmentField).val(null).trigger('change');
+                // Clear and disable administrative unit and division
+                $(administrativeUnitField).val(null).trigger('change');
                 $(divisionField).val(null).trigger('change');
                 
                 if (sectorId) {
-                    // Fetch departments for this sector
-                    fetchDepartments(sectorId);
+                    // Fetch administrative units for this sector
+                    fetchAdministrativeUnits(sectorId);
                 } else {
-                    // Clear department options
-                    $(departmentField).empty().trigger('change');
+                    // Clear administrative unit options
+                    $(administrativeUnitField).empty().trigger('change');
                     $(divisionField).empty().trigger('change');
                 }
             });
             
-            // Handle Department change
-            $(departmentField).on('select2:select select2:clear', function(e) {
-                const departmentId = $(this).val();
+            // Handle Administrative Unit change
+            $(administrativeUnitField).on('select2:select select2:clear', function(e) {
+                const administrativeUnitId = $(this).val();
                 
                 // Clear division
                 $(divisionField).val(null).trigger('change');
                 
-                if (departmentId) {
-                    // Fetch divisions for this department
-                    fetchDivisions(departmentId);
+                if (administrativeUnitId) {
+                    // Fetch divisions for this administrative unit
+                    fetchDivisions(administrativeUnitId);
                 } else {
                     // Clear division options
                     $(divisionField).empty().trigger('change');
@@ -1629,50 +1629,50 @@
             {% if equipment and equipment.sector %}
                 const existingSectorId = {{ equipment.sector.id|default:"null" }};
                 if (existingSectorId) {
-                    fetchDepartments(existingSectorId, {{ equipment.department.id|default:"null" }}, {{ equipment.division.id|default:"null" }});
+                    fetchAdministrativeUnits(existingSectorId, {{ equipment.administrative_unit.id|default:"null" }}, {{ equipment.division.id|default:"null" }});
                 }
             {% endif %}
         }
         
-        function fetchDepartments(sectorId, selectedDeptId = null, selectedDivId = null) {
+        function fetchAdministrativeUnits(sectorId, selectedUnitId = null, selectedDivId = null) {
             $.ajax({
-                url: '{% url "api_departments" %}',
+                url: '{% url "api_administrative_units" %}',
                 data: { sector_id: sectorId },
                 dataType: 'json',
                 success: function(response) {
                     // Clear existing options
-                    $(departmentField).empty();
+                    $(administrativeUnitField).empty();
                     
                     // Add placeholder option
-                    $(departmentField).append('<option value="">اختر الإدارة...</option>');
+                    $(administrativeUnitField).append('<option value="">اختر الإدارة...</option>');
                     
-                    // Add departments
-                    response.departments.forEach(function(dept) {
-                        const option = new Option(dept.name, dept.id, false, false);
-                        option.dataset.isDummy = dept.is_dummy;
-                        $(departmentField).append(option);
+                    // Add administrative units
+                    response.administrative_units.forEach(function(unit) {
+                        const option = new Option(unit.name, unit.id, false, false);
+                        option.dataset.isDummy = unit.is_dummy;
+                        $(administrativeUnitField).append(option);
                     });
                     
-                    // Select the previously selected department if provided
-                    if (selectedDeptId) {
-                        $(departmentField).val(selectedDeptId).trigger('change');
+                    // Select the previously selected administrative unit if provided
+                    if (selectedUnitId) {
+                        $(administrativeUnitField).val(selectedUnitId).trigger('change');
                         if (selectedDivId) {
-                            fetchDivisions(selectedDeptId, selectedDivId);
+                            fetchDivisions(selectedUnitId, selectedDivId);
                         }
                     } else {
-                        $(departmentField).trigger('change');
+                        $(administrativeUnitField).trigger('change');
                     }
                 },
                 error: function() {
-                    console.error('Error fetching departments');
+                    console.error('Error fetching administrative units');
                 }
             });
         }
         
-        function fetchDivisions(departmentId, selectedDivId = null) {
+        function fetchDivisions(administrativeUnitId, selectedDivId = null) {
             $.ajax({
                 url: '{% url "api_divisions" %}',
-                data: { department_id: departmentId },
+                data: { administrative_unit_id: administrativeUnitId },
                 dataType: 'json',
                 success: function(response) {
                     // Clear existing options

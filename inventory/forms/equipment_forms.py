@@ -4,7 +4,11 @@ from django.db.models import Q
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field
 from django.contrib.contenttypes.forms import generic_inlineformset_factory
-from ..models import Equipment, CalibrationCertificateImage, Maintenance, EquipmentImage, EquipmentLicenseRecord, EquipmentInspectionRecord, FireExtinguisherInspectionRecord, FireExtinguisherImage, Sector, Department, Division
+from ..models import (
+    Equipment, CalibrationCertificateImage, Maintenance, EquipmentImage,
+    EquipmentLicenseRecord, EquipmentInspectionRecord, FireExtinguisherInspectionRecord,
+    FireExtinguisherImage, Sector, Department, AdministrativeUnit, Division
+)
 from .base import Select2Widget
 from .generic_forms import MaintenanceForm
 
@@ -16,7 +20,7 @@ class EquipmentForm(forms.ModelForm):
         model = Equipment
         fields = [
             'door_no', 'plate_no', 'manufacture_year', 'manufacturer', 'model',
-            'location', 'sector', 'department', 'division', 'status'
+            'location', 'sector', 'administrative_unit', 'department', 'division', 'status'
         ]
         widgets = {
             # Foreign key fields with search functionality
@@ -24,7 +28,10 @@ class EquipmentForm(forms.ModelForm):
             'model': Select2Widget(attrs={'data-placeholder': 'اختر الموديل...'}),
             'location': Select2Widget(attrs={'data-placeholder': 'اختر الموقع...'}),
             'sector': Select2Widget(attrs={'data-placeholder': 'اختر القطاع...', 'class': 'nested-selector-sector'}),
-            'department': Select2Widget(attrs={'data-placeholder': 'اختر الإدارة...', 'class': 'nested-selector-department'}),
+            'administrative_unit': Select2Widget(attrs={
+                'data-placeholder': 'اختر الإدارة...', 'class': 'nested-selector-administrative-unit'
+            }),
+            'department': Select2Widget(attrs={'data-placeholder': 'اختر القسم...'}),
             'division': Select2Widget(attrs={'data-placeholder': 'اختر الدائرة...', 'class': 'nested-selector-division'}),
         }
     
@@ -37,7 +44,8 @@ class EquipmentForm(forms.ModelForm):
         # Ensure sector field always has all sectors available
         self.fields['sector'].queryset = Sector.objects.all()
         
-        # Make sure department and division fields are not required initially (will be validated in clean)
+        # Make sure administrative_unit, department and division fields are not required initially (will be validated in clean)
+        self.fields['administrative_unit'].required = False
         self.fields['department'].required = False
         self.fields['division'].required = False
         
@@ -45,15 +53,15 @@ class EquipmentForm(forms.ModelForm):
         if self.instance and self.instance.pk:
             # If updating, filter departments and divisions based on existing values
             if self.instance.sector:
-                self.fields['department'].queryset = Department.objects.filter(
+                self.fields['administrative_unit'].queryset = AdministrativeUnit.objects.filter(
                     Q(sector=self.instance.sector) | Q(is_dummy=True)
                 ).distinct()
             else:
-                self.fields['department'].queryset = Department.objects.filter(is_dummy=True)
+                self.fields['administrative_unit'].queryset = AdministrativeUnit.objects.filter(is_dummy=True)
             
-            if self.instance.department:
+            if getattr(self.instance, 'administrative_unit', None):
                 self.fields['division'].queryset = Division.objects.filter(
-                    Q(department=self.instance.department) | Q(is_dummy=True)
+                    Q(administrative_unit=self.instance.administrative_unit) | Q(is_dummy=True)
                 ).distinct()
             else:
                 self.fields['division'].queryset = Division.objects.filter(is_dummy=True)
@@ -61,19 +69,19 @@ class EquipmentForm(forms.ModelForm):
             # For new records, set defaults to "غير محدد" (dummy records)
             # Get dummy records
             dummy_sector = Sector.objects.filter(name='غير محدد', is_dummy=True).first()
-            dummy_department = Department.objects.filter(name='غير محدد', is_dummy=True).first()
+            dummy_unit = AdministrativeUnit.objects.filter(name='غير محدد', is_dummy=True).first()
             dummy_division = Division.objects.filter(name='غير محدد', is_dummy=True).first()
             
             # Set default values to dummy records
             if dummy_sector and not self.initial.get('sector'):
                 self.initial['sector'] = dummy_sector.pk
-            if dummy_department and not self.initial.get('department'):
-                self.initial['department'] = dummy_department.pk
+            if dummy_unit and not self.initial.get('administrative_unit'):
+                self.initial['administrative_unit'] = dummy_unit.pk
             if dummy_division and not self.initial.get('division'):
                 self.initial['division'] = dummy_division.pk
             
             # Start with querysets that include dummy records
-            self.fields['department'].queryset = Department.objects.filter(is_dummy=True)
+            self.fields['administrative_unit'].queryset = AdministrativeUnit.objects.filter(is_dummy=True)
             self.fields['division'].queryset = Division.objects.filter(is_dummy=True)
         
         # Ensure fields render even with empty querysets by explicitly including them
@@ -87,15 +95,15 @@ class EquipmentForm(forms.ModelForm):
         # Get raw data from form before validation
         if self.data:
             sector_id = self.data.get('sector')
-            department_id = self.data.get('department')
+            admin_unit_id = self.data.get('administrative_unit')
             division_id = self.data.get('division')
             
             # Update querysets based on submitted values BEFORE validation
             if sector_id:
                 try:
                     sector = Sector.objects.get(pk=sector_id)
-                    # Update department queryset to include departments for this sector
-                    self.fields['department'].queryset = Department.objects.filter(
+                    # Update administrative unit queryset to include units for this sector
+                    self.fields['administrative_unit'].queryset = AdministrativeUnit.objects.filter(
                         Q(sector=sector) | Q(is_dummy=True)
                     ).distinct()
                     
@@ -107,29 +115,29 @@ class EquipmentForm(forms.ModelForm):
                             current_division_qs = self.fields['division'].queryset
                             if division not in current_division_qs:
                                 # Add the selected division to queryset
-                                sector_departments = Department.objects.filter(
+                                sector_units = AdministrativeUnit.objects.filter(
                                     Q(sector=sector) | Q(is_dummy=True)
                                 ).distinct()
                                 self.fields['division'].queryset = Division.objects.filter(
-                                    Q(department__in=sector_departments) | Q(is_dummy=True) | Q(pk=division.pk)
+                                    Q(administrative_unit__in=sector_units) | Q(is_dummy=True) | Q(pk=division.pk)
                                 ).distinct()
                         except Division.DoesNotExist:
                             pass
                 except (Sector.DoesNotExist, ValueError):
                     pass
             
-            if department_id:
+            if admin_unit_id:
                 try:
-                    department = Department.objects.get(pk=department_id)
-                    # Update division queryset to include divisions for this department
+                    administrative_unit = AdministrativeUnit.objects.get(pk=admin_unit_id)
+                    # Update division queryset to include divisions for this administrative unit
                     self.fields['division'].queryset = Division.objects.filter(
-                        Q(department=department) | Q(is_dummy=True)
+                        Q(administrative_unit=administrative_unit) | Q(is_dummy=True)
                     ).distinct()
-                except (Department.DoesNotExist, ValueError):
+                except (AdministrativeUnit.DoesNotExist, ValueError):
                     pass
             
-            # If division is selected without department, ensure it's in queryset
-            if division_id and not department_id:
+            # If division is selected without administrative unit, ensure it's in queryset
+            if division_id and not admin_unit_id:
                 try:
                     division = Division.objects.get(pk=division_id)
                     if division not in self.fields['division'].queryset:
@@ -145,6 +153,7 @@ class EquipmentForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         sector = cleaned_data.get('sector')
+        administrative_unit = cleaned_data.get('administrative_unit')
         department = cleaned_data.get('department')
         division = cleaned_data.get('division')
         
@@ -156,38 +165,42 @@ class EquipmentForm(forms.ModelForm):
             })
         
         # If updating and all hierarchy fields are NULL, that's okay (backward compatibility)
-        if self.instance.pk and not sector and not department and not division:
+        if self.instance.pk and not sector and not administrative_unit and not department and not division:
             return cleaned_data
         
         # Validate hierarchy consistency
         if division:
-            if department and division.department != department:
+            if administrative_unit and division.administrative_unit != administrative_unit:
                 # Special case: Allow main dummy division "غير محدد" to be selected
-                # with any department (it's a fallback option that should always be available)
                 if division.name == 'غير محدد' and division.is_dummy:
-                    # Allow this combination - keep the selected department
-                    pass  # Don't change department, allow the combination
+                    pass
                 else:
                     raise forms.ValidationError({
                         'division': 'الدائرة المختارة لا تنتمي للإدارة المحددة.'
                     })
-            elif not department:
-                # If division is selected without department, set department from division
-                cleaned_data['department'] = division.department
+            elif not administrative_unit:
+                cleaned_data['administrative_unit'] = division.administrative_unit
         
-        if department:
-            if sector and department.sector != sector:
-                # Special case: Allow main dummy department "غير محدد" to be selected
-                # with any sector (it's a fallback option that should always be available)
-                if department.name == 'غير محدد' and department.is_dummy:
-                    # Allow this combination - keep the selected sector
-                    pass  # Don't change sector, allow the combination
+        if administrative_unit:
+            if sector and administrative_unit.sector != sector:
+                if administrative_unit.name == 'غير محدد' and administrative_unit.is_dummy:
+                    pass
                 else:
                     raise forms.ValidationError({
-                        'department': 'الإدارة المختارة لا تنتمي للقطاع المحدد.'
+                        'administrative_unit': 'الإدارة المختارة لا تنتمي للقطاع المحدد.'
                     })
-            elif not sector:
-                # If department is selected without sector, set sector from department
+            elif not sector and administrative_unit.sector:
+                cleaned_data['sector'] = administrative_unit.sector
+
+        if department:
+            if sector and department.sector != sector:
+                if department.name == 'غير محدد' and department.is_dummy:
+                    pass
+                else:
+                    raise forms.ValidationError({
+                        'department': 'القسم المختار لا ينتمي للقطاع المحدد.'
+                    })
+            elif not sector and department.sector:
                 cleaned_data['sector'] = department.sector
         
         # Allow all combinations (per system requirements):

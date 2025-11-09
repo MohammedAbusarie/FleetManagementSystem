@@ -132,9 +132,9 @@ class RegionAdmin(admin.ModelAdmin):
 
 @admin.register(Division)
 class DivisionAdmin(admin.ModelAdmin):
-    list_display = ['name', 'department', 'is_dummy', 'created_at']
+    list_display = ['name', 'administrative_unit', 'is_dummy', 'created_at']
     search_fields = ['name']
-    list_filter = ['department', 'is_dummy', 'created_at']
+    list_filter = ['administrative_unit', 'is_dummy', 'created_at']
     
     def has_delete_permission(self, request, obj=None):
         """Prevent deletion of protected default record"""
@@ -145,23 +145,29 @@ class DivisionAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         """Make fields readonly for protected default record"""
         if obj and obj.is_protected_default:
-            return ['name', 'department', 'is_dummy', 'created_at', 'updated_at']
+            return ['name', 'administrative_unit', 'is_dummy', 'created_at', 'updated_at']
         return ['created_at', 'updated_at']
 
 
 # Register main models
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
-    list_display = ['fleet_no', 'plate_no_en', 'plate_no_ar', 'manufacturer', 'model', 'ownership_type', 'sector', 'department', 'division', 'created_at']
+    list_display = [
+        'fleet_no', 'plate_no_en', 'plate_no_ar', 'manufacturer', 'model',
+        'ownership_type', 'sector', 'administrative_unit', 'department', 'division', 'created_at'
+    ]
     search_fields = ['fleet_no', 'plate_no_en', 'plate_no_ar']
-    list_filter = ['manufacturer', 'ownership_type', 'department_code', 'car_class', 'sector', 'department', 'division']
+    list_filter = [
+        'manufacturer', 'ownership_type', 'department_code', 'car_class',
+        'sector', 'administrative_unit', 'department', 'division'
+    ]
     filter_horizontal = ['visited_regions']
     fieldsets = (
         ('Basic Information', {
             'fields': ('fleet_no', 'plate_no_en', 'plate_no_ar')
         }),
         ('Organizational Hierarchy', {
-            'fields': ('sector', 'department', 'division')
+            'fields': ('sector', 'administrative_unit', 'department', 'division')
         }),
         ('Vehicle Details', {
             'fields': ('department_code', 'driver_name', 'car_class', 'manufacturer', 'model',
@@ -181,15 +187,21 @@ class CarAdmin(admin.ModelAdmin):
 
 @admin.register(Equipment)
 class EquipmentAdmin(admin.ModelAdmin):
-    list_display = ['door_no', 'plate_no', 'manufacturer', 'model', 'status', 'location', 'sector', 'department', 'division', 'created_at']
+    list_display = [
+        'door_no', 'plate_no', 'manufacturer', 'model', 'status', 'location',
+        'sector', 'administrative_unit', 'department', 'division', 'created_at'
+    ]
     search_fields = ['door_no', 'plate_no']
-    list_filter = ['manufacturer', 'status', 'location', 'sector', 'department', 'division', 'manufacture_year']
+    list_filter = [
+        'manufacturer', 'status', 'location', 'sector',
+        'administrative_unit', 'department', 'division', 'manufacture_year'
+    ]
     fieldsets = (
         ('Basic Information', {
             'fields': ('door_no', 'plate_no', 'manufacture_year')
         }),
         ('Organizational Hierarchy', {
-            'fields': ('sector', 'department', 'division')
+            'fields': ('sector', 'administrative_unit', 'department', 'division')
         }),
         ('Equipment Details', {
             'fields': ('manufacturer', 'model', 'location', 'status')

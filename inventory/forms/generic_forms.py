@@ -3,7 +3,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, Submit, HTML
-from ..models import EquipmentModel, Maintenance, Sector, Department, Division
+from ..models import EquipmentModel, Maintenance, Sector, Department, AdministrativeUnit, Division
 
 
 class MaintenanceForm(forms.ModelForm):
@@ -55,6 +55,59 @@ class EquipmentModelForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_method = 'post'
+
+
+class AdministrativeUnitForm(forms.ModelForm):
+    """Form for AdministrativeUnit model"""
+    
+    class Meta:
+        model = AdministrativeUnit
+        fields = ['name', 'sector']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'sector': forms.Select(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'name': 'الاسم',
+            'sector': 'القطاع',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['sector'].queryset = Sector.objects.all().order_by('name')
+        self.fields['sector'].required = False
+        
+        if self.instance and self.instance.pk and self.instance.is_protected_default:
+            self.fields['name'].widget.attrs['readonly'] = True
+            self.fields['name'].widget.attrs['disabled'] = True
+            self.fields['sector'].widget.attrs['disabled'] = True
+        
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.layout = Layout(
+            Field('name'),
+            Field('sector'),
+            HTML('<div class="mt-4">'),
+            Submit('submit', 'حفظ', css_class='btn btn-primary'),
+            HTML('<a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>'),
+            HTML('</div>')
+        )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        if self.instance and self.instance.pk and self.instance.is_protected_default:
+            raise forms.ValidationError('لا يمكن تعديل السجل "غير محدد" لأنه قيمة افتراضية أساسية في النظام.')
+        if not self.instance.pk:
+            cleaned_data['is_dummy'] = False
+        return cleaned_data
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if not instance.pk:
+            instance.is_dummy = False
+        if commit:
+            instance.save()
+        return instance
 
 
 class SectorForm(forms.ModelForm):
@@ -170,32 +223,32 @@ class DivisionForm(forms.ModelForm):
     
     class Meta:
         model = Division
-        fields = ['name', 'department']
+        fields = ['name', 'administrative_unit']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'department': forms.Select(attrs={'class': 'form-control'}),
+            'administrative_unit': forms.Select(attrs={'class': 'form-control'}),
         }
         labels = {
             'name': 'الاسم',
-            'department': 'الإدارة',
+            'administrative_unit': 'الإدارة',
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['department'].queryset = Department.objects.all().order_by('name')
-        self.fields['department'].required = False
+        self.fields['administrative_unit'].queryset = AdministrativeUnit.objects.all().order_by('name')
+        self.fields['administrative_unit'].required = False
         
         # Make fields readonly if this is a protected default record
         if self.instance and self.instance.pk and self.instance.is_protected_default:
             self.fields['name'].widget.attrs['readonly'] = True
             self.fields['name'].widget.attrs['disabled'] = True
-            self.fields['department'].widget.attrs['disabled'] = True
+            self.fields['administrative_unit'].widget.attrs['disabled'] = True
         
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.layout = Layout(
             Field('name'),
-            Field('department'),
+            Field('administrative_unit'),
             HTML('<div class="mt-4">'),
             Submit('submit', 'حفظ', css_class='btn btn-primary'),
             HTML('<a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>'),

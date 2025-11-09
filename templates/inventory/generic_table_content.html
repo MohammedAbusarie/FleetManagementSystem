@@ -44,6 +44,9 @@
                             <th>الاسم</th>
                             {% if model_name == 'Sector' %}
                             <th>قيمة افتراضية</th>
+                            {% elif model_name == 'AdministrativeUnit' %}
+                            <th>القطاع</th>
+                            <th>قيمة افتراضية</th>
                             {% elif model_name == 'Department' %}
                             <th>القطاع</th>
                             <th>قيمة افتراضية</th>
@@ -68,6 +71,15 @@
                                     <span class="badge bg-success">لا</span>
                                 {% endif %}
                             </td>
+                            {% elif model_name == 'AdministrativeUnit' %}
+                            <td>{{ obj.sector.name|default:"-" }}</td>
+                            <td>
+                                {% if obj.is_dummy %}
+                                    <span class="badge bg-secondary">نعم</span>
+                                {% else %}
+                                    <span class="badge bg-success">لا</span>
+                                {% endif %}
+                            </td>
                             {% elif model_name == 'Department' %}
                             <td>{{ obj.sector.name|default:"-" }}</td>
                             <td>
@@ -78,7 +90,7 @@
                                 {% endif %}
                             </td>
                             {% elif model_name == 'Division' %}
-                            <td>{{ obj.department.name|default:"-" }}</td>
+                            <td>{{ obj.administrative_unit.name|default:"-" }}</td>
                             <td>
                                 {% if obj.is_dummy %}
                                     <span class="badge bg-secondary">نعم</span>

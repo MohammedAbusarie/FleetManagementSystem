@@ -2,7 +2,7 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from ..models import Sector, Department, Division
+from ..models import Sector, AdministrativeUnit, Division
 
 
 @require_http_methods(["GET"])
@@ -18,12 +18,11 @@ def sectors_list(request):
 
 
 @require_http_methods(["GET"])
-def departments_by_sector(request):
-    """Get departments filtered by sector"""
+def administrative_units_by_sector(request):
+    """Get administrative units filtered by sector"""
     sector_id = request.GET.get('sector_id')
     
-    # ALWAYS get the main dummy department "غير محدد" - it should always be available
-    main_dummy_dept = Department.objects.filter(
+    main_dummy_unit = AdministrativeUnit.objects.filter(
         name='غير محدد',
         is_dummy=True
     ).first()
@@ -31,97 +30,74 @@ def departments_by_sector(request):
     if sector_id:
         try:
             sector = Sector.objects.get(id=sector_id)
-            # Get all departments for this sector (including dummy departments)
-            departments = Department.objects.filter(sector=sector)
+            units = AdministrativeUnit.objects.filter(sector=sector)
             
-            # ALWAYS include the main dummy department "غير محدد" regardless of selected sector
-            # This ensures users can always select "غير محدد" as a fallback option
-            departments_list = list(departments)
-            if main_dummy_dept:
-                # Check if it's already in the list (by ID)
-                if not any(d.id == main_dummy_dept.id for d in departments_list):
-                    departments_list.append(main_dummy_dept)
+            units_list = list(units)
+            if main_dummy_unit and not any(u.id == main_dummy_unit.id for u in units_list):
+                units_list.append(main_dummy_unit)
         except Sector.DoesNotExist:
-            departments_list = []
-            # Even if sector doesn't exist, include dummy department
-            if main_dummy_dept:
-                departments_list = [main_dummy_dept]
+            units_list = []
+            if main_dummy_unit:
+                units_list = [main_dummy_unit]
     else:
-        # If no sector_id provided, return all departments
-        departments_list = list(Department.objects.all())
-    # Separate dummy "غير محدد" from others
-    # Only include ONE dummy department "غير محدد" (the main one)
-    dummy_depts = [d for d in departments_list if d.is_dummy and d.name == 'غير محدد']
-    # If multiple dummy depts exist, only keep the first one (main dummy)
-    if len(dummy_depts) > 1:
-        dummy_depts = [dummy_depts[0]]
+        units_list = list(AdministrativeUnit.objects.all())
     
-    other_depts = [d for d in departments_list if d not in dummy_depts]
-    # Sort other departments by name
-    other_depts = sorted(other_depts, key=lambda x: x.name)
-    # Combine: dummy first, then others
-    departments_list = dummy_depts + other_depts
+    dummy_units = [u for u in units_list if u.is_dummy and u.name == 'غير محدد']
+    if len(dummy_units) > 1:
+        dummy_units = [dummy_units[0]]
+    
+    other_units = [u for u in units_list if u not in dummy_units]
+    other_units = sorted(other_units, key=lambda x: x.name)
+    units_list = dummy_units + other_units
     
     data = [{
-        'id': dept.id,
-        'name': dept.name,
-        'is_dummy': dept.is_dummy,
-        'sector_id': dept.sector.id if dept.sector else None
-    } for dept in departments_list]
+        'id': unit.id,
+        'name': unit.name,
+        'is_dummy': unit.is_dummy,
+        'sector_id': unit.sector.id if unit.sector else None
+    } for unit in units_list]
     
-    return JsonResponse({'departments': data})
+    return JsonResponse({'administrative_units': data})
 
 
 @require_http_methods(["GET"])
-def divisions_by_department(request):
-    """Get divisions filtered by department"""
-    department_id = request.GET.get('department_id')
+def divisions_by_administrative_unit(request):
+    """Get divisions filtered by administrative unit"""
+    administrative_unit_id = request.GET.get('administrative_unit_id')
     
-    # ALWAYS get the main dummy division "غير محدد" - it should always be available
     main_dummy_div = Division.objects.filter(
         name='غير محدد',
         is_dummy=True
     ).first()
     
-    if department_id:
+    if administrative_unit_id:
         try:
-            department = Department.objects.get(id=department_id)
-            # Get all divisions for this department
-            divisions = Division.objects.filter(department=department)
+            administrative_unit = AdministrativeUnit.objects.get(id=administrative_unit_id)
+            divisions = Division.objects.filter(administrative_unit=administrative_unit)
             
-            # ALWAYS include the main dummy division "غير محدد" regardless of selected department
-            # This ensures users can always select "غير محدد" as a fallback option
             divisions_list = list(divisions)
-            if main_dummy_div:
-                # Check if it's already in the list (by ID)
-                if not any(d.id == main_dummy_div.id for d in divisions_list):
-                    divisions_list.append(main_dummy_div)
-        except Department.DoesNotExist:
+            if main_dummy_div and not any(d.id == main_dummy_div.id for d in divisions_list):
+                divisions_list.append(main_dummy_div)
+        except AdministrativeUnit.DoesNotExist:
             divisions_list = []
-            # Even if department doesn't exist, include dummy division
             if main_dummy_div:
                 divisions_list = [main_dummy_div]
     else:
-        # If no department_id provided, return all divisions
         divisions_list = list(Division.objects.all())
-    # Separate dummy "غير محدد" from others
-    # Only include ONE dummy division "غير محدد" (the main one)
+    
     dummy_divs = [d for d in divisions_list if d.is_dummy and d.name == 'غير محدد']
-    # If multiple dummy divs exist, only keep the first one (main dummy)
     if len(dummy_divs) > 1:
         dummy_divs = [dummy_divs[0]]
     
     other_divs = [d for d in divisions_list if d not in dummy_divs]
-    # Sort other divisions by name
     other_divs = sorted(other_divs, key=lambda x: x.name)
-    # Combine: dummy first, then others
     divisions_list = dummy_divs + other_divs
     
     data = [{
         'id': div.id,
         'name': div.name,
         'is_dummy': div.is_dummy,
-        'department_id': div.department.id if div.department else None
+        'administrative_unit_id': div.administrative_unit.id if div.administrative_unit else None
     } for div in divisions_list]
     
     return JsonResponse({'divisions': data})

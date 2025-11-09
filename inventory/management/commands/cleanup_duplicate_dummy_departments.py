@@ -1,6 +1,6 @@
 """Management command to clean up duplicate dummy departments"""
 from django.core.management.base import BaseCommand
-from inventory.models import Sector, Department, Division, Car, Equipment
+from inventory.models import Sector, Department, Car, Equipment
 
 
 class Command(BaseCommand):
@@ -79,14 +79,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING('\nIn real mode, would:'))
             self.stdout.write('  1. Migrate all Car references to main dummy department')
             self.stdout.write('  2. Migrate all Equipment references to main dummy department')
-            self.stdout.write('  3. Migrate all Division references to main dummy department')
-            self.stdout.write('  4. Delete duplicate dummy departments')
+            self.stdout.write('  3. Delete duplicate dummy departments')
             return
         
         # Migrate all references from duplicate departments to main dummy department
         migrated_cars = 0
         migrated_equipment = 0
-        migrated_divisions = 0
         
         for dept in duplicate_dummy_depts:
             # Migrate Car references
@@ -110,31 +108,7 @@ class Command(BaseCommand):
                 migrated_equipment += equipment_count
                 self.stdout.write(self.style.SUCCESS(f'  Migrated {equipment_count} equipment from department {dept.id}'))
             
-            # Migrate Division references
-            divisions_count = Division.objects.filter(department=dept).count()
-            if divisions_count > 0:
-                # Check if we can migrate divisions
-                for division in Division.objects.filter(department=dept):
-                    # Try to migrate division to main dummy department
-                    # But first check if a division with same name already exists under main dummy
-                    existing_division = Division.objects.filter(
-                        name=division.name,
-                        department=main_dummy_dept
-                    ).first()
-                    
-                    if existing_division:
-                        # Migrate references from this division to existing one
-                        Car.objects.filter(division=division).update(division=existing_division)
-                        Equipment.objects.filter(division=division).update(division=existing_division)
-                        division.delete()
-                        migrated_divisions += 1
-                    else:
-                        # Just update the department reference
-                        division.department = main_dummy_dept
-                        division.save()
-                        migrated_divisions += 1
-                
-                self.stdout.write(self.style.SUCCESS(f'  Migrated {divisions_count} division(s) from department {dept.id}'))
+            # Divisions are now linked to AdministrativeUnit, no migration needed here
         
         # Now delete the duplicate departments
         deleted_count = 0
@@ -152,7 +126,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('='*50))
         self.stdout.write(self.style.SUCCESS(f'Migrated {migrated_cars} car reference(s)'))
         self.stdout.write(self.style.SUCCESS(f'Migrated {migrated_equipment} equipment reference(s)'))
-        self.stdout.write(self.style.SUCCESS(f'Migrated {migrated_divisions} division(s)'))
         self.stdout.write(self.style.SUCCESS(f'Deleted {deleted_count} duplicate dummy department(s)'))
         self.stdout.write(self.style.SUCCESS('='*50))
         

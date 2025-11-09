@@ -34,7 +34,7 @@ class InventoryConfig(AppConfig):
     
     def _ensure_default_records(self):
         """Ensure default 'غير محدد' records exist"""
-        from .models import Sector, Department, Division
+        from .models import Sector, AdministrativeUnit, Department, Division
         
         # Create dummy Sector if it doesn't exist
         dummy_sector, _ = Sector.objects.get_or_create(
@@ -42,8 +42,21 @@ class InventoryConfig(AppConfig):
             defaults={'is_dummy': True}
         )
         
-        # Create dummy Department linked to dummy Sector if it doesn't exist
-        dummy_department, created = Department.objects.get_or_create(
+        # Create dummy Administrative Unit linked to dummy Sector if it doesn't exist
+        dummy_admin_unit, _ = AdministrativeUnit.objects.get_or_create(
+            name='غير محدد',
+            defaults={'sector': dummy_sector, 'is_dummy': True}
+        )
+        
+        if dummy_admin_unit.sector != dummy_sector or not dummy_admin_unit.is_dummy:
+            AdministrativeUnit.objects.filter(pk=dummy_admin_unit.pk).update(
+                sector=dummy_sector,
+                is_dummy=True
+            )
+            dummy_admin_unit.refresh_from_db()
+        
+        # Create dummy Department (separate "قسم") linked to dummy Sector if it doesn't exist
+        dummy_department, _ = Department.objects.get_or_create(
             name='غير محدد',
             defaults={'sector': dummy_sector, 'is_dummy': True}
         )
@@ -57,8 +70,8 @@ class InventoryConfig(AppConfig):
             )
             dummy_department.refresh_from_db()
         
-        # Create dummy Division linked to dummy Department if it doesn't exist
+        # Create dummy Division linked to dummy Administrative Unit if it doesn't exist
         Division.objects.get_or_create(
             name='غير محدد',
-            defaults={'department': dummy_department, 'is_dummy': True}
+            defaults={'administrative_unit': dummy_admin_unit, 'is_dummy': True}
         )

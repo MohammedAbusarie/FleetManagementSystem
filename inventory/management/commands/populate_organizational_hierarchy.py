@@ -1,6 +1,6 @@
 """Management command to populate organizational hierarchy test data"""
 from django.core.management.base import BaseCommand
-from inventory.models import Sector, Department, Division
+from inventory.models import Sector, AdministrativeUnit, Department, Division
 
 
 class Command(BaseCommand):
@@ -21,11 +21,22 @@ class Command(BaseCommand):
             from inventory.models import Car, Equipment
             
             # Clear references in Car model (including old department_code field)
-            Car.objects.update(division=None, department=None, sector=None, department_code=None)
+            Car.objects.update(
+                division=None,
+                administrative_unit=None,
+                department=None,
+                sector=None,
+                department_code=None
+            )
             self.stdout.write(self.style.SUCCESS('  Cleared Car references'))
             
             # Clear references in Equipment model (including sector field)
-            Equipment.objects.update(division=None, department=None, sector=None)
+            Equipment.objects.update(
+                division=None,
+                administrative_unit=None,
+                department=None,
+                sector=None
+            )
             self.stdout.write(self.style.SUCCESS('  Cleared Equipment references'))
             
             # Now delete in reverse order to avoid foreign key constraints
@@ -48,6 +59,11 @@ class Command(BaseCommand):
             defaults={'is_dummy': True}
         )
         
+        dummy_admin_unit, _ = AdministrativeUnit.objects.get_or_create(
+            name='غير محدد',
+            defaults={'sector': dummy_sector, 'is_dummy': True}
+        )
+        
         dummy_department, _ = Department.objects.get_or_create(
             name='غير محدد',
             defaults={'sector': dummy_sector, 'is_dummy': True}
@@ -55,7 +71,7 @@ class Command(BaseCommand):
         
         dummy_division, _ = Division.objects.get_or_create(
             name='غير محدد',
-            defaults={'department': dummy_department, 'is_dummy': True}
+            defaults={'administrative_unit': dummy_admin_unit, 'is_dummy': True}
         )
         
         self.stdout.write(self.style.SUCCESS('Dummy records ready'))
@@ -79,8 +95,8 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(self.style.SUCCESS(f'  Created Sector: {sector.id}'))
         
-        # Create test Departments for each sector
-        departments_data = [
+        # Create test Administrative Units for each sector
+        administrative_units_data = [
             # قطاع التقنية والابتكار
             {'name': 'إدارة تقنية المعلومات', 'sector': created_sectors[0]},
             {'name': 'إدارة البرمجيات', 'sector': created_sectors[0]},
@@ -104,115 +120,149 @@ class Command(BaseCommand):
             {'name': 'إدارة الميزانية', 'sector': created_sectors[4]},
         ]
         
+        created_administrative_units = []
+        for unit_data in administrative_units_data:
+            admin_unit, created = AdministrativeUnit.objects.get_or_create(
+                name=unit_data['name'],
+                defaults={'sector': unit_data['sector'], 'is_dummy': False}
+            )
+            if not created:
+                updated = False
+                if admin_unit.sector != unit_data['sector']:
+                    admin_unit.sector = unit_data['sector']
+                    updated = True
+                if admin_unit.is_dummy:
+                    admin_unit.is_dummy = False
+                    updated = True
+                if updated:
+                    admin_unit.save()
+            created_administrative_units.append(admin_unit)
+            if created:
+                self.stdout.write(self.style.SUCCESS(f'  Created Administrative Unit: {admin_unit.id}'))
+        
+        # Create representative Departments (أقسام) for each sector
+        departments_data = [
+            {'name': 'قسم العمليات', 'sector': created_sectors[0]},
+            {'name': 'قسم الدعم', 'sector': created_sectors[0]},
+            {'name': 'قسم الخدمات الميدانية', 'sector': created_sectors[1]},
+            {'name': 'قسم اللوجستيات', 'sector': created_sectors[1]},
+            {'name': 'قسم التخطيط', 'sector': created_sectors[2]},
+            {'name': 'قسم المتابعة', 'sector': created_sectors[2]},
+            {'name': 'قسم التوظيف', 'sector': created_sectors[3]},
+            {'name': 'قسم التدريب', 'sector': created_sectors[3]},
+            {'name': 'قسم المحاسبة', 'sector': created_sectors[4]},
+            {'name': 'قسم الميزانية', 'sector': created_sectors[4]},
+        ]
+        
         created_departments = []
         for dept_data in departments_data:
             department, created = Department.objects.get_or_create(
                 name=dept_data['name'],
                 defaults={'sector': dept_data['sector'], 'is_dummy': False}
             )
-            # If department already existed, make sure it's linked to the correct sector
-            if not created and department.sector != dept_data['sector']:
-                department.sector = dept_data['sector']
-                department.is_dummy = False
-                department.save()
+            if not created:
+                updated = False
+                if department.sector != dept_data['sector']:
+                    department.sector = dept_data['sector']
+                    updated = True
+                if department.is_dummy:
+                    department.is_dummy = False
+                    updated = True
+                if updated:
+                    department.save()
             created_departments.append(department)
             if created:
                 self.stdout.write(self.style.SUCCESS(f'  Created Department: {department.id}'))
         
-        # NOTE: We do NOT create dummy departments for each valid sector anymore
-        # Users can always select the main dummy department "غير محدد" regardless of sector
-        # This prevents duplicate "غير محدد" entries in the admin filters
-        dummy_depts_for_valid_sectors = []
-        # The main dummy_department (linked to dummy_sector) is sufficient for all use cases
-        
-        # Create test Divisions for each department
+        # Create test Divisions for each administrative unit
         divisions_data = [
             # إدارة تقنية المعلومات
-            {'name': 'دائرة تطوير الأنظمة', 'department': created_departments[0]},
-            {'name': 'دائرة الدعم الفني', 'department': created_departments[0]},
-            {'name': 'دائرة الأمان السيبراني', 'department': created_departments[0]},
+            {'name': 'دائرة تطوير الأنظمة', 'administrative_unit': created_administrative_units[0]},
+            {'name': 'دائرة الدعم الفني', 'administrative_unit': created_administrative_units[0]},
+            {'name': 'دائرة الأمان السيبراني', 'administrative_unit': created_administrative_units[0]},
             
             # إدارة البرمجيات
-            {'name': 'دائرة التطوير', 'department': created_departments[1]},
-            {'name': 'دائرة الاختبار', 'department': created_departments[1]},
+            {'name': 'دائرة التطوير', 'administrative_unit': created_administrative_units[1]},
+            {'name': 'دائرة الاختبار', 'administrative_unit': created_administrative_units[1]},
             
             # إدارة الشبكات
-            {'name': 'دائرة البنية التحتية', 'department': created_departments[2]},
-            {'name': 'دائرة الاتصالات', 'department': created_departments[2]},
+            {'name': 'دائرة البنية التحتية', 'administrative_unit': created_administrative_units[2]},
+            {'name': 'دائرة الاتصالات', 'administrative_unit': created_administrative_units[2]},
             
             # إدارة الخدمات العامة
-            {'name': 'دائرة الصيانة العامة', 'department': created_departments[3]},
-            {'name': 'دائرة النظافة', 'department': created_departments[3]},
+            {'name': 'دائرة الصيانة العامة', 'administrative_unit': created_administrative_units[3]},
+            {'name': 'دائرة النظافة', 'administrative_unit': created_administrative_units[3]},
             
             # إدارة الصيانة
-            {'name': 'دائرة صيانة المباني', 'department': created_departments[4]},
-            {'name': 'دائرة صيانة المعدات', 'department': created_departments[4]},
+            {'name': 'دائرة صيانة المباني', 'administrative_unit': created_administrative_units[4]},
+            {'name': 'دائرة صيانة المعدات', 'administrative_unit': created_administrative_units[4]},
             
             # إدارة النقل
-            {'name': 'دائرة الأسطول', 'department': created_departments[5]},
-            {'name': 'دائرة اللوجستيات', 'department': created_departments[5]},
+            {'name': 'دائرة الأسطول', 'administrative_unit': created_administrative_units[5]},
+            {'name': 'دائرة اللوجستيات', 'administrative_unit': created_administrative_units[5]},
             
             # إدارة التخطيط
-            {'name': 'دائرة التخطيط الاستراتيجي', 'department': created_departments[6]},
-            {'name': 'دائرة الدراسات', 'department': created_departments[6]},
+            {'name': 'دائرة التخطيط الاستراتيجي', 'administrative_unit': created_administrative_units[6]},
+            {'name': 'دائرة الدراسات', 'administrative_unit': created_administrative_units[6]},
             
             # إدارة المتابعة
-            {'name': 'دائرة المتابعة والرقابة', 'department': created_departments[7]},
+            {'name': 'دائرة المتابعة والرقابة', 'administrative_unit': created_administrative_units[7]},
             
             # إدارة التوظيف
-            {'name': 'دائرة التوظيف والاختيار', 'department': created_departments[8]},
-            {'name': 'دائرة التعيينات', 'department': created_departments[8]},
+            {'name': 'دائرة التوظيف والاختيار', 'administrative_unit': created_administrative_units[8]},
+            {'name': 'دائرة التعيينات', 'administrative_unit': created_administrative_units[8]},
             
             # إدارة التدريب
-            {'name': 'دائرة التدريب والتطوير', 'department': created_departments[9]},
+            {'name': 'دائرة التدريب والتطوير', 'administrative_unit': created_administrative_units[9]},
             
             # إدارة المحاسبة
-            {'name': 'دائرة الحسابات', 'department': created_departments[10]},
-            {'name': 'دائرة المراجعة', 'department': created_departments[10]},
+            {'name': 'دائرة الحسابات', 'administrative_unit': created_administrative_units[10]},
+            {'name': 'دائرة المراجعة', 'administrative_unit': created_administrative_units[10]},
             
             # إدارة الميزانية
-            {'name': 'دائرة التخطيط المالي', 'department': created_departments[11]},
-            {'name': 'دائرة الرقابة المالية', 'department': created_departments[11]},
+            {'name': 'دائرة التخطيط المالي', 'administrative_unit': created_administrative_units[11]},
+            {'name': 'دائرة الرقابة المالية', 'administrative_unit': created_administrative_units[11]},
         ]
         
-        # IMPORTANT: Create valid divisions that belong to dummy department (dummy sector)
-        # This allows: Dummy Sector → Dummy Department → Valid Division
-        valid_divisions_for_dummy_dept = [
-            {'name': 'دائرة عامة', 'department': dummy_department, 'is_dummy': False},
-            {'name': 'دائرة مؤقتة', 'department': dummy_department, 'is_dummy': False},
-            {'name': 'دائرة غير مصنفة', 'department': dummy_department, 'is_dummy': False},
+        # IMPORTANT: Create valid divisions that belong to dummy administrative unit (dummy sector)
+        # This allows: Dummy Sector → Dummy Administrative Unit → Valid Division
+        valid_divisions_for_dummy_unit = [
+            {'name': 'دائرة عامة', 'administrative_unit': dummy_admin_unit, 'is_dummy': False},
+            {'name': 'دائرة مؤقتة', 'administrative_unit': dummy_admin_unit, 'is_dummy': False},
+            {'name': 'دائرة غير مصنفة', 'administrative_unit': dummy_admin_unit, 'is_dummy': False},
         ]
         
-        for div_data in valid_divisions_for_dummy_dept:
+        for div_data in valid_divisions_for_dummy_unit:
             division, created = Division.objects.get_or_create(
                 name=div_data['name'],
-                defaults={'department': div_data['department'], 'is_dummy': div_data['is_dummy']}
+                defaults={'administrative_unit': div_data['administrative_unit'], 'is_dummy': div_data['is_dummy']}
             )
             if created:
-                self.stdout.write(self.style.SUCCESS(f'  Created Valid Division for Dummy Dept: {division.id}'))
+                self.stdout.write(self.style.SUCCESS(f'  Created Valid Division for Dummy Administrative Unit: {division.id}'))
         
-        # Create dummy division for the main dummy department only
-        # This allows: Dummy Sector → Dummy Department → Dummy Division
-        # Note: We only create one dummy division linked to the main dummy department
-        # Users can always select the main dummy department and dummy division regardless of sector
+        # Create dummy division for the main dummy administrative unit only
+        # This allows: Dummy Sector → Dummy Administrative Unit → Dummy Division
+        # Note: We only create one dummy division linked to the main dummy administrative unit
+        # Users can always select the main dummy unit and dummy division regardless of sector
         dummy_div, created = Division.objects.get_or_create(
             name='غير محدد',
-            defaults={'department': dummy_department, 'is_dummy': True}
+            defaults={'administrative_unit': dummy_admin_unit, 'is_dummy': True}
         )
         if created:
             self.stdout.write(self.style.SUCCESS(f'  Created Dummy Division: {dummy_div.id}'))
         
-        # Create divisions for regular departments
+        # Create divisions for regular administrative units
         for div_data in divisions_data:
             division, created = Division.objects.get_or_create(
                 name=div_data['name'],
-                defaults={'department': div_data['department'], 'is_dummy': False}
+                defaults={'administrative_unit': div_data['administrative_unit'], 'is_dummy': False}
             )
             if created:
                 self.stdout.write(self.style.SUCCESS(f'  Created Division: {division.id}'))
         
         # Summary
         total_sectors = Sector.objects.count()
+        total_administrative_units = AdministrativeUnit.objects.count()
         total_departments = Department.objects.count()
         total_divisions = Division.objects.count()
         
@@ -220,13 +270,14 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Organizational Hierarchy Population Complete!'))
         self.stdout.write(self.style.SUCCESS('='*50))
         self.stdout.write(self.style.SUCCESS(f'Total Sectors: {total_sectors}'))
+        self.stdout.write(self.style.SUCCESS(f'Total Administrative Units: {total_administrative_units}'))
         self.stdout.write(self.style.SUCCESS(f'Total Departments: {total_departments}'))
         self.stdout.write(self.style.SUCCESS(f'Total Divisions: {total_divisions}'))
         self.stdout.write(self.style.SUCCESS('='*50))
         self.stdout.write(self.style.WARNING('\nNote: Organizational hierarchy structure:'))
-        self.stdout.write(self.style.WARNING('  - Only ONE main dummy department "غير محدد" exists'))
+        self.stdout.write(self.style.WARNING('  - Only ONE main dummy administrative unit "غير محدد" exists'))
         self.stdout.write(self.style.WARNING('  - Only ONE main dummy division "غير محدد" exists'))
-        self.stdout.write(self.style.WARNING('  - Users can select dummy department/division regardless of sector'))
-        self.stdout.write(self.style.WARNING('  - Valid Sector -> Valid Department -> Valid Division'))
-        self.stdout.write(self.style.WARNING('  - Dummy Sector -> Dummy Department -> Dummy Division'))
+        self.stdout.write(self.style.WARNING('  - Users can select dummy administrative unit/division regardless of sector'))
+        self.stdout.write(self.style.WARNING('  - Valid Sector -> Valid Administrative Unit -> Valid Division'))
+        self.stdout.write(self.style.WARNING('  - Departments (الأقسام) تبقى اختيارية وخارج التسلسل الهرمي'))
 
