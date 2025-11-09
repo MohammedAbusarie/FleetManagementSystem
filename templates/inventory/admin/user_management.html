@@ -188,11 +188,21 @@
             <div class="user-card">
                 <div class="d-flex align-items-start">
                     <div class="user-avatar me-3">
-                        {{ user.first_name|first|default:user.username|first|upper }}
+                        {% if user.first_name %}
+                            {{ user.first_name|first|upper }}
+                        {% else %}
+                            <span class="english-display" lang="en" dir="ltr">{{ user.username|first|upper }}</span>
+                        {% endif %}
                     </div>
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h6 class="mb-0">{{ user.get_full_name|default:user.username }}</h6>
+                            <h6 class="mb-0">
+                                {% if user.get_full_name %}
+                                    {{ user.get_full_name }}
+                                {% else %}
+                                    <span class="english-display" lang="en" dir="ltr">{{ user.username }}</span>
+                                {% endif %}
+                            </h6>
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
                                     <i class="bi bi-three-dots-vertical"></i>
@@ -261,14 +271,18 @@
                         <div class="mb-2">
                             <small class="text-muted">
                                 <i class="bi bi-person me-1"></i>
-                                {{ user.username }}
+                                <span class="english-display" lang="en" dir="ltr">{{ user.username }}</span>
                             </small>
                         </div>
                         
                         <div class="mb-2">
                             <small class="text-muted">
                                 <i class="bi bi-envelope me-1"></i>
-                                {{ user.email|default:"غير محدد" }}
+                                {% if user.email %}
+                                    <span class="english-display" lang="en" dir="ltr">{{ user.email }}</span>
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
                             </small>
                         </div>
                         

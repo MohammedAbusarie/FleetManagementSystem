@@ -220,7 +220,13 @@
                     <div class="sidebar-user-avatar">
                         <i class="bi bi-person-circle"></i>
                     </div>
-                    <div class="sidebar-user-name">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="sidebar-user-name">
+                        {% if user.get_full_name %}
+                            {{ user.get_full_name }}
+                        {% else %}
+                            <span class="english-display" lang="en" dir="ltr">{{ user.username }}</span>
+                        {% endif %}
+                    </div>
                 </div>
             </a>
             

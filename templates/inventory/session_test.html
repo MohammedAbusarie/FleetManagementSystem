@@ -15,8 +15,14 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <h5>معلومات المستخدم</h5>
-                            <p><strong>اسم المستخدم:</strong> {{ user.username }}</p>
-                            <p><strong>البريد الإلكتروني:</strong> {{ user.email|default:"غير محدد" }}</p>
+                            <p><strong>اسم المستخدم:</strong> <span class="english-display" lang="en" dir="ltr">{{ user.username }}</span></p>
+                            <p><strong>البريد الإلكتروني:</strong>
+                                {% if user.email %}
+                                    <span class="english-display" lang="en" dir="ltr">{{ user.email }}</span>
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </p>
                         </div>
                         <div class="col-md-6">
                             <h5>معلومات الجلسة</h5>

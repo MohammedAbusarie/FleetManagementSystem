@@ -32,6 +32,44 @@
     }
 
     /**
+     * Normalize displayed text content to English numerals for targeted elements
+     */
+    function normalizeDisplayElements(root) {
+        if (!root) {
+            return;
+        }
+
+        const displaySelectors = [
+            '.english-display',
+            '.plate-no-en-value',
+            '.fleet-no-value',
+            '.ltr-display',
+            '[data-english-display="true"]'
+        ].join(', ');
+
+        const elements = root.querySelectorAll
+            ? root.querySelectorAll(displaySelectors)
+            : [];
+
+        elements.forEach(function(element) {
+            const original = element.textContent;
+            const converted = convertArabicToEnglish(original);
+
+            if (original !== converted) {
+                element.textContent = converted;
+            }
+
+            // Ensure attributes are set to hint English context
+            if (!element.hasAttribute('lang')) {
+                element.setAttribute('lang', 'en');
+            }
+            if (!element.hasAttribute('dir')) {
+                element.setAttribute('dir', 'ltr');
+            }
+        });
+    }
+
+    /**
      * Check if an input field should use English numerals
      */
     function isEnglishField(input) {
@@ -169,6 +207,9 @@
             field.addEventListener('input', handleInput, false);
             field.addEventListener('paste', handlePaste, false);
         });
+
+        // Normalize display-only elements on initial load
+        normalizeDisplayElements(document);
     }
 
     // Initialize when DOM is ready
@@ -202,6 +243,9 @@
                                 }
                             });
                         }
+
+                        // Normalize any display-only elements inside the added node
+                        normalizeDisplayElements(node);
                     }
                 });
             }

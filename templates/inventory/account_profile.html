@@ -201,7 +201,9 @@
                         <div class="info-label">
                             <i class="bi bi-person me-2"></i>اسم المستخدم
                         </div>
-                        <div class="info-value readonly">{{ user.username }}</div>
+                        <div class="info-value readonly">
+                            <span class="english-display" lang="en" dir="ltr">{{ user.username }}</span>
+                        </div>
                     </div>
                     
                     <div class="info-row">
@@ -218,7 +220,11 @@
                             <i class="bi bi-envelope me-2"></i>البريد الإلكتروني
                         </div>
                         <div class="info-value readonly">
-                            {{ user.email|default:"غير محدد" }}
+                            {% if user.email %}
+                                <span class="english-display" lang="en" dir="ltr">{{ user.email }}</span>
+                            {% else %}
+                                غير محدد
+                            {% endif %}
                         </div>
                     </div>
                     

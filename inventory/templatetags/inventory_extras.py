@@ -6,6 +6,7 @@ from django import template
 from django.urls import reverse
 import os
 
+
 register = template.Library()
 
 
@@ -54,3 +55,4 @@ def get_item(dictionary, key):
     if isinstance(dictionary, dict):
         return dictionary.get(key)
     return None
+

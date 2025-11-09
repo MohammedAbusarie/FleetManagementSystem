@@ -41,6 +41,32 @@ body .info-row:has(.info-label:contains("اسم المستخدم")) .info-value 
     font-feature-settings: "lnum" !important;
 }
 
+/* Generic display elements that should stay in English/Western numerals */
+body .english-display,
+body .english-text,
+body .ltr-display,
+body *:not([class*="bi"]):not([class*="icon"]).english-display,
+body *:not([class*="bi"]):not([class*="icon"]).english-text,
+body *:not([class*="bi"]):not([class*="icon"]).ltr-display,
+body .info-value .english-display,
+body .info-value .english-text,
+body .info-value .ltr-display {
+    /* NOTE: This rule deliberately mirrors the specificity of base/_fonts.css.
+       Apply the `english-display` (or `english-text` / `ltr-display`) class to any
+       element that must stay in Latin characters (username/email/etc) so it wins
+       against the global Arabic font + digit shaping and forces Western numerals. */
+    direction: ltr !important;
+    text-align: left !important;
+    font-family: 'Roboto', 'Roboto', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
+    unicode-bidi: isolate !important;
+    font-variant-numeric: lining-nums tabular-nums !important;
+    -webkit-font-feature-settings: "lnum" 1, "tnum" 1 !important;
+    font-feature-settings: "lnum" 1, "tnum" 1 !important;
+    font-style: normal !important;
+    font-weight: 400 !important;
+    display: inline-block !important;
+}
+
 /* =============================================================================
    EMAIL FIELDS - Force English/RTL
    ============================================================================= */

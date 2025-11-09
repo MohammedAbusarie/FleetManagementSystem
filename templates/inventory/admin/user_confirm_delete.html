@@ -115,16 +115,30 @@
                     <!-- User Information -->
                     <div class="user-info text-center">
                         <div class="user-avatar">
-                            {{ user.first_name|first|default:user.username|first|upper }}
+                            {% if user.first_name %}
+                                {{ user.first_name|first|upper }}
+                            {% else %}
+                                <span class="english-display" lang="en" dir="ltr">{{ user.username|first|upper }}</span>
+                            {% endif %}
                         </div>
-                        <h5 class="mb-2">{{ user.get_full_name|default:user.username }}</h5>
+                        <h5 class="mb-2">
+                            {% if user.get_full_name %}
+                                {{ user.get_full_name }}
+                            {% else %}
+                                <span class="english-display" lang="en" dir="ltr">{{ user.username }}</span>
+                            {% endif %}
+                        </h5>
                         <p class="text-muted mb-1">
                             <i class="bi bi-person me-1"></i>
-                            {{ user.username }}
+                            <span class="english-display" lang="en" dir="ltr">{{ user.username }}</span>
                         </p>
                         <p class="text-muted mb-1">
                             <i class="bi bi-envelope me-1"></i>
-                            {{ user.email|default:"غير محدد" }}
+                            {% if user.email %}
+                                <span class="english-display" lang="en" dir="ltr">{{ user.email }}</span>
+                            {% else %}
+                                غير محدد
+                            {% endif %}
                         </p>
                         <p class="text-muted mb-0">
                             <i class="bi bi-calendar me-1"></i>

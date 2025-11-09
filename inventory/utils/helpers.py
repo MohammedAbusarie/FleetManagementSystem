@@ -132,6 +132,8 @@ def log_user_login(user, ip_address, user_agent, success=True):
     )
 
 
+
+
 def get_client_ip(request):
     """Get client IP address from request"""
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
