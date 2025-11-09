@@ -506,6 +506,20 @@ class Equipment(models.Model):
         return f"{self.door_no} - {self.plate_no}"
 
     @property
+    def primary_image(self):
+        """Return the main image for the equipment, falling back to gallery images."""
+        if self.equipment_image:
+            return self.equipment_image
+
+        prefetched_images = getattr(self, "_prefetched_objects_cache", {}).get("equipment_images")
+        if prefetched_images:
+            first_image = next((img for img in prefetched_images if getattr(img, "image", None)), None)
+        else:
+            first_image = self.equipment_images.order_by("-uploaded_at").first()
+
+        return first_image.image if first_image else None
+
+    @property
     def current_license_record(self):
         """Get the current license record"""
         return self.license_records.first()
@@ -627,6 +641,7 @@ class EquipmentImage(models.Model):
     class Meta:
         verbose_name = "صورة معدة"
         verbose_name_plural = "صور المعدات"
+        ordering = ['-uploaded_at']
 
     def __str__(self):
         return f"Image for {self.equipment.door_no}"

@@ -99,11 +99,13 @@
                                 <td dir="ltr">{% if equipment.last_maintenance_date %}{{ equipment.last_maintenance_date|date:"Y-m-d" }}{% else %}-{% endif %}</td>
                                 <td dir="ltr">{% if equipment.last_maintenance_cost %}{{ equipment.last_maintenance_cost|floatformat:2 }}{% else %}-{% endif %}</td>
                                 <td>
-                                    {% if equipment.equipment_image %}
-                                        <img src="{{ equipment.equipment_image|secure_media_url }}" alt="{{ equipment.door_no }}" class="table-img">
-                                    {% else %}
-                                        <span class="text-muted">لا توجد صورة</span>
-                                    {% endif %}
+                                    {% with image=equipment.primary_image %}
+                                        {% if image %}
+                                            <img src="{{ image|secure_media_url }}" alt="{{ equipment.door_no }}" class="table-img">
+                                        {% else %}
+                                            <span class="text-muted">لا توجد صورة</span>
+                                        {% endif %}
+                                    {% endwith %}
                                 </td>
                                 <td>
                                     <a href="{% url 'equipment_detail' equipment.pk %}" class="btn btn-sm btn-info" title="عرض التفاصيل">

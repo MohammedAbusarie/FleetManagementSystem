@@ -62,6 +62,7 @@ def equipment_list_view(request):
 @login_required
 def equipment_detail_json(request, pk):
     equipment = get_object_or_404(Equipment, pk=pk)
+    primary_image = equipment.primary_image
     data = {
         'door_no': equipment.door_no,
         'plate_no': equipment.plate_no,
@@ -78,7 +79,7 @@ def equipment_detail_json(request, pk):
         'annual_inspection_end_date': equipment.current_inspection_record.end_date.strftime('%Y-%m-%d') if equipment.current_inspection_record else None,
         'fire_extinguisher_inspection_date': equipment.current_fire_extinguisher_record.inspection_date.strftime('%Y-%m-%d') if equipment.current_fire_extinguisher_record else None,
         'fire_extinguisher_expiry_date': equipment.current_fire_extinguisher_record.expiry_date.strftime('%Y-%m-%d') if equipment.current_fire_extinguisher_record else None,
-        'equipment_image_url': reverse('secure_media', kwargs={'path': str(equipment.equipment_image)}) if equipment.equipment_image else None,
+        'equipment_image_url': reverse('secure_media', kwargs={'path': str(primary_image)}) if primary_image else None,
         'calibration_certificates': [{'image_url': reverse('secure_media', kwargs={'path': str(cert.image)})} for cert in equipment.calibration_certificates.all()],
         'maintenance_records': [{
             'maintenance_date': maint.maintenance_date.strftime('%Y-%m-%d') if maint.maintenance_date else None,

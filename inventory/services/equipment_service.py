@@ -13,8 +13,14 @@ class EquipmentService(BaseService):
     def get_equipment_with_related(self):
         """Get equipment with all related objects prefetched"""
         return self.model.objects.select_related(
-            'manufacturer', 'model', 'location', 'sector', 'administrative_unit', 'department', 'division'
-        ).prefetch_related('calibration_certificates', 'fire_extinguisher_images')
+            'manufacturer',
+            'model',
+            'location',
+            'sector',
+            'administrative_unit',
+            'department',
+            'division'
+        ).prefetch_related('calibration_certificates', 'fire_extinguisher_images', 'equipment_images')
     
     def get_equipment_with_maintenance(self):
         """Get equipment annotated with latest maintenance info"""
