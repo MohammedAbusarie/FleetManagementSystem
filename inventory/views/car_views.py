@@ -12,7 +12,13 @@ from ..services import CarService
 from ..translation_utils import get_message_template
 from .auth_views import is_admin
 from ..utils.decorators import admin_or_permission_required, admin_or_permission_required_with_message
-from ..utils.helpers import has_permission, log_user_action, get_client_ip, validate_image_files
+from ..utils.helpers import (
+    has_permission,
+    log_user_action,
+    get_client_ip,
+    validate_image_files,
+    ensure_maintenance_records_required,
+)
 from ..services.rbac_service import LoggingService
 
 car_service = CarService()
@@ -76,37 +82,36 @@ def car_create_view(request):
         image_validation_error = validate_image_files(uploaded_images)
         if image_validation_error:
             form.add_error(None, image_validation_error)
-        
-        # Get status from POST data to determine if maintenance formset needs validation
+
+        form_is_valid = form.is_valid()
+
         status = request.POST.get('status', '')
-        maintenance_formset_valid = True
         maintenance_formset = None
-        
-        # Only validate maintenance formset if status is under_maintenance
-        # For new cars, generic inline formsets need an instance to validate,
-        # so we'll validate it after the car is saved if status is under_maintenance
+        maintenance_formset_valid = True
+
         if status == 'under_maintenance':
-            # Validate form first to get cleaned data
-            if form.is_valid():
-                # Create a temporary car instance (not saved) for formset validation
+            if form_is_valid:
                 temp_car = form.save(commit=False)
                 maintenance_formset = CarMaintenanceFormSet(request.POST, request.FILES, instance=temp_car)
-                maintenance_formset_valid = maintenance_formset.is_valid()
             else:
-                # Form not valid yet, create formset without instance
-                # Will validate after car is saved
                 maintenance_formset = CarMaintenanceFormSet(request.POST, request.FILES)
-                maintenance_formset_valid = True
+            maintenance_formset_valid = maintenance_formset.is_valid()
+            if maintenance_formset_valid:
+                maintenance_error = ensure_maintenance_records_required(status, maintenance_formset)
+                if maintenance_error:
+                    maintenance_formset_valid = False
+                    form.add_error('status', maintenance_error)
         else:
-            # Status is not under_maintenance, create empty formset (no validation needed)
             maintenance_formset = CarMaintenanceFormSet()
-            maintenance_formset_valid = True
-        
+
+        license_formset_valid = license_formset.is_valid()
+        inspection_formset_valid = inspection_formset.is_valid()
+
         if (
-            form.is_valid()
+            form_is_valid
             and maintenance_formset_valid
-            and license_formset.is_valid()
-            and inspection_formset.is_valid()
+            and license_formset_valid
+            and inspection_formset_valid
             and not image_validation_error
         ):
             car = form.save(commit=False)
@@ -178,11 +183,7 @@ def car_create_view(request):
         else:
             # Validation failed - ensure maintenance_formset is available for error display
             if maintenance_formset is None:
-                status = request.POST.get('status', '')
-                if status == 'under_maintenance':
-                    maintenance_formset = CarMaintenanceFormSet(request.POST, request.FILES)
-                else:
-                    maintenance_formset = CarMaintenanceFormSet()
+                maintenance_formset = CarMaintenanceFormSet(request.POST, request.FILES)
             messages.error(request, get_message_template('validation_error'))
     else:
         form = CarForm()
@@ -217,12 +218,24 @@ def car_update_view(request, pk):
         image_validation_error = validate_image_files(uploaded_images)
         if image_validation_error:
             form.add_error(None, image_validation_error)
-        
+
+        form_is_valid = form.is_valid()
+        maintenance_formset_valid = maintenance_formset.is_valid()
+        license_formset_valid = license_formset.is_valid()
+        inspection_formset_valid = inspection_formset.is_valid()
+
+        status_value = form.cleaned_data.get('status') if form_is_valid else request.POST.get('status', '')
+        if maintenance_formset_valid:
+            maintenance_error = ensure_maintenance_records_required(status_value, maintenance_formset)
+            if maintenance_error:
+                maintenance_formset_valid = False
+                form.add_error('status', maintenance_error)
+
         if (
-            form.is_valid()
-            and maintenance_formset.is_valid()
-            and license_formset.is_valid()
-            and inspection_formset.is_valid()
+            form_is_valid
+            and maintenance_formset_valid
+            and license_formset_valid
+            and inspection_formset_valid
             and not image_validation_error
         ):
             car = form.save(commit=False)

@@ -176,3 +176,43 @@ def validate_image_files(files):
                 pass
 
     return None
+
+
+def ensure_maintenance_records_required(status, maintenance_formset):
+    """
+    Enforce that at least one maintenance record with a maintenance date exists
+    when the car status is set to under maintenance.
+    """
+    if status != 'under_maintenance':
+        return None
+
+    message_missing_record = "يجب إضافة سجل صيانة واحد على الأقل عند اختيار حالة السيارة «تحت الصيانة»."
+    message_missing_date = "يرجى استكمال بيانات سجلات الصيانة قبل الحفظ."
+
+    non_deleted_forms = []
+    for form in getattr(maintenance_formset, 'forms', []):
+        cleaned_data = getattr(form, 'cleaned_data', {}) or {}
+        if cleaned_data.get('DELETE'):
+            continue
+        has_values = any(
+            cleaned_data.get(field)
+            for field in ('maintenance_date', 'restoration_date', 'cost', 'description')
+        )
+        if has_values:
+            non_deleted_forms.append(form)
+
+    if not non_deleted_forms:
+        maintenance_formset._non_form_errors = maintenance_formset.error_class([message_missing_record])
+        return message_missing_record
+
+    missing_date = False
+    for form in non_deleted_forms:
+        cleaned_data = form.cleaned_data
+        if not cleaned_data.get('maintenance_date'):
+            form.add_error('maintenance_date', "تاريخ الصيانة مطلوب عند اختيار حالة السيارة «تحت الصيانة».")
+            missing_date = True
+
+    if missing_date:
+        return message_missing_date
+
+    return None
