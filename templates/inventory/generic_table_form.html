@@ -23,7 +23,7 @@
                 {% else %}
                     <div class="form-group mb-3">
                         <label for="name" class="form-label">الاسم</label>
-                        <input type="text" class="form-control" id="name" name="name" value="{% if object %}{{ object.name }}{% endif %}" required>
+                        <input type="text" class="form-control" id="name" name="name" value="{% if submitted_name %}{{ submitted_name }}{% elif object %}{{ object.name }}{% endif %}" required>
                     </div>
                     <div class="mt-4">
                         <button type="submit" class="btn btn-primary">

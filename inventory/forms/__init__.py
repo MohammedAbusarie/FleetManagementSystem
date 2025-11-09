@@ -12,6 +12,7 @@ from .equipment_forms import (
 from .generic_forms import (
     GenericDDLForm,
     EquipmentModelForm,
+    CarModelForm,
     SearchForm,
     MaintenanceForm,
     SectorForm,
@@ -34,6 +35,7 @@ __all__ = [
     'FireExtinguisherInspectionRecordFormSet',
     'GenericDDLForm',
     'EquipmentModelForm',
+    'CarModelForm',
     'SearchForm',
     'MaintenanceForm',
     'SectorForm',

@@ -3,7 +3,16 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Field, Submit, HTML
-from ..models import EquipmentModel, Maintenance, Sector, Department, AdministrativeUnit, Division
+from ..models import (
+    EquipmentModel,
+    Maintenance,
+    Sector,
+    Department,
+    AdministrativeUnit,
+    Division,
+    CarModel,
+    Manufacturer,
+)
 
 
 class MaintenanceForm(forms.ModelForm):
@@ -55,6 +64,49 @@ class EquipmentModelForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_method = 'post'
+        self.helper.layout = Layout(
+            Field('name'),
+            Field('manufacturer'),
+            HTML('<div class="mt-4">'),
+            Submit('submit', 'حفظ', css_class='btn btn-primary'),
+            HTML('<a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>'),
+            HTML('</div>')
+        )
+
+
+class CarModelForm(forms.ModelForm):
+    """Form for CarModel"""
+    
+    class Meta:
+        model = CarModel
+        fields = ['name', 'manufacturer', 'year']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'manufacturer': forms.Select(attrs={'class': 'form-control'}),
+            'year': forms.NumberInput(attrs={'class': 'form-control', 'min': 1900})
+        }
+        labels = {
+            'name': 'الاسم',
+            'manufacturer': 'الشركة المصنعة',
+            'year': 'السنة',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['manufacturer'].queryset = Manufacturer.objects.all().order_by('name')
+        self.fields['year'].required = False
+
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.layout = Layout(
+            Field('name'),
+            Field('manufacturer'),
+            Field('year'),
+            HTML('<div class="mt-4">'),
+            Submit('submit', 'حفظ', css_class='btn btn-primary'),
+            HTML('<a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>'),
+            HTML('</div>')
+        )
 
 
 class AdministrativeUnitForm(forms.ModelForm):

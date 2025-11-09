@@ -6,8 +6,12 @@ from django.apps import apps
 from django.db.models.deletion import ProtectedError
 from ..translation_utils import get_verbose_model_translations, get_model_arabic_name, get_message_template
 from ..forms import (
-    EquipmentModelForm, SectorForm, AdministrativeUnitForm,
-    DepartmentForm, DivisionForm
+    EquipmentModelForm,
+    CarModelForm,
+    SectorForm,
+    AdministrativeUnitForm,
+    DepartmentForm,
+    DivisionForm,
 )
 from .auth_views import is_admin
 from ..utils.decorators import admin_or_permission_required, admin_or_permission_required_with_message
@@ -98,6 +102,8 @@ def generic_table_create_view(request, model_name):
     form_class = None
     if model_name == 'EquipmentModel':
         form_class = EquipmentModelForm
+    elif model_name == 'CarModel':
+        form_class = CarModelForm
     elif model_name == 'Sector':
         form_class = SectorForm
     elif model_name == 'AdministrativeUnit':
@@ -107,6 +113,9 @@ def generic_table_create_view(request, model_name):
     elif model_name == 'Division':
         form_class = DivisionForm
     
+    form = None
+    submitted_name = ''
+
     if form_class:
         if request.method == 'POST':
             form = form_class(request.POST)
@@ -132,32 +141,36 @@ def generic_table_create_view(request, model_name):
     else:
         # Handle other models with simple name field
         if request.method == 'POST':
-            name = request.POST.get('name')
-            try:
-                obj = model.objects.create(name=name)
-                # Log the action
-                log_user_action(
-                    request.user,
-                    'create',
-                    module_name='generic_tables',
-                    object_id=str(obj.pk),
-                    description=f"تم إنشاء {get_model_arabic_name(model_name)}: {name}",
-                    ip_address=get_client_ip(request)
-                )
-                messages.success(request, get_message_template('create_success', model_name, 'create'))
-                # Store selected model in session to reload after redirect
-                request.session['selected_generic_table'] = model_name
-                return redirect('generic_tables')
-            except Exception as e:
-                messages.error(request, get_message_template('create_error', model_name, 'create'))
-        else:
-            form = None
-    
+            name = (request.POST.get('name') or '').strip()
+            submitted_name = name
+
+            if not name:
+                messages.error(request, 'يرجى إدخال الاسم.')
+            else:
+                try:
+                    obj = model.objects.create(name=name)
+                    # Log the action
+                    log_user_action(
+                        request.user,
+                        'create',
+                        module_name='generic_tables',
+                        object_id=str(obj.pk),
+                        description=f"تم إنشاء {get_model_arabic_name(model_name)}: {name}",
+                        ip_address=get_client_ip(request)
+                    )
+                    messages.success(request, get_message_template('create_success', model_name, 'create'))
+                    # Store selected model in session to reload after redirect
+                    request.session['selected_generic_table'] = model_name
+                    return redirect('generic_tables')
+                except Exception as e:
+                    messages.error(request, get_message_template('create_error', model_name, 'create'))
     context = {
         'model_name': model_name,
         'model_name_arabic': get_model_arabic_name(model_name),
-        'form': form
+        'form': form,
+        'submitted_name': submitted_name
     }
+
     return render(request, 'inventory/generic_table_form.html', context)
 
 
@@ -188,6 +201,8 @@ def generic_table_update_view(request, model_name, pk):
     form_class = None
     if model_name == 'EquipmentModel':
         form_class = EquipmentModelForm
+    elif model_name == 'CarModel':
+        form_class = CarModelForm
     elif model_name == 'Sector':
         form_class = SectorForm
     elif model_name == 'AdministrativeUnit':
