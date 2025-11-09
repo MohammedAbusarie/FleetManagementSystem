@@ -12,7 +12,7 @@ from ..services import CarService
 from ..translation_utils import get_message_template
 from .auth_views import is_admin
 from ..utils.decorators import admin_or_permission_required, admin_or_permission_required_with_message
-from ..utils.helpers import has_permission, log_user_action, get_client_ip
+from ..utils.helpers import has_permission, log_user_action, get_client_ip, validate_image_files
 from ..services.rbac_service import LoggingService
 
 car_service = CarService()
@@ -72,6 +72,10 @@ def car_create_view(request):
         form = CarForm(request.POST, request.FILES)
         license_formset = CarLicenseRecordFormSet(request.POST)
         inspection_formset = CarInspectionRecordFormSet(request.POST)
+        uploaded_images = request.FILES.getlist('car_images')
+        image_validation_error = validate_image_files(uploaded_images)
+        if image_validation_error:
+            form.add_error(None, image_validation_error)
         
         # Get status from POST data to determine if maintenance formset needs validation
         status = request.POST.get('status', '')
@@ -98,13 +102,18 @@ def car_create_view(request):
             maintenance_formset = CarMaintenanceFormSet()
             maintenance_formset_valid = True
         
-        if form.is_valid() and maintenance_formset_valid and license_formset.is_valid() and inspection_formset.is_valid():
+        if (
+            form.is_valid()
+            and maintenance_formset_valid
+            and license_formset.is_valid()
+            and inspection_formset.is_valid()
+            and not image_validation_error
+        ):
             car = form.save(commit=False)
             car.save()
 
             # Handle multiple car images
-            files = request.FILES.getlist('car_images')
-            for f in files:
+            for f in uploaded_images:
                 CarImage.objects.create(car=car, image=f)
 
             # Handle visited regions dynamically
@@ -204,14 +213,23 @@ def car_update_view(request, pk):
         maintenance_formset = CarMaintenanceFormSet(request.POST, request.FILES, instance=car)
         license_formset = CarLicenseRecordFormSet(request.POST, instance=car)
         inspection_formset = CarInspectionRecordFormSet(request.POST, instance=car)
+        uploaded_images = request.FILES.getlist('car_images')
+        image_validation_error = validate_image_files(uploaded_images)
+        if image_validation_error:
+            form.add_error(None, image_validation_error)
         
-        if form.is_valid() and maintenance_formset.is_valid() and license_formset.is_valid() and inspection_formset.is_valid():
+        if (
+            form.is_valid()
+            and maintenance_formset.is_valid()
+            and license_formset.is_valid()
+            and inspection_formset.is_valid()
+            and not image_validation_error
+        ):
             car = form.save(commit=False)
             car.save()
 
             # Handle multiple car images
-            files = request.FILES.getlist('car_images')
-            for f in files:
+            for f in uploaded_images:
                 CarImage.objects.create(car=car, image=f)
             
             # Handle image deletion

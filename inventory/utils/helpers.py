@@ -1,5 +1,15 @@
 """Helper functions and utilities"""
 from django.core.paginator import Paginator
+from PIL import Image, UnidentifiedImageError
+
+ALLOWED_IMAGE_FORMATS = {"JPEG", "PNG", "GIF", "BMP", "WEBP"}
+ALLOWED_IMAGE_CONTENT_TYPES = {
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/bmp",
+    "image/webp",
+}
 
 
 def paginate_queryset(queryset, page_number, per_page=20):
@@ -135,3 +145,34 @@ def get_client_ip(request):
 def get_user_agent(request):
     """Get user agent from request"""
     return request.META.get('HTTP_USER_AGENT', '')
+
+
+def validate_image_files(files):
+    """
+    Validate that uploaded files are actual images with allowed formats.
+
+    Returns:
+        None if all files are valid images, otherwise an Arabic error message.
+    """
+    for uploaded_file in files:
+        if not uploaded_file:
+            continue
+
+        content_type = getattr(uploaded_file, "content_type", "")
+        if content_type and content_type.lower() not in ALLOWED_IMAGE_CONTENT_TYPES:
+            return "الرجاء رفع ملفات صور فقط بصيغ JPG أو PNG أو GIF أو BMP أو WebP."
+
+        try:
+            image = Image.open(uploaded_file)
+            image.verify()
+            if image.format not in ALLOWED_IMAGE_FORMATS:
+                return "الرجاء رفع ملفات صور فقط بصيغ JPG أو PNG أو GIF أو BMP أو WebP."
+        except (UnidentifiedImageError, OSError):
+            return "أحد الملفات المرفوعة ليس صورة صالحة، يرجى التحقق والمحاولة مرة أخرى."
+        finally:
+            try:
+                uploaded_file.seek(0)
+            except (AttributeError, OSError):
+                pass
+
+    return None
