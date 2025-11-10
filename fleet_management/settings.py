@@ -10,12 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import logging
 import os
 from pathlib import Path
 
-from django.contrib.messages import constants as messages
 import dj_database_url
 from dotenv import load_dotenv
+from django.contrib.messages import constants as messages
 
 # Load environment variables only in debug/local mode
 if os.getenv('DEBUG', 'True') == 'True':
@@ -107,6 +108,16 @@ if DATABASE_URL:
         conn_max_age=int(os.getenv('DB_CONN_MAX_AGE', '600')),
         ssl_require=os.getenv('DB_SSL_REQUIRE', 'False').lower() == 'true',
     )
+
+print(
+    "[settings] DEBUG={debug} DATABASE_URL={db_url} DB_HOST={host} DB_NAME={name} DB_USER={user}".format(
+        debug=DEBUG,
+        db_url="present" if DATABASE_URL else "absent",
+        host=DATABASES['default']['HOST'],
+        name=DATABASES['default']['NAME'],
+        user=DATABASES['default']['USER'],
+    )
+)
 
 
 # Password validation
