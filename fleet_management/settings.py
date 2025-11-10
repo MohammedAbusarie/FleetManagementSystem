@@ -10,13 +10,16 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-from pathlib import Path
 import os
-from dotenv import load_dotenv
-from django.contrib.messages import constants as messages
+from pathlib import Path
 
-# Load environment variables
-load_dotenv()
+from django.contrib.messages import constants as messages
+import dj_database_url
+from dotenv import load_dotenv
+
+# Load environment variables only in debug/local mode
+if os.getenv('DEBUG', 'True') == 'True':
+    load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -97,6 +100,14 @@ DATABASES = {
     }
 }
 
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES['default'] = dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=int(os.getenv('DB_CONN_MAX_AGE', '600')),
+        ssl_require=os.getenv('DB_SSL_REQUIRE', 'False').lower() == 'true',
+    )
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -148,7 +159,13 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Media files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+
+if DEBUG:
+    MEDIA_ROOT = BASE_DIR / 'media'
+else:
+    MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', '/var/lib/postgresql/data'))
+
+MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
