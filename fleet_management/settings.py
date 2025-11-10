@@ -171,12 +171,22 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 # Media files
 MEDIA_URL = '/media/'
 
-if DEBUG:
-    MEDIA_ROOT = BASE_DIR / 'media'
-else:
-    MEDIA_ROOT = Path(os.getenv('MEDIA_ROOT', '/var/lib/postgresql/data'))
+DEFAULT_MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT_PATH = os.getenv('MEDIA_ROOT')
 
-MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
+if DEBUG:
+    media_root = Path(MEDIA_ROOT_PATH) if MEDIA_ROOT_PATH else DEFAULT_MEDIA_ROOT
+else:
+    media_root = Path(MEDIA_ROOT_PATH or '/var/lib/postgresql/data')
+
+try:
+    media_root.mkdir(parents=True, exist_ok=True)
+except OSError as exc:
+    logging.error("Unable to create media directory at %s: %s", media_root, exc)
+MEDIA_ROOT = media_root
+
+if not media_root.exists():
+    logging.warning("Media root %s does not exist or failed to mount.", media_root)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
