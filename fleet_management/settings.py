@@ -190,6 +190,14 @@ MEDIA_ROOT = media_root
 if not media_root.exists():
     logging.warning("Media root %s does not exist or failed to mount.", media_root)
 
+logging.info(
+    "[static-config] STATIC_URL=%s STATIC_ROOT=%s MEDIA_URL=%s MEDIA_ROOT=%s",
+    STATIC_URL,
+    STATIC_ROOT,
+    MEDIA_URL,
+    MEDIA_ROOT,
+)
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
