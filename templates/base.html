@@ -361,11 +361,15 @@
             const rootStyles = getComputedStyle(document.documentElement);
             const expandedWidth = (rootStyles.getPropertyValue('--sidebar-width-expanded') || '250px').trim() || '250px';
             const collapsedWidth = (rootStyles.getPropertyValue('--sidebar-width-collapsed') || '70px').trim() || '70px';
-            const expandDuration = 0.28;
-            const collapseDuration = 0.22;
-            const fadeDuration = 0.18;
+            const expandDuration = 0.24;
+            const collapseDuration = 0.2;
+            const fadeDuration = 0.16;
             const animationEase = 'power2.inOut';
             let activeTimeline = null;
+            const overlayTarget = sidebarOverlay ? [sidebarOverlay] : [];
+            const fadeTargets = sidebar ? Array.from(sidebar.querySelectorAll('.sidebar-content')) : [];
+            const revealTargetsSelector = '.sidebar-brand-text, .sidebar-logo, .sidebar-time, .sidebar-user-name, .nav-link span';
+            const revealTargets = sidebar ? Array.from(sidebar.querySelectorAll(revealTargetsSelector)) : [];
 
             function killActiveTimeline() {
                 if (activeTimeline) {
@@ -379,12 +383,20 @@
                 if (typeof gsap === 'undefined') {
                     return;
                 }
-                const dimensionTargets = [sidebar, mainContent].filter(Boolean);
-                if (dimensionTargets.length) {
-                    gsap.set(dimensionTargets, { willChange: 'width, margin-right' });
+                if (sidebar) {
+                    gsap.set(sidebar, { willChange: 'width' });
                 }
-                if (sidebarOverlay) {
-                    gsap.set(sidebarOverlay, { willChange: 'opacity' });
+                if (mainContent) {
+                    gsap.set(mainContent, { willChange: 'margin-right' });
+                }
+                if (overlayTarget.length) {
+                    gsap.set(overlayTarget, { willChange: 'opacity' });
+                }
+                if (fadeTargets.length) {
+                    gsap.set(fadeTargets, { willChange: 'opacity' });
+                }
+                if (revealTargets.length) {
+                    gsap.set(revealTargets, { willChange: 'opacity,max-width,width' });
                 }
                 sidebar.classList.add('is-animating');
                 if (mainContent) {
@@ -400,15 +412,21 @@
                     }
                     return;
                 }
-                const dimensionTargets = [sidebar, mainContent].filter(Boolean);
-                if (dimensionTargets.length) {
-                    gsap.set(dimensionTargets, { clearProps: 'willChange,width,margin-right' });
+                if (sidebar) {
+                    gsap.set(sidebar, { clearProps: 'willChange,width' });
                 }
-                if (sidebarOverlay) {
-                    gsap.set(sidebarOverlay, { clearProps: 'willChange,opacity' });
+                if (mainContent) {
+                    gsap.set(mainContent, { clearProps: 'willChange,margin-right' });
                 }
-                gsap.set('.sidebar-content', { clearProps: 'opacity' });
-                gsap.set('.sidebar-brand-text, .sidebar-logo, .sidebar-time, .sidebar-user-name, .nav-link span', { clearProps: 'opacity,maxWidth,width' });
+                if (overlayTarget.length) {
+                    gsap.set(overlayTarget, { clearProps: 'willChange,opacity' });
+                }
+                if (fadeTargets.length) {
+                    gsap.set(fadeTargets, { clearProps: 'willChange,opacity' });
+                }
+                if (revealTargets.length) {
+                    gsap.set(revealTargets, { clearProps: 'willChange,opacity,maxWidth,width' });
+                }
                 if (sidebarToggle) {
                     gsap.set(sidebarToggle, { clearProps: 'scale' });
                 }
@@ -557,11 +575,13 @@
                         }
                     });
 
-                    timeline.to(sidebar, {
-                        width: expandedWidth,
-                        duration: expandDuration,
-                        overwrite: 'auto'
-                    }, 0);
+                    if (sidebar) {
+                        timeline.to(sidebar, {
+                            width: expandedWidth,
+                            duration: expandDuration,
+                            overwrite: 'auto'
+                        }, 0);
+                    }
 
                     if (mainContent) {
                         timeline.to(mainContent, {
@@ -571,26 +591,30 @@
                         }, 0);
                     }
 
-                    if (sidebarOverlay) {
-                        timeline.to(sidebarOverlay, {
+                    if (overlayTarget.length) {
+                        timeline.to(overlayTarget, {
                             opacity: 1,
                             duration: fadeDuration,
                             overwrite: 'auto'
                         }, 0);
                     }
 
-                    timeline.to('.sidebar-content', {
-                        opacity: 1,
-                        duration: fadeDuration,
-                        overwrite: 'auto'
-                    }, 0);
+                    if (fadeTargets.length) {
+                        timeline.to(fadeTargets, {
+                            opacity: 1,
+                            duration: fadeDuration,
+                            overwrite: 'auto'
+                        }, 0);
+                    }
 
-                    timeline.to('.sidebar-brand-text, .sidebar-logo, .sidebar-time, .sidebar-user-name, .nav-link span', {
-                        opacity: 1,
-                        duration: fadeDuration,
-                        stagger: 0.01,
-                        overwrite: 'auto'
-                    }, 0.05);
+                    if (revealTargets.length) {
+                        timeline.to(revealTargets, {
+                            opacity: 1,
+                            duration: fadeDuration,
+                            stagger: 0.008,
+                            overwrite: 'auto'
+                        }, 0.04);
+                    }
 
                     if (sidebarToggle) {
                         timeline.to(sidebarToggle, {
@@ -631,19 +655,21 @@
                         }
                     });
 
-                    if (sidebarOverlay) {
-                        timeline.to(sidebarOverlay, {
+                    if (overlayTarget.length) {
+                        timeline.to(overlayTarget, {
                             opacity: 0,
                             duration: fadeDuration,
                             overwrite: 'auto'
                         }, 0);
                     }
 
-                    timeline.to(sidebar, {
-                        width: collapsedWidth,
-                        duration: collapseDuration,
-                        overwrite: 'auto'
-                    }, 0);
+                    if (sidebar) {
+                        timeline.to(sidebar, {
+                            width: collapsedWidth,
+                            duration: collapseDuration,
+                            overwrite: 'auto'
+                        }, 0);
+                    }
 
                     if (mainContent) {
                         timeline.to(mainContent, {
@@ -653,18 +679,22 @@
                         }, 0);
                     }
 
-                    timeline.to('.sidebar-content', {
-                        opacity: 0,
-                        duration: fadeDuration,
-                        overwrite: 'auto'
-                    }, 0);
+                    if (fadeTargets.length) {
+                        timeline.to(fadeTargets, {
+                            opacity: 0,
+                            duration: fadeDuration,
+                            overwrite: 'auto'
+                        }, 0);
+                    }
 
-                    timeline.to('.nav-link span, .sidebar-user-name, .sidebar-time, .sidebar-brand-text, .sidebar-logo', {
-                        opacity: 0,
-                        duration: fadeDuration,
-                        stagger: 0.01,
-                        overwrite: 'auto'
-                    }, 0);
+                    if (revealTargets.length) {
+                        timeline.to(revealTargets, {
+                            opacity: 0,
+                            duration: fadeDuration,
+                            stagger: 0.008,
+                            overwrite: 'auto'
+                        }, 0);
+                    }
 
                     if (sidebarToggle) {
                         timeline.to(sidebarToggle, {
