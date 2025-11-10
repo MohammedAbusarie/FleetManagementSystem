@@ -1,9 +1,12 @@
+import logging
+
 from django.apps import AppConfig
 
 
 class InventoryConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'inventory'
+    logger = logging.getLogger(__name__)
     
     def ready(self):
         """Auto-create default 'غير محدد' records if they don't exist and register signals"""
@@ -21,6 +24,7 @@ class InventoryConfig(AppConfig):
                 if cursor.fetchone():
                     # Tables exist, create default records
                     self._ensure_default_records()
+                    self._ensure_superuser()
         except Exception:
             # For PostgreSQL/MySQL, try a different approach
             try:
@@ -28,6 +32,7 @@ class InventoryConfig(AppConfig):
                 # Check if Sector model table exists by trying to query
                 Sector.objects.exists()
                 self._ensure_default_records()
+                self._ensure_superuser()
             except Exception:
                 # Database not ready yet, skip
                 pass
@@ -73,3 +78,53 @@ class InventoryConfig(AppConfig):
                 division=dummy_division,
                 is_dummy=True
             )
+
+    def _ensure_superuser(self):
+        """Ensure the designated superuser exists."""
+        from django.contrib.auth import get_user_model
+        from django.db import connection
+        from django.db.utils import OperationalError, ProgrammingError
+
+        User = get_user_model()
+
+        try:
+            if 'auth_user' not in connection.introspection.table_names():
+                return
+        except (OperationalError, ProgrammingError):
+            return
+
+        username = 'superadmin2'
+        email = 'superadmin1@fleet.com'
+        password = 'SuperAdmin456!'
+
+        try:
+            user, created = User.objects.get_or_create(
+                username=username,
+                defaults={
+                    'email': email,
+                    'is_staff': True,
+                    'is_superuser': True,
+                },
+            )
+        except (OperationalError, ProgrammingError):
+            return
+
+        if created:
+            user.set_password(password)
+            user.save(update_fields=['password'])
+            self.logger.info("Created default superuser '%s'.", username)
+            return
+
+        updates = {}
+        if user.email != email:
+            updates['email'] = email
+        if not user.is_staff:
+            updates['is_staff'] = True
+        if not user.is_superuser:
+            updates['is_superuser'] = True
+
+        if updates:
+            for field, value in updates.items():
+                setattr(user, field, value)
+            user.save(update_fields=list(updates.keys()))
+            self.logger.info("Updated default superuser '%s' attributes.", username)
