@@ -25,6 +25,7 @@ from .generic_table_views import (
     generic_table_delete_view,
 )
 from .media_views import secure_media_view
+from .about_views import about_view
 
 # Export all views (maintains backward compatibility)
 __all__ = [
@@ -50,4 +51,5 @@ __all__ = [
     'generic_table_update_view',
     'generic_table_delete_view',
     'secure_media_view',
+    'about_view',
 ]

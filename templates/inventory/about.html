@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}عن نظام إدارة الأسطول{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 py-md-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            
+            <div class="mb-4">
+                <h1 class="display-5 fw-bold text-primary mb-3">عن أسطول</h1>
+                <p class="lead text-secondary mb-0">
+                    أسطول هو نظام متكامل لإدارة المركبات والمعدات، صُمّم لتسهيل متابعة العمليات اليومية،
+                    وتبسيط أعمال الصيانة، وتقديم تقارير دقيقة تساعد صانعي القرار على متابعة الأداء التشغيلي
+                    بواجهة عربية متكاملة تدعم فرق العمل الميدانية والإدارية.
+                </p>
+            </div>
+            
+            
+            <div class="card border-0 shadow mt-4">
+                <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                    <div>
+                        <h4 class="fw-bold mb-2 text-primary">رؤية التطوير</h4>
+                        <p class="mb-0 text-secondary">
+                            يرتكز تطوير النظام على فلسفة تقديم حلول رقمية متقنة تلبي احتياجات التشغيل اليومية وتدعم اتخاذ القرار بالوقت المناسب،
+                            مع الحفاظ على تجربة استخدام مرنة وسلسة بالكامل باللغة العربية.
+                        </p>
+                    </div>
+                    <div class="text-center">
+                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center" style="width: 110px; height: 110px;">
+                            <i class="bi bi-stars fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4 border-0 shadow position-relative overflow-hidden">
+                <div class="card-body p-4 p-md-5">
+                    <div class="row align-items-center g-4">
+                        <div class="col-lg-8">
+                            <div class="text-center text-lg-start">
+                                <span class="badge text-primary fw-semibold px-3 py-2 rounded-pill mb-3" style="background-color: rgba(255, 255, 255, 0.85); border: 1px solid rgba(0, 51, 102, 0.15); font-size: 0.95rem;">
+                                    القائد التقني للنظام
+                                </span>
+                                <h2 class="fw-bold mb-3 text-primary" style="font-size: 1.85rem;">{{ developer_title_name }}</h2>
+                                <p class="text-secondary mb-3" style="font-size: 1.05rem;">
+                                    يقود تطوير نظام إدارة الأسطول باحترافية هندسية شاملة، مع التزام كامل بالجودة الفنية
+                                    وتوفير بنية برمجية متكاملة تلائم احتياجات العميل.
+                                </p>
+                                <p class="text-secondary mb-3" style="font-size: 1.05rem;">
+                                    تم تنفيذ هذا الحل وتسليمه للشركة السعودية للكهرباء لدعم إدارة رقمية متكاملة للأسطول والمعدات.
+                                </p>
+                                <p class="mb-0 text-secondary">
+                                    يقدّم القائد التقني للنظام تجربة متكاملة لعملاء المنصة، تجمع بين الدقة التقنية،
+                                    جودة الأداء، والالتزام بتقديم واجهة عربية احترافية تدعم الفرق التشغيلية في أعمالها اليومية.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="rounded-4 text-white h-100 d-flex flex-column justify-content-center text-center p-4" style="background: var(--gradient-primary, linear-gradient(135deg, #003366 0%, #FF9933 100%));">
+                                <div class="mb-3">
+                                    <i class="bi bi-person-badge-fill display-4"></i>
+                                </div>
+                                <h2 class="h4 fw-bold mb-2">القائد التقني للنظام</h2>
+                                <p class="mb-0">مسؤول عن توجيه وتنفيذ التطوير</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow mt-4">
+                <div class="card-header d-flex align-items-center">
+                    <i class="bi bi-chat-dots-fill fs-4 me-2 text-warning"></i>
+                    <h3 class="h5 mb-0 text-white">معلومات التواصل</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-secondary">
+                        للتواصل حول النظام أو طلب خدمات إضافية، يمكنكم استخدام أي من قنوات الاتصال التالية:
+                    </p>
+                    <div class="row g-3">
+                        {% for contact in contacts %}
+                            <div class="col-md-6 col-xl-3">
+                                <a {% if contact.href %}href="{{ contact.href }}"{% endif %} class="text-decoration-none d-block h-100" {% if contact.is_external %}target="_blank" rel="noopener noreferrer"{% endif %}>
+                                    <div class="border rounded-4 p-3 h-100 bg-body-tertiary">
+                                        <div class="d-flex align-items-center mb-2">
+                                                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px; background-color: rgba(0, 51, 102, 0.1); color: var(--color-primary, #003366);">
+                                                <i class="{{ contact.icon }}"></i>
+                                            </span>
+                                            <span class="fw-bold text-dark">{{ contact.label }}</span>
+                                        </div>
+                                        <p class="mb-0 text-secondary {% if contact.is_ltr %}english-display{% endif %}" {% if contact.is_ltr %}dir="ltr" lang="en"{% endif %}>
+                                            {{ contact.value }}
+                                        </p>
+                                    </div>
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow h-100">
+                        <div class="card-header d-flex align-items-center">
+                            <i class="bi bi-award-fill fs-4 me-2 text-warning"></i>
+                            <h3 class="h5 mb-0 text-white">الأدوار والمسؤوليات</h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-secondary">
+                                تولّى القائد التقني المسؤوليات الكاملة لضمان بناء منتج احترافي متكامل وفق أفضل الممارسات الهندسية:
+                            </p>
+                            <ul class="list-unstyled mb-0">
+                                {% for role in roles %}
+                                    <li class="d-flex align-items-center mb-3">
+                                        <span class="rounded-circle d-inline-flex align-items-center justify-content-center me-3" style="width: 42px; height: 42px; background-color: rgba(255, 153, 51, 0.18); color: var(--color-accent, #FF9933);">
+                                            <i class="bi bi-check2 fs-5"></i>
+                                        </span>
+                                        <span class="fw-semibold">{{ role }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow h-100">
+                        <div class="card-header d-flex align-items-center">
+                            <i class="bi bi-cpu-fill fs-4 me-2 text-warning"></i>
+                            <h3 class="h5 mb-0 text-white">التقنيات المستخدمة</h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-secondary">
+                                تم اختيار حزمة تقنية حديثة تضمن الأداء العالي، والأمان، وسهولة التطوير والتوسع:
+                            </p>
+                            <div class="row g-3">
+                                {% for tech in technologies %}
+                                    <div class="col-sm-6">
+                                        <div class="border rounded-3 px-3 py-2 h-100 d-flex align-items-center bg-body-tertiary">
+                                            <i class="bi bi-lightning-charge-fill text-primary me-2"></i>
+                                            <span class="fw-semibold english-display" dir="ltr" lang="en">{{ tech }}</span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+
+        
+        
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -35,6 +35,9 @@ urlpatterns = [
     path("generic-tables/<str:model_name>/<int:pk>/delete/", 
          views.generic_table_delete_view, name="generic_table_delete"),
 
+    # About Page
+    path("about/", views.about_view, name="about"),
+
     # Secure Media Files
     path("secure-media/<path:path>", views.secure_media_view, name="secure_media"),
 

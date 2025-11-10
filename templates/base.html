@@ -251,6 +251,9 @@
                 <a class="nav-link {% if 'generic' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'generic_tables' %}" title="الجداول العامة">
                     <i class="bi bi-table"></i> <span>الجداول العامة</span>
                 </a>
+                <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}" href="{% url 'about' %}" title="عن نظام إدارة الأسطول">
+                    <i class="bi bi-info-circle-fill"></i> <span>عن النظام</span>
+                </a>
                 <hr style="border-color: rgba(255, 255, 255, 0.2); margin: 20px 15px;">
                 <a class="nav-link" href="{% url 'logout' %}" title="تسجيل الخروج">
                     <i class="bi bi-box-arrow-right"></i> <span>تسجيل الخروج</span>
