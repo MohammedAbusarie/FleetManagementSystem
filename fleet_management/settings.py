@@ -198,6 +198,9 @@ logging.info(
     MEDIA_URL,
     MEDIA_ROOT,
 )
+logging.info(
+    "[media-config] Using MEDIA_ROOT=%s (is_dir=%s)", MEDIA_ROOT, MEDIA_ROOT.is_dir()
+)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
