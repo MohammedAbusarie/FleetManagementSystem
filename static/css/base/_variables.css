@@ -87,3 +87,10 @@
     --z-sidebar-tooltip: 1001;
 }
 
+:root {
+    /* Roboto-first font stack while preserving legacy GE SS Two definition for quick rollback */
+    --font-primary-roboto: 'Roboto', 'GE SS Two', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+    --font-primary-legacy: 'GE SS Two', 'Roboto', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+    --font-primary: var(--font-primary-roboto);
+}
+

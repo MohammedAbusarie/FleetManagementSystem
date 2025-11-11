@@ -42,6 +42,9 @@
             --shadow-lg: 0 4px 15px rgba(0, 51, 102, 0.3);
             --spacing-lg: 20px;
             --spacing-md: 12px;
+            --font-primary: 'Roboto', 'GE SS Two', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+            --font-primary-roboto: 'Roboto', 'GE SS Two', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+            --font-primary-legacy: 'GE SS Two', 'Roboto', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
         }
         
         /* Critical Card Styles Fallback */
@@ -131,6 +134,15 @@
             font-weight: bold;
             font-style: normal;
             font-display: swap;
+        }
+    </style>
+    
+    <!-- Font Stack Override Keeps GE SS Two As Fallback -->
+    <style id="font-stack-overrides">
+        :root {
+            --font-primary: 'Roboto', 'GE SS Two', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+            --font-primary-roboto: 'Roboto', 'GE SS Two', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+            --font-primary-legacy: 'GE SS Two', 'Roboto', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
         }
     </style>
     

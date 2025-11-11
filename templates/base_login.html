@@ -67,6 +67,15 @@
         }
     </style>
     
+    <!-- Font Stack Override Keeps GE SS Two As Fallback -->
+    <style id="font-stack-overrides">
+        :root {
+            --font-primary: 'Roboto', 'GE SS Two', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+            --font-primary-roboto: 'Roboto', 'GE SS Two', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+            --font-primary-legacy: 'GE SS Two', 'Roboto', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+        }
+    </style>
+    
     {% block extra_css %}{% endblock %}
 </head>
 <body>
