@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import logging
+import logging.config
 import os
 from pathlib import Path
 
@@ -111,17 +112,6 @@ if DATABASE_URL:
         ssl_require=os.getenv('DB_SSL_REQUIRE', 'False').lower() == 'true',
     )
 
-print(
-    "[settings] DEBUG={debug} DATABASE_URL={db_url} DB_HOST={host} DB_NAME={name} DB_USER={user}".format(
-        debug=DEBUG,
-        db_url="present" if DATABASE_URL else "absent",
-        host=DATABASES['default']['HOST'],
-        name=DATABASES['default']['NAME'],
-        user=DATABASES['default']['USER'],
-    )
-)
-
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -191,17 +181,6 @@ MEDIA_ROOT = media_root
 if not media_root.exists():
     logging.warning("Media root %s does not exist or failed to mount.", media_root)
 
-logging.info(
-    "[static-config] STATIC_URL=%s STATIC_ROOT=%s MEDIA_URL=%s MEDIA_ROOT=%s",
-    STATIC_URL,
-    STATIC_ROOT,
-    MEDIA_URL,
-    MEDIA_ROOT,
-)
-logging.info(
-    "[media-config] Using MEDIA_ROOT=%s (is_dir=%s)", MEDIA_ROOT, MEDIA_ROOT.is_dir()
-)
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -256,7 +235,7 @@ LOGGING = {
             'formatter': 'verbose',
         },
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
@@ -268,10 +247,36 @@ LOGGING = {
             'propagate': True,
         },
         'django': {
-            'handlers': ['file'],
+            'handlers': ['file', 'console'],
             'level': 'INFO',
             'propagate': True,
         },
     },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
 }
+
+logging.config.dictConfig(LOGGING)
+
+logger = logging.getLogger(__name__)
+logger.info(
+    "[settings] DEBUG=%s DATABASE_URL=%s DB_HOST=%s DB_NAME=%s DB_USER=%s",
+    DEBUG,
+    "present" if DATABASE_URL else "absent",
+    DATABASES['default']['HOST'],
+    DATABASES['default']['NAME'],
+    DATABASES['default']['USER'],
+)
+logger.info(
+    "[static-config] STATIC_URL=%s STATIC_ROOT=%s MEDIA_URL=%s MEDIA_ROOT=%s",
+    STATIC_URL,
+    STATIC_ROOT,
+    MEDIA_URL,
+    MEDIA_ROOT,
+)
+logger.info(
+    "[media-config] Using MEDIA_ROOT=%s (is_dir=%s)", MEDIA_ROOT, MEDIA_ROOT.is_dir()
+)
 
